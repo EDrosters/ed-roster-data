@@ -621,6 +621,45 @@ def build_today_data(consultant_periods, registrar_periods, jmo_people, np_peopl
     return {"panel1": build_day(TODAY), "panel2": build_day(TOMORROW)}
 
 
+def build_my_roster_data(consultant_periods, registrar_periods):
+    consultants = {}
+    for p in consultant_periods:
+        dates = p["d"].split("|")
+        for c in p["c"]:
+            codes = c["v"].split("|")
+            bucket = consultants.setdefault(c["n"], {})
+            for d, code in zip(dates, codes):
+                if code and d:
+                    bucket[d] = code
+
+    registrars = {}
+    for p in registrar_periods:
+        dates = p["d"].split("|")
+        for c in p["c"]:
+            codes = c["v"].split("|")
+            bucket = registrars.setdefault(c["n"], {})
+            for d, code in zip(dates, codes):
+                if code and d:
+                    bucket[d] = code
+
+    window_start = (date.today() - timedelta(days=30)).isoformat()
+
+    def pack(name_dict, role):
+        out = []
+        for name, shifts in sorted(name_dict.items()):
+            items = sorted((d, c) for d, c in shifts.items() if d >= window_start)
+            if not items:
+                continue
+            out.append({
+                "n": name, "r": role,
+                "d": "|".join(d for d, _ in items),
+                "v": "|".join(c for _, c in items),
+            })
+        return out
+
+    return pack(consultants, "C") + pack(registrars, "R")
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -650,13 +689,20 @@ def main():
     print("Building today/tomorrow view...")
     data = build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
 
+    print("Building My Roster (per-person) view...")
+    my_roster_data = build_my_roster_data(consultant_periods, registrar_periods)
+    print(f"  {len(my_roster_data)} people with recent/upcoming shifts")
+
     with open("roster_data.json", "w") as f:
         json.dump(data, f, indent=2)
 
     with open("consultant_roster.json", "w") as f:
         json.dump(consultant_periods, f, separators=(",", ":"))
 
-    print("Done. Wrote roster_data.json and consultant_roster.json")
+    with open("my_roster.json", "w") as f:
+        json.dump(my_roster_data, f, separators=(",", ":"))
+
+    print("Done. Wrote roster_data.json, consultant_roster.json, and my_roster.json")
 
 
 if __name__ == "__main__":
