@@ -1,1 +1,1 @@
-# ed-roster-data
+pip install msal
