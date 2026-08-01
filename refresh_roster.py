@@ -468,7 +468,9 @@ def classify_role(role_label):
     return None, None
 
 
-def build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people):
+from types import SimpleNamespace
+
+def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, amp_people):
     initials_map = {}
     for p in consultant_periods:
         for c in p["c"]:
@@ -550,6 +552,27 @@ def build_today_data(consultant_periods, registrar_periods, jmo_people, np_peopl
 
     def next_day(dt):
         return (date.fromisoformat(dt) + timedelta(days=1)).isoformat()
+
+    return SimpleNamespace(
+        consultant_lookup=consultant_lookup,
+        registrar_lookup=registrar_lookup,
+        jmo_lookup=jmo_lookup,
+        npamp_lookup=npamp_lookup,
+        facem_oncall_lookup=facem_oncall_lookup,
+        director_oncall_lookup=director_oncall_lookup,
+        next_day=next_day,
+    )
+
+
+def build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people):
+    L = make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
+    consultant_lookup = L.consultant_lookup
+    registrar_lookup = L.registrar_lookup
+    jmo_lookup = L.jmo_lookup
+    npamp_lookup = L.npamp_lookup
+    facem_oncall_lookup = L.facem_oncall_lookup
+    director_oncall_lookup = L.director_oncall_lookup
+    next_day = L.next_day
 
     def build_day(dt):
         oncall = director_oncall_lookup(dt)
@@ -671,6 +694,72 @@ def build_my_roster_data(consultant_periods, registrar_periods):
     return pack(consultants, "C") + pack(registrars, "R")
 
 
+def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people, n_weeks=8):
+    L = make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
+
+    def build_week(dates):
+        oncall = [L.director_oncall_lookup(d) for d in dates]
+
+        shifts = []
+        shift_index = {}
+        for meta in TEMPLATE:
+            shift_name = meta["shift"]
+            if shift_name not in shift_index:
+                shift_index[shift_name] = {"name": shift_name, "notes": [], "zones": [], "zone_index": {}}
+                shifts.append(shift_index[shift_name])
+            entry = shift_index[shift_name]
+
+            if meta["role"] == "FACEM on call" and meta["zone"] is None:
+                which = "day" if meta["time"] == "0430-0800" else "night"
+                if which == "night":
+                    values = [L.facem_oncall_lookup(d, which) for d in dates]
+                else:
+                    values = [L.facem_oncall_lookup(L.next_day(d), which) for d in dates]
+                if any(values):
+                    entry["notes"].append({"label": "FACEM on Call, " + meta["time"], "values": values})
+                continue
+
+            role_label = meta["role"]
+            role_type, code = classify_role(role_label)
+
+            if role_label == "Nurse Prac":
+                values = [L.npamp_lookup(d, shift_name, np_people) for d in dates]
+            elif role_label == "Adv Musc Physio":
+                values = [L.npamp_lookup(d, shift_name, amp_people) for d in dates]
+            elif role_type == "consultant":
+                values = [L.consultant_lookup(d, code) for d in dates]
+            elif role_type == "registrar":
+                values = [L.registrar_lookup(d, code) for d in dates]
+            elif role_type == "jmo":
+                values = [L.jmo_lookup(d, code) for d in dates]
+            else:
+                values = ["" for _ in dates]
+
+            if not any(values):
+                continue
+
+            zone_name = meta["zone"] or "Other"
+            if zone_name not in entry["zone_index"]:
+                entry["zone_index"][zone_name] = {"zone": zone_name, "roles": []}
+                entry["zones"].append(entry["zone_index"][zone_name])
+            entry["zone_index"][zone_name]["roles"].append({"role": role_label, "values": values})
+
+        for s in shifts:
+            del s["zone_index"]
+
+        return {"d": "|".join(dates), "oncall": "|".join(oncall), "shifts": shifts}
+
+    today = date.today()
+    monday_start = today - timedelta(days=today.weekday())
+
+    weeks = []
+    for i in range(n_weeks):
+        week_start = monday_start + timedelta(days=7 * i)
+        week_dates = [(week_start + timedelta(days=j)).isoformat() for j in range(7)]
+        weeks.append(build_week(week_dates))
+    return weeks
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -704,6 +793,10 @@ def main():
     my_roster_data = build_my_roster_data(consultant_periods, registrar_periods)
     print(f"  {len(my_roster_data)} people with recent/upcoming shifts")
 
+    print("Building Weekly Allocations view...")
+    weekly_data = build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
+    print(f"  {len(weekly_data)} weeks")
+
     with open("roster_data.json", "w") as f:
         json.dump(data, f, indent=2)
 
@@ -716,7 +809,10 @@ def main():
     with open("my_roster.json", "w") as f:
         json.dump(my_roster_data, f, separators=(",", ":"))
 
-    print("Done. Wrote roster_data.json, consultant_roster.json, registrar_roster.json, and my_roster.json")
+    with open("weekly_allocations.json", "w") as f:
+        json.dump(weekly_data, f, separators=(",", ":"))
+
+    print("Done. Wrote roster_data.json, consultant_roster.json, registrar_roster.json, my_roster.json, and weekly_allocations.json")
 
 
 if __name__ == "__main__":
