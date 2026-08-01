@@ -119,6 +119,47 @@ def download_roster(access_token):
 # ============================================================
 
 DATE_TAB_RE = re.compile(r"^[0-9.\-]+$")
+THEME_COLORS = ['FFFFFF', '000000', 'EEECE1', '1F497D', '4F81BD', 'C0504D', '9BBB59', '8064A2', '4BACC6', 'F79646']
+
+def apply_tint(hexcol, tint):
+    r = int(hexcol[0:2], 16); g = int(hexcol[2:4], 16); b = int(hexcol[4:6], 16)
+    if tint < 0:
+        r *= (1 + tint); g *= (1 + tint); b *= (1 + tint)
+    elif tint > 0:
+        r = r + (255 - r) * tint
+        g = g + (255 - g) * tint
+        b = b + (255 - b) * tint
+    return '%02X%02X%02X' % (round(max(0, min(255, r))), round(max(0, min(255, g))), round(max(0, min(255, b))))
+
+def soften(hexcol, amount=0.55):
+    r = int(hexcol[0:2], 16); g = int(hexcol[2:4], 16); b = int(hexcol[4:6], 16)
+    r = r + (255 - r) * amount
+    g = g + (255 - g) * amount
+    b = b + (255 - b) * amount
+    return '%02X%02X%02X' % (round(r), round(g), round(b))
+
+def resolve_fill(cell):
+    fill = cell.fill
+    if not fill or fill.patternType != "solid":
+        return None
+    fg = fill.fgColor
+    hexcol = None
+    if fg.type == "rgb" and fg.rgb and isinstance(fg.rgb, str) and len(fg.rgb) == 8:
+        if fg.rgb[:2] != "00":
+            hexcol = fg.rgb[2:]
+    elif fg.type == "theme":
+        try:
+            base = THEME_COLORS[fg.theme]
+            hexcol = apply_tint(base, fg.tint or 0)
+        except Exception:
+            hexcol = None
+    if not hexcol:
+        return None
+    r = int(hexcol[0:2], 16) / 255; g = int(hexcol[2:4], 16) / 255; b = int(hexcol[4:6], 16) / 255
+    lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    if lum > 0.96:
+        return None
+    return soften(hexcol)
 METRIC_LABELS = {
     "facem total", "registrars", "jmos rostered", "jmos minimum",
     "director on call", "funded", "reg sick call",
@@ -157,7 +198,38 @@ def find_last_date_col(ws, date_row, start_col, limit=270):
     return last
 
 
-def extract_consultant_tab(ws, name):
+def build_weekday_base(wb):
+    weekday_base = {}
+    data_ws = wb["Data"]
+    for r in range(2, 9):
+        wd = data_ws.cell(row=r, column=1).value
+        day_base = data_ws.cell(row=r, column=2).value
+        eve_base = data_ws.cell(row=r, column=3).value
+        if wd:
+            weekday_base[str(wd).strip()] = (day_base or 0) + (eve_base or 0)
+    return weekday_base
+
+def to_num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+def facem_status(actual_total, weekday, weekday_base):
+    base = weekday_base.get(weekday)
+    if actual_total is None or base is None:
+        return ""
+    diff = actual_total - base
+    if diff > 0:
+        return "b"
+    if diff == 0:
+        return "g"
+    if diff == -1:
+        return "y"
+    return "r"
+
+
+def extract_consultant_tab(ws, name, weekday_base):
     date_row, start_col = find_date_anchor(ws, 6, 7)
     if date_row is None:
         return None
@@ -185,6 +257,7 @@ def extract_consultant_tab(ws, name):
     consultants = []
     current_group = None
     blank_streak = 0
+    dse_rows = {}
     while r < ws.max_row:
         a = ws.cell(row=r, column=1).value
         b = ws.cell(row=r, column=2).value
@@ -197,10 +270,21 @@ def extract_consultant_tab(ws, name):
             r += 1
             continue
         if norm(b) in ("d", "s", "e"):
+            dse_rows = {}
+            for offset in range(3):
+                lbl = ws.cell(row=r + offset, column=2).value
+                if lbl and norm(lbl) in ("d", "s", "e"):
+                    vals = [to_num(ws.cell(row=r + offset, column=c).value) for c in range(start_col, last_col + 1)]
+                    dse_rows[norm(lbl)] = vals
             break
         blank_streak = 0
-        codes = [fmt_code(ws.cell(row=r, column=c).value) for c in range(start_col, last_col + 1)]
-        consultants.append({"n": str(b).strip(), "g": current_group or "", "v": "|".join(codes)})
+        codes = []
+        fills = []
+        for c in range(start_col, last_col + 1):
+            cell = ws.cell(row=r, column=c)
+            codes.append(fmt_code(cell.value))
+            fills.append(resolve_fill(cell) or "")
+        consultants.append({"n": str(b).strip(), "g": current_group or "", "v": "|".join(codes), "f": "|".join(fills)})
         r += 1
 
     metrics_out = {}
@@ -208,6 +292,19 @@ def extract_consultant_tab(ws, name):
         key = METRIC_KEY_MAP.get(norm(label))
         if key:
             metrics_out[key] = "|".join(values)
+
+    facem_status_list = []
+    d_vals = dse_rows.get("d", [])
+    s_vals = dse_rows.get("s", [])
+    e_vals = dse_rows.get("e", [])
+    for i, wd in enumerate(weekdays):
+        d = d_vals[i] if i < len(d_vals) else None
+        s = s_vals[i] if i < len(s_vals) else None
+        e = e_vals[i] if i < len(e_vals) else None
+        parts = [x for x in (d, s, e) if x is not None]
+        total = sum(parts) if parts else None
+        facem_status_list.append(facem_status(total, wd, weekday_base) if total is not None else "")
+    metrics_out["facem_status"] = "|".join(facem_status_list)
 
     start_date = next((d for d in dates if d), None)
     end_date = next((d for d in reversed(dates) if d), None)
@@ -217,10 +314,11 @@ def extract_consultant_tab(ws, name):
 
 
 def extract_all_consultants(wb):
+    weekday_base = build_weekday_base(wb)
     periods = []
     for name in wb.sheetnames:
         if DATE_TAB_RE.match(name.strip()):
-            result = extract_consultant_tab(wb[name], name)
+            result = extract_consultant_tab(wb[name], name, weekday_base)
             if result:
                 periods.append(result)
     periods.sort(key=lambda p: p["s"] or "")
@@ -555,7 +653,10 @@ def main():
     with open("roster_data.json", "w") as f:
         json.dump(data, f, indent=2)
 
-    print("Done. Wrote roster_data.json")
+    with open("consultant_roster.json", "w") as f:
+        json.dump(consultant_periods, f, separators=(",", ":"))
+
+    print("Done. Wrote roster_data.json and consultant_roster.json")
 
 
 if __name__ == "__main__":
