@@ -760,6 +760,77 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
     return weeks
 
 
+def extract_amp2026(wb):
+    ws = wb["AMP 2026"]
+
+    def extract_block(title_row, date_row, name_row_start, name_row_end, col_start, col_end):
+        title = fmt_code(ws.cell(row=title_row, column=1).value)
+        m = re.search(r"(20\d\d)", title)
+        target_year = int(m.group(1)) if m else None
+
+        raw_dates = []
+        for c in range(col_start, col_end + 1):
+            v = ws.cell(row=date_row, column=c).value
+            if isinstance(v, datetime):
+                raw_dates.append((c, v))
+        if not raw_dates or target_year is None:
+            return {}
+
+        # self-correcting: figure out the offset from whatever year is actually
+        # in the sheet right now, rather than hard-coding a fixed correction -
+        # so this keeps working even if the stale dates get fixed later.
+        raw_year = raw_dates[0][1].year
+        offset = target_year - raw_year
+
+        people = {}
+        for r in range(name_row_start, name_row_end + 1):
+            name = fmt_code(ws.cell(row=r, column=1).value)
+            if not name:
+                continue
+            codes = {}
+            for c, dv in raw_dates:
+                corrected = dv.replace(year=dv.year + offset)
+                code = fmt_code(ws.cell(row=r, column=c).value)
+                if code and code != "0":
+                    codes[corrected.strftime("%Y-%m-%d")] = code
+            people.setdefault(name, {}).update(codes)
+        return people
+
+    block1 = extract_block(1, 2, 3, 13, 2, 182)
+    block2 = extract_block(15, 16, 17, 27, 2, 185)
+
+    amp2026 = {}
+    for name, codes in block1.items():
+        amp2026.setdefault(name, {}).update(codes)
+    for name, codes in block2.items():
+        amp2026.setdefault(name, {}).update(codes)
+    return amp2026
+
+
+def build_amp_roster_data(amp2026_people):
+    all_dates = sorted({d for codes in amp2026_people.values() for d in codes})
+    if not all_dates:
+        return []
+    year = int(all_dates[0][:4])
+
+    months = []
+    for m in range(1, 13):
+        _, days_in_month = __import__("calendar").monthrange(year, m)
+        month_dates = [date(year, m, d).isoformat() for d in range(1, days_in_month + 1)]
+        people = []
+        for name in sorted(amp2026_people.keys()):
+            codes = amp2026_people[name]
+            values = [codes.get(d, "") for d in month_dates]
+            if any(values):
+                people.append({"n": name, "v": "|".join(values)})
+        months.append({
+            "label": date(year, m, 1).strftime("%B %Y"),
+            "d": "|".join(month_dates),
+            "c": people,
+        })
+    return months
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -797,6 +868,11 @@ def main():
     weekly_data = build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
     print(f"  {len(weekly_data)} weeks")
 
+    print("Extracting AMP 2026 tab...")
+    amp2026_people = extract_amp2026(wb)
+    amp_roster_data = build_amp_roster_data(amp2026_people)
+    print(f"  {len(amp2026_people)} AMPs")
+
     with open("roster_data.json", "w") as f:
         json.dump(data, f, indent=2)
 
@@ -812,7 +888,10 @@ def main():
     with open("weekly_allocations.json", "w") as f:
         json.dump(weekly_data, f, separators=(",", ":"))
 
-    print("Done. Wrote roster_data.json, consultant_roster.json, registrar_roster.json, my_roster.json, and weekly_allocations.json")
+    with open("amp_roster.json", "w") as f:
+        json.dump(amp_roster_data, f, separators=(",", ":"))
+
+    print("Done. Wrote all 6 data files.")
 
 
 if __name__ == "__main__":
