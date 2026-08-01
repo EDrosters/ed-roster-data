@@ -170,6 +170,12 @@ METRIC_KEY_MAP = {
 }
 REG_TABS = ["Reg T1 2025", "Reg T2 2025", "Reg T3 2025", "Reg T4 2025",
             "Reg T1 2026", "Reg T2 2026", "Reg T3 2026"]
+TERM_LABELS = {
+    "Reg T1 2025": "Term 1, 2025", "Reg T2 2025": "Term 2, 2025",
+    "Reg T3 2025": "Term 3, 2025", "Reg T4 2025": "Term 4, 2025",
+    "Reg T1 2026": "Term 1, 2026", "Reg T2 2026": "Term 2, 2026",
+    "Reg T3 2026": "Term 3, 2026",
+}
 
 def norm(s):
     return re.sub(r"\s+", " ", str(s)).strip().lower()
@@ -325,15 +331,16 @@ def extract_all_consultants(wb):
     return periods
 
 
-def extract_registrar_term(ws):
+def extract_registrar_term(ws, tab_name):
     date_row, start_col = find_date_anchor(ws, 6, 8)
     if date_row is None:
         return None
     last_col = find_last_date_col(ws, date_row, start_col, 260)
-    dates = []
+    dates, weekdays = [], []
     for c in range(start_col, last_col + 1):
         dv = ws.cell(row=date_row, column=c).value
         dates.append(dv.strftime("%Y-%m-%d") if isinstance(dv, datetime) else None)
+        weekdays.append(dv.strftime("%a") if isinstance(dv, datetime) else "")
 
     r = date_row + 1
     registrars = []
@@ -345,20 +352,24 @@ def extract_registrar_term(ws):
             r += 1
             continue
         name = str(a).strip()
+        eft = ws.cell(row=r, column=2).value
         codes = [fmt_code(ws.cell(row=r, column=c).value) for c in range(start_col, last_col + 1)]
-        registrars.append({"n": name, "v": "|".join(codes)})
+        registrars.append({"n": name, "eft": eft, "v": "|".join(codes)})
         r += 1
+
+    registrars.sort(key=lambda x: (-(x["eft"] or 0), x["n"]))
 
     start_date = next((d for d in dates if d), None)
     end_date = next((d for d in reversed(dates) if d), None)
-    return {"s": start_date, "e": end_date, "d": "|".join(d or "" for d in dates), "c": registrars}
+    return {"t": TERM_LABELS.get(tab_name, tab_name), "s": start_date, "e": end_date,
+            "d": "|".join(d or "" for d in dates), "w": "|".join(weekdays), "c": registrars}
 
 
 def extract_all_registrars(wb):
     periods = []
     for tab in REG_TABS:
         if tab in wb.sheetnames:
-            result = extract_registrar_term(wb[tab])
+            result = extract_registrar_term(wb[tab], tab)
             if result:
                 periods.append(result)
     periods.sort(key=lambda p: p["s"] or "")
@@ -699,10 +710,13 @@ def main():
     with open("consultant_roster.json", "w") as f:
         json.dump(consultant_periods, f, separators=(",", ":"))
 
+    with open("registrar_roster.json", "w") as f:
+        json.dump(registrar_periods, f, separators=(",", ":"))
+
     with open("my_roster.json", "w") as f:
         json.dump(my_roster_data, f, separators=(",", ":"))
 
-    print("Done. Wrote roster_data.json, consultant_roster.json, and my_roster.json")
+    print("Done. Wrote roster_data.json, consultant_roster.json, registrar_roster.json, and my_roster.json")
 
 
 if __name__ == "__main__":
