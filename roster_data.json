@@ -297,12 +297,6 @@
                 "names": [
                   "Anamika Joijode"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Chris Harmer"
-                ]
               }
             ]
           },
@@ -313,6 +307,12 @@
                 "role": "Registrars",
                 "names": [
                   "Jaimee Warren"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Chris Harmer"
                 ]
               }
             ]
