@@ -131,6 +131,17 @@
                 ]
               }
             ]
+          },
+          {
+            "zone": "Unallocated",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Nick Hooper"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -274,6 +285,17 @@
                 "role": "JMO",
                 "names": [
                   "Calum Haggett (PGY4)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Unallocated",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Scott Taylor"
                 ]
               }
             ]
