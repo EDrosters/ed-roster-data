@@ -789,6 +789,7 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
 
         shifts = []
         shift_index = {}
+        pending_day_facem_note = None
         for meta in TEMPLATE:
             shift_name = meta["shift"]
             if shift_name not in shift_index:
@@ -800,10 +801,12 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
                 which = "day" if meta["time"] == "0430-0800" else "night"
                 if which == "night":
                     values = [L.facem_oncall_lookup(d, which) for d in dates]
+                    if any(values):
+                        entry["notes"].append({"label": "FACEM on Call, " + meta["time"], "values": values})
                 else:
                     values = [L.facem_oncall_lookup(L.next_day(d), which) for d in dates]
-                if any(values):
-                    entry["notes"].append({"label": "FACEM on Call, " + meta["time"], "values": values})
+                    if any(values):
+                        pending_day_facem_note = {"label": "FACEM on Call, " + meta["time"], "values": values}
                 continue
 
             role_label = meta["role"]
@@ -830,6 +833,9 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
                 entry["zone_index"][zone_name] = {"zone": zone_name, "roles": []}
                 entry["zones"].append(entry["zone_index"][zone_name])
             entry["zone_index"][zone_name]["roles"].append({"role": role_label, "values": values})
+
+        if pending_day_facem_note and "Night" in shift_index:
+            shift_index["Night"]["notes"].append(pending_day_facem_note)
 
         for s in shifts:
             del s["zone_index"]
