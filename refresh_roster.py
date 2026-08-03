@@ -564,7 +564,8 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
     )
 
 
-def build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people):
+def build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people, comments=None):
+    comments = comments or {}
     L = make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
     consultant_lookup = L.consultant_lookup
     registrar_lookup = L.registrar_lookup
@@ -650,7 +651,8 @@ def build_today_data(consultant_periods, registrar_periods, jmo_people, np_peopl
             s["zones"] = [z for z in remaining_zones if z["roles"]]
 
         date_obj = date.fromisoformat(dt)
-        return {"date": date_obj.strftime("%A %d %B"), "oncall": oncall, "shifts": shifts}
+        return {"date": date_obj.strftime("%A %d %B"), "oncall": oncall,
+                "comment": comments.get(dt, ""), "shifts": shifts}
 
     return {"panel1": build_day(TODAY), "panel2": build_day(TOMORROW)}
 
@@ -831,6 +833,19 @@ def build_amp_roster_data(amp2026_people):
     return months
 
 
+def extract_comments(wb):
+    if "Comments" not in wb.sheetnames:
+        return {}
+    ws = wb["Comments"]
+    comments = {}
+    for r in range(2, ws.max_row + 1):
+        dv = ws.cell(row=r, column=1).value
+        comment = fmt_code(ws.cell(row=r, column=3).value)
+        if isinstance(dv, datetime) and comment:
+            comments[dv.strftime("%Y-%m-%d")] = comment
+    return comments
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -857,8 +872,12 @@ def main():
     jmo_people, np_people, amp_people = extract_jmo_np(wb)
     print(f"  {len(jmo_people)} JMOs, {len(np_people)} NPs, {len(amp_people)} AMPs")
 
+    print("Extracting Comments tab...")
+    comments = extract_comments(wb)
+    print(f"  {len(comments)} dated comments found")
+
     print("Building today/tomorrow view...")
-    data = build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
+    data = build_today_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people, comments)
 
     print("Building My Roster (per-person) view...")
     my_roster_data = build_my_roster_data(consultant_periods, registrar_periods)
