@@ -556,10 +556,13 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         p, idx = consultant_period_for(dt)
         if p is None:
             return ""
-        target = "d1c" if which == "day" else "e1c"
+        prefix = "d" if which == "day" else "e"
         for c in p["c"]:
             codes = c["v"].split("|")
-            if idx < len(codes) and codes[idx].lower() == target:
+            if idx >= len(codes):
+                continue
+            code = codes[idx].lower()
+            if code.startswith(prefix) and code.endswith("c") and len(code) > 2:
                 return c["n"]
         return ""
 
@@ -661,7 +664,7 @@ def build_today_data(consultant_periods, registrar_periods, jmo_people, np_peopl
                     if name:
                         entry["top_notes"].append(["FACEM on Call, " + meta["time"], name])
                 else:
-                    name = facem_oncall_lookup(next_day(dt), which)
+                    name = facem_oncall_lookup(dt, which)
                     if name:
                         pending_day_facem_note = ["FACEM on Call, " + meta["time"], name]
                 continue
@@ -804,7 +807,7 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
                     if any(values):
                         entry["notes"].append({"label": "FACEM on Call, " + meta["time"], "values": values})
                 else:
-                    values = [L.facem_oncall_lookup(L.next_day(d), which) for d in dates]
+                    values = [L.facem_oncall_lookup(d, which) for d in dates]
                     if any(values):
                         pending_day_facem_note = {"label": "FACEM on Call, " + meta["time"], "values": values}
                 continue
