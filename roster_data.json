@@ -372,7 +372,7 @@
   "panel2": {
     "date": "Tuesday 04 August",
     "oncall": "Nick Hooper",
-    "comment": "Hello",
+    "comment": "",
     "shifts": [
       {
         "name": "Day",
