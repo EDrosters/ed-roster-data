@@ -2,6 +2,7 @@
   "panel1": {
     "date": "Monday 03 August",
     "oncall": "Mark Putland",
+    "comment": "Test 12",
     "shifts": [
       {
         "name": "Day",
@@ -371,6 +372,7 @@
   "panel2": {
     "date": "Tuesday 04 August",
     "oncall": "Nick Hooper",
+    "comment": "Test",
     "shifts": [
       {
         "name": "Day",
