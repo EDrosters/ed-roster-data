@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Monday 03 August",
     "oncall": "Mark Putland",
-    "comment": "Hello",
+    "comment": "",
     "shifts": [
       {
         "name": "Day",
