@@ -427,6 +427,29 @@ TEMPLATE = [{'shift': 'Day', 'zone': None, 'role': 'FACEM on call', 'time': '043
 # STEP 5 - Lookup functions (same logic as get_today_from_source.py)
 # ============================================================
 
+VALID_CONSULTANT_CODES = set()
+VALID_REGISTRAR_CODES = set()
+for _row in TEMPLATE:
+    _m = re.match(r"^(.*?)\s*\(([^)]+)\)\s*$", _row["role"])
+    if _m:
+        _prefix, _code = _m.group(1).strip().lower(), _m.group(2).strip().lower()
+        if _prefix == "consultant":
+            VALID_CONSULTANT_CODES.add(_code)
+        elif _prefix in ("registrar", "om registrar"):
+            VALID_REGISTRAR_CODES.add(_code)
+
+NON_ZONE_CODES = {"x", "l", "8", "rt", "cl", "sl", "bl", "el"}
+
+def is_non_zone_code(stripped_lower):
+    """Codes that are recognized but never belong in a clinical zone
+    (leave, training, admin day, etc.) - these should NOT be flagged
+    as 'unallocated' even though they don't match a template slot."""
+    return stripped_lower in NON_ZONE_CODES or stripped_lower.startswith("pl")
+
+def code_period(stripped_lower):
+    m = re.match(r"^([dsen])", stripped_lower)
+    return {"d": "Day", "s": "Swing", "e": "Eve", "n": "Night"}.get(m.group(1)) if m else None
+
 def strip_suffix(code):
     c = code.strip()
     if c.lower().endswith("-t"):
@@ -553,6 +576,48 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
     def next_day(dt):
         return (date.fromisoformat(dt) + timedelta(days=1)).isoformat()
 
+    def find_unallocated(dt):
+        """Returns {'Consultants': [names], 'Registrars': [names]} for anyone
+        with a real shift code that day that doesn't match any known template
+        position (and isn't a recognized non-zone status like leave/training)."""
+        result = {"Consultants": {}, "Registrars": {}}
+        p, idx = consultant_period_for(dt)
+        if p is not None:
+            for c in p["c"]:
+                codes = c["v"].split("|")
+                if idx >= len(codes):
+                    continue
+                raw = codes[idx]
+                if not raw:
+                    continue
+                stripped = strip_suffix(raw).lower()
+                if is_non_zone_code(stripped):
+                    continue
+                if stripped in VALID_CONSULTANT_CODES:
+                    continue
+                period = code_period(stripped)
+                if period:
+                    result["Consultants"].setdefault(period, []).append(c["n"])
+
+        p, idx = registrar_period_for(dt)
+        if p is not None:
+            for c in p["c"]:
+                codes = c["v"].split("|")
+                if idx >= len(codes):
+                    continue
+                raw = codes[idx]
+                if not raw:
+                    continue
+                stripped = strip_suffix(raw).lower()
+                if is_non_zone_code(stripped):
+                    continue
+                if stripped in VALID_REGISTRAR_CODES:
+                    continue
+                period = code_period(stripped)
+                if period:
+                    result["Registrars"].setdefault(period, []).append(reverse_registrar_name(c["n"]))
+        return result
+
     return SimpleNamespace(
         consultant_lookup=consultant_lookup,
         registrar_lookup=registrar_lookup,
@@ -560,6 +625,7 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         npamp_lookup=npamp_lookup,
         facem_oncall_lookup=facem_oncall_lookup,
         director_oncall_lookup=director_oncall_lookup,
+        find_unallocated=find_unallocated,
         next_day=next_day,
     )
 
@@ -632,6 +698,25 @@ def build_today_data(consultant_periods, registrar_periods, jmo_people, np_peopl
             for nm in [x.strip() for x in value.split(",") if x.strip()]:
                 if nm not in zone["role_lookup"][generic_role]["names"]:
                     zone["role_lookup"][generic_role]["names"].append(nm)
+
+        unallocated = L.find_unallocated(dt)
+        for role_key, generic_role in (("Consultants", "Consultants"), ("Registrars", "Registrars")):
+            for shift_name, names in unallocated[role_key].items():
+                if shift_name not in shift_index:
+                    shift_index[shift_name] = {"name": shift_name, "top_notes": [], "zones": [], "zone_index": {}}
+                    shifts.append(shift_index[shift_name])
+                entry = shift_index[shift_name]
+                if "Unallocated" not in entry["zone_index"]:
+                    entry["zone_index"]["Unallocated"] = {"zone": "Unallocated", "roles": [], "role_lookup": {}}
+                    entry["zones"].append(entry["zone_index"]["Unallocated"])
+                zone = entry["zone_index"]["Unallocated"]
+                if generic_role not in zone["role_lookup"]:
+                    role_entry = {"role": generic_role, "names": []}
+                    zone["role_lookup"][generic_role] = role_entry
+                    zone["roles"].append(role_entry)
+                for nm in names:
+                    if nm not in zone["role_lookup"][generic_role]["names"]:
+                        zone["role_lookup"][generic_role]["names"].append(nm)
 
         if pending_day_facem_note and "Night" in shift_index:
             shift_index["Night"]["top_notes"].append(pending_day_facem_note)
@@ -748,6 +833,28 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
 
         for s in shifts:
             del s["zone_index"]
+
+        unallocated_per_day = [L.find_unallocated(d) for d in dates]
+        for role_key, generic_role in (("Consultants", "Consultants"), ("Registrars", "Registrars")):
+            all_shift_names = set()
+            for day_result in unallocated_per_day:
+                all_shift_names.update(day_result[role_key].keys())
+            for shift_name in all_shift_names:
+                values = [", ".join(day_result[role_key].get(shift_name, [])) for day_result in unallocated_per_day]
+                if not any(values):
+                    continue
+                if shift_name not in shift_index:
+                    shift_index[shift_name] = {"name": shift_name, "notes": [], "zones": [], "zone_index": {}}
+                    shifts.append(shift_index[shift_name])
+                entry = shift_index[shift_name]
+                unalloc_zone = next((z for z in entry["zones"] if z["zone"] == "Unallocated"), None)
+                if unalloc_zone is None:
+                    unalloc_zone = {"zone": "Unallocated", "roles": []}
+                    entry["zones"].append(unalloc_zone)
+                unalloc_zone["roles"].append({"role": generic_role, "values": values})
+
+        for s in shifts:
+            s.pop("zone_index", None)
 
         return {"d": "|".join(dates), "oncall": "|".join(oncall), "shifts": shifts}
 
