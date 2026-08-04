@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who's On</title>
+<meta name="theme-color" content="#2a3550">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #f0f2f6;
+    --ink: #1b2130;
+    --ink-soft: #4b5262;
+    --ink-faint: #838a99;
+    --line: #e6e8ee;
+    --accent: #2a3550;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--canvas);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top) + 0.9rem) 1.1rem 0.9rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .back-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .back-btn:active { background: rgba(255,255,255,0.3); }
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  header .sub { font-size: 0.78rem; opacity: 0.85; margin-top: 0.1rem; }
+
+  .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
+  .empty-state { text-align: center; color: var(--ink-faint); padding: 3rem 1rem; font-size: 0.95rem; }
+
+  .group-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 1.2rem 0 0.5rem 0.2rem;
+  }
+  .group-heading:first-child { margin-top: 0; }
+
+  .shift-block {
+    border-radius: 12px;
+    padding: 0.9rem 1rem 1rem;
+    margin-bottom: 0.9rem;
+    background: var(--shiftbg);
+    border-left: 4px solid var(--shiftaccent);
+  }
+  .shift-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--shiftaccent);
+    margin-bottom: 0.5rem;
+  }
+  .zone-card {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  .zone-card:last-child { margin-bottom: 0; }
+  .zone-banner {
+    padding: 0.4rem 0.8rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #fff;
+  }
+  .role-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    border-top: 1px solid #f1f1f4;
+    font-size: 0.88rem;
+  }
+  .role-row:first-of-type { border-top: none; }
+  .role-name { color: var(--ink-faint); font-weight: 500; flex-shrink: 0; }
+  .role-people { color: var(--ink); font-weight: 600; text-align: right; }
+
+  .site-link { text-align: center; padding: 0.5rem 1rem 1.5rem; }
+  .site-link a { color: var(--ink-faint); font-size: 0.8rem; text-decoration: none; }
+</style>
+</head>
+<body>
+<header>
+  <button class="back-btn" onclick="history.length > 1 ? history.back() : (location.href='myshifts.html')">&#8249;</button>
+  <div>
+    <h1>Who's On</h1>
+    <div class="sub" id="dateSub"></div>
+  </div>
+</header>
+
+<div class="content" id="content">
+  <div class="empty-state">Loading roster...</div>
+</div>
+
+<div class="site-link"><a href="https://edrosters.com" target="_blank" rel="noopener">edrosters.com</a></div>
+
+<script>
+const CONSULTANT_URL = "https://edrosters.github.io/ed-roster-data/consultant_roster.json";
+const REGISTRAR_URL = "https://edrosters.github.io/ed-roster-data/registrar_roster.json";
+
+const content = document.getElementById('content');
+const dateSub = document.getElementById('dateSub');
+
+const params = new URLSearchParams(location.search);
+const targetDate = params.get('date') || new Date().toISOString().slice(0, 10);
+
+const PERIOD_NAME = {d:'Day', s:'Swing', e:'Eve', n:'Night'};
+const SHIFT_ACCENTS = { d: '#C97A1E', s: '#1E8F63', e: '#4553C4', n: '#2B3A55' };
+const SHIFT_BG = { d: '#FCF3E7', s: '#EAF6F0', e: '#EEF0FC', n: '#EAECF1' };
+
+const DAY_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Purple',7:'Green',9:'Green'};
+const EVENING_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Green',7:'Purple',9:'Green'};
+const WED_ROLE = {x:'Wednesday Purple', y:'Wednesday Fast Track', z:'Wednesday OM'};
+const REG_ROLE = {
+  d: {'1':'Purple','2':'Green','3':'Fast Track','4':'SSU','5':'Purple'},
+  s: {'1':'Green','2':'Purple','3':'Green','4':'Green','5':'Purple','6':'Purple'},
+  e: {'1':'Purple','2':'Green','3':'Fast Track','4':'Green','5':'Purple','6':'Fast Track','7':'Purple','8':'Green','9':'Purple','z':'Green','01':'Purple','02':'Green'},
+  n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track'},
+};
+const ZONE_DOT = { epic:'#D6423C', eric:'#D6423C', purple:'#8A6BB0', green:'#28B065', 'fast track':'#5B8FC7', ssu:'#D57BC4' };
+
+function zoneDot(z) { return ZONE_DOT[z.trim().toLowerCase()] || '#9aa1ab'; }
+
+function decodeConsultant(raw) {
+  if (!raw) return null;
+  let lower = raw.toLowerCase();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  if (lower === 'x' || lower === 'l' || lower === '8' || lower === 'rt' || lower === 'cl' || lower === 'sl' || lower === 'bl' || lower === 'el' || lower.startsWith('pl')) return null;
+  if (PERIOD_NAME[lower]) return null;
+  let m = lower.match(/^d([xyz])$/);
+  if (m) return { role: WED_ROLE[m[1]], period: 'd', zone: 'Other' };
+  m = lower.match(/^([dsen])(0?[0-9]{1,2})([ac])?$/);
+  if (m) {
+    const period = m[1], num = m[2], onCall = m[3] === 'c';
+    let zone = null;
+    if (period === 'd' && DAY_ROLE[num]) zone = DAY_ROLE[num];
+    else if (period === 'e' && EVENING_ROLE[num]) zone = EVENING_ROLE[num];
+    if (!zone) return null;
+    return { role: 'Consultant' + (onCall ? ' (On call)' : ''), period, zone };
+  }
+  return null;
+}
+
+function decodeRegistrar(raw) {
+  if (!raw) return null;
+  let lower = raw.toLowerCase();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  if (lower === 'x' || lower === 'l' || lower === 'rt' || lower === 'cl' || lower === 'sl' || lower === 'bl' || lower === 'el' || lower.startsWith('pl')) return null;
+  if (PERIOD_NAME[lower]) return null;
+  const m = lower.match(/^([dsen])(0?[0-9]{1,2}|z)([ac])?$/);
+  if (m) {
+    const period = m[1], num = m[2], onCall = m[3] === 'c';
+    const zone = REG_ROLE[period] && REG_ROLE[period][num];
+    if (!zone) return null;
+    return { role: 'Registrar' + (onCall ? ' (On call)' : ''), period, zone };
+  }
+  return null;
+}
+
+function reverseRegistrarName(n) {
+  n = n.trim();
+  const m = n.match(/^(.*?)\s*(\([^)]*\))\s*$/);
+  let suffix = '', core = n;
+  if (m) { core = m[1].trim(); suffix = ' ' + m[2]; }
+  const parts = core.split(' ');
+  if (parts.length === 2) return parts[1] + ' ' + parts[0] + suffix;
+  if (parts.length <= 1) return core + suffix;
+  return parts[parts.length - 1] + ' ' + parts.slice(0, -1).join(' ') + suffix;
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function collectShifts(periods, decodeFn, nameFn, shifts) {
+  const period = periods.find(p => p.c.length && targetDate >= p.s && targetDate <= p.e);
+  if (!period) return;
+  const idx = period.d.split('|').indexOf(targetDate);
+  if (idx === -1) return;
+  period.c.forEach(person => {
+    const code = person.v.split('|')[idx];
+    const decoded = decodeFn(code);
+    if (!decoded) return;
+    const s = shifts[decoded.period] || (shifts[decoded.period] = {});
+    const z = s[decoded.zone] || (s[decoded.zone] = {});
+    const r = z[decoded.role] || (z[decoded.role] = []);
+    const name = nameFn(person.n);
+    if (!r.includes(name)) r.push(name);
+  });
+}
+
+function render(consultantPeriods, registrarPeriods) {
+  const d = new Date(targetDate + 'T00:00:00');
+  dateSub.textContent = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const shifts = {};
+  collectShifts(consultantPeriods, decodeConsultant, (n) => n, shifts);
+  collectShifts(registrarPeriods, decodeRegistrar, reverseRegistrarName, shifts);
+
+  const order = ['d', 's', 'e', 'n'];
+  let html = '';
+  let any = false;
+  order.forEach(periodKey => {
+    const zones = shifts[periodKey];
+    if (!zones) return;
+    any = true;
+    html += '<div class="shift-block" style="--shiftaccent:' + SHIFT_ACCENTS[periodKey] + ';--shiftbg:' + SHIFT_BG[periodKey] + '">' +
+      '<div class="shift-name">' + PERIOD_NAME[periodKey] + '</div>';
+    Object.keys(zones).forEach(zoneName => {
+      html += '<div class="zone-card"><div class="zone-banner" style="background:' + zoneDot(zoneName) + '">' + escapeHtml(zoneName) + '</div>';
+      Object.keys(zones[zoneName]).forEach(roleName => {
+        html += '<div class="role-row"><span class="role-name">' + escapeHtml(roleName) + '</span>' +
+          '<span class="role-people">' + zones[zoneName][roleName].map(n => escapeHtml(n)).join('<br>') + '</span></div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  content.innerHTML = any ? html : '<div class="empty-state">No doctor roster data found for this date.</div>';
+}
+
+async function load() {
+  try {
+    const [consultantRes, registrarRes] = await Promise.all([
+      fetch(CONSULTANT_URL, { cache: 'no-store' }),
+      fetch(REGISTRAR_URL, { cache: 'no-store' }),
+    ]);
+    if (!consultantRes.ok || !registrarRes.ok) throw new Error('HTTP error');
+    const consultantPeriods = await consultantRes.json();
+    const registrarPeriods = await registrarRes.json();
+    render(consultantPeriods, registrarPeriods);
+  } catch (err) {
+    console.error('Roster load error:', err);
+    content.innerHTML = '<div class="empty-state">Unable to load roster data right now.</div>';
+  }
+}
+
+load();
+</script>
+</body>
+</html>
