@@ -153,6 +153,30 @@
     padding: 0.85rem;
   }
   .download-btn:active { opacity: 0.85; }
+
+  .cal-help { margin-top: 0.5rem; }
+  .cal-help-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    font-family: 'Inter', sans-serif;
+    padding: 0.3rem;
+    text-align: center;
+  }
+  .cal-help-body {
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.8rem 0.9rem;
+    margin-top: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .cal-help-body p { margin: 0 0 0.6rem; }
+  .cal-help-body p:last-child { margin-bottom: 0; }
+  .cal-help-body b { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -170,7 +194,14 @@
 <div class="site-link"><a href="https://edrosters.com" target="_blank" rel="noopener">edrosters.com</a></div>
 
 <div class="download-bar" id="downloadBar" style="display:none;">
-  <button class="download-btn" id="downloadBtn">Add to Calendar</button>
+  <button class="download-btn" id="downloadBtn">Download Calendar File</button>
+  <div class="cal-help">
+    <button class="cal-help-toggle" id="calHelpToggle">Works with Apple, Outlook &amp; Google &#9662;</button>
+    <div class="cal-help-body" id="calHelpBody" style="display:none;">
+      <p><b>Apple Calendar / Outlook:</b> just tap the downloaded file - it opens straight into your calendar app.</p>
+      <p><b>Google Calendar:</b> Google doesn't support opening a whole file with one tap. Instead: open the Google Calendar app on desktop &#8594; Settings (gear icon) &#8594; Import &amp; export &#8594; Import &#8594; choose the downloaded file.</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -383,6 +414,14 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+});
+
+const calHelpToggle = document.getElementById('calHelpToggle');
+const calHelpBody = document.getElementById('calHelpBody');
+calHelpToggle.addEventListener('click', () => {
+  const showing = calHelpBody.style.display !== 'none';
+  calHelpBody.style.display = showing ? 'none' : 'block';
+  calHelpToggle.textContent = showing ? 'Works with Apple, Outlook & Google \u25be' : 'Works with Apple, Outlook & Google \u25b4';
 });
 
 const STORAGE_KEY = 'myShifts.selectedPerson';
