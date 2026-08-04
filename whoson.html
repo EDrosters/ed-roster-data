@@ -152,6 +152,15 @@ const REG_ROLE = {
   n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track'},
 };
 const ZONE_DOT = { epic:'#D6423C', eric:'#D6423C', purple:'#8A6BB0', green:'#28B065', 'fast track':'#5B8FC7', ssu:'#D57BC4' };
+const ZONE_ORDER = ['epic', 'eric', 'purple', 'green', 'fast track', 'ssu', 'other'];
+
+function orderedZoneNames(zones) {
+  return Object.keys(zones).sort((a, b) => {
+    const ai = ZONE_ORDER.indexOf(a.trim().toLowerCase());
+    const bi = ZONE_ORDER.indexOf(b.trim().toLowerCase());
+    return (ai === -1 ? ZONE_ORDER.length : ai) - (bi === -1 ? ZONE_ORDER.length : bi);
+  });
+}
 
 function zoneDot(z) { return ZONE_DOT[z.trim().toLowerCase()] || '#9aa1ab'; }
 
@@ -242,7 +251,7 @@ function render(consultantPeriods, registrarPeriods) {
     any = true;
     html += '<div class="shift-block" style="--shiftaccent:' + SHIFT_ACCENTS[periodKey] + ';--shiftbg:' + SHIFT_BG[periodKey] + '">' +
       '<div class="shift-name">' + PERIOD_NAME[periodKey] + '</div>';
-    Object.keys(zones).forEach(zoneName => {
+    orderedZoneNames(zones).forEach(zoneName => {
       html += '<div class="zone-card"><div class="zone-banner" style="background:' + zoneDot(zoneName) + '">' + escapeHtml(zoneName) + '</div>';
       Object.keys(zones[zoneName]).forEach(roleName => {
         html += '<div class="role-row"><span class="role-name">' + escapeHtml(roleName) + '</span>' +
