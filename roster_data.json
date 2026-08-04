@@ -78,12 +78,6 @@
                 ]
               },
               {
-                "role": "Adv Musc Physio",
-                "names": [
-                  "Alice Wilcox"
-                ]
-              },
-              {
                 "role": "JMO",
                 "names": [
                   "Jeff Wong (PGY5)"
@@ -531,7 +525,8 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Fiona Nicholson"
+                  "Fiona Nicholson",
+                  "Jess Thomas"
                 ]
               },
               {
