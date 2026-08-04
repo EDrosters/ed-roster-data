@@ -74,7 +74,11 @@
     align-items: center;
     gap: 0.9rem;
     box-shadow: 0 1px 2px rgba(20,20,40,0.04);
+    text-decoration: none;
+    color: inherit;
   }
+  .shift-card:active { background: #f3f4f8; }
+  .chevron { color: var(--ink-faint); font-size: 1.3rem; flex-shrink: 0; }
   .shift-card.today { outline: 2px solid var(--accent); }
   .date-block {
     min-width: 48px;
@@ -289,12 +293,13 @@ function renderShifts() {
     }
     const colors = PERIOD_COLOR[decoded.period] || { bg: '#eef1fb', ink: '#2a3550' };
     const isToday = d === todayStr;
-    html += '<div class="shift-card' + (isToday ? ' today' : '') + '">' +
+    html += '<a class="shift-card' + (isToday ? ' today' : '') + '" href="whoson.html?date=' + d + '">' +
       '<div class="date-block"><div class="dow">' + fmtWeekday(d) + '</div>' +
       '<div class="num">' + fmtDayNum(d) + '</div>' +
       '<div class="mon">' + fmtMonAbbrev(d) + '</div></div>' +
       '<div class="shift-info"><div class="shift-text" style="color:' + colors.ink + '">' + escapeHtml(decoded.text) + '</div></div>' +
-      '</div>';
+      '<div class="chevron">&#8250;</div>' +
+      '</a>';
   });
 
   content.innerHTML = any ? html : '<div class="empty-state">No upcoming shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
