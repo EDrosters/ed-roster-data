@@ -251,17 +251,26 @@ function renderShifts() {
     return;
   }
   const shiftMap = personShiftMap(currentPerson.n, currentPerson.r);
-  const dates = Object.keys(shiftMap).sort();
+  const allDates = Object.keys(shiftMap).sort();
+  const upcoming = allDates.filter(d => d >= todayStr);
+  const past = allDates.filter(d => d < todayStr).sort().reverse(); // most-recent-past first
+  const orderedDates = upcoming.concat(past);
 
   let html = '';
   let lastGroupLabel = null;
   let any = false;
-  dates.forEach(d => {
+  let pastSectionStarted = false;
+  orderedDates.forEach(d => {
     const decoded = decodeCode(shiftMap[d], currentPerson.r);
     if (!decoded) return;
     any = true;
+    if (d < todayStr && !pastSectionStarted) {
+      html += '<div class="day-group-label" style="margin-top:1.4rem;">Recent (past)</div>';
+      pastSectionStarted = true;
+      lastGroupLabel = null;
+    }
     const groupLabel = fmtGroupLabel(d);
-    if (groupLabel !== lastGroupLabel) {
+    if (groupLabel !== lastGroupLabel && !(d < todayStr)) {
       html += '<div class="day-group-label">' + escapeHtml(groupLabel) + '</div>';
       lastGroupLabel = groupLabel;
     }
