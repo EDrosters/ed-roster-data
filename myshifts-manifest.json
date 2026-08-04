@@ -1,0 +1,15 @@
+{
+  "name": "My Shifts",
+  "short_name": "My Shifts",
+  "description": "Your upcoming ED roster shifts",
+  "start_url": "myshifts.html",
+  "scope": "myshifts.html",
+  "display": "standalone",
+  "background_color": "#f0f2f6",
+  "theme_color": "#4553C4",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/myshifts-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/myshifts-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Shifts</title>
+<meta name="theme-color" content="#4553C4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Shifts">
+<link rel="manifest" href="myshifts-manifest.json">
+<link rel="apple-touch-icon" href="icons/myshifts-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #f0f2f6;
+    --ink: #1b2130;
+    --ink-soft: #4b5262;
+    --ink-faint: #838a99;
+    --line: #e6e8ee;
+    --accent: #4553C4;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--canvas);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top) + 0.9rem) 1.1rem 0.9rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+  }
+  select#personSelect {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  select#personSelect option { color: #1b2130; }
+
+  .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
+
+  .empty-state {
+    text-align: center;
+    color: var(--ink-faint);
+    padding: 3rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .shift-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
+  }
+  .shift-card.today { outline: 2px solid var(--accent); }
+  .date-block {
+    min-width: 48px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .date-block .dow {
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .date-block .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .date-block .mon {
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .shift-info { flex: 1; min-width: 0; }
+  .shift-text {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .shift-sub {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-top: 0.15rem;
+  }
+
+  .day-group-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    margin: 1.1rem 0 0.4rem 0.2rem;
+  }
+  .day-group-label:first-child { margin-top: 0; }
+
+  .download-bar {
+    position: sticky;
+    bottom: 0;
+    padding: 0.8rem 1rem calc(env(safe-area-inset-bottom) + 0.8rem);
+    background: linear-gradient(to top, var(--canvas) 60%, transparent);
+  }
+  .download-btn {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem;
+  }
+  .download-btn:active { opacity: 0.85; }
+</style>
+</head>
+<body>
+<header>
+  <h1>My Shifts</h1>
+  <select id="personSelect">
+    <option value="">Choose your name...</option>
+  </select>
+</header>
+
+<div class="content" id="content">
+  <div class="empty-state">Pick your name above to see your upcoming shifts.</div>
+</div>
+
+<div class="download-bar" id="downloadBar" style="display:none;">
+  <button class="download-btn" id="downloadBtn">Add to Calendar</button>
+</div>
+
+<script>
+const DATA_URL = "https://edrosters.github.io/ed-roster-data/my_roster.json";
+let PEOPLE = [];
+let currentPerson = null;
+
+const select = document.getElementById('personSelect');
+const content = document.getElementById('content');
+const downloadBar = document.getElementById('downloadBar');
+const todayStr = new Date().toISOString().slice(0, 10);
+
+const DAY_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Purple',7:'Green',9:'Green'};
+const EVENING_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Green',7:'Purple',9:'Green'};
+const WED_ROLE = {x:'Wednesday Purple', y:'Wednesday Fast Track', z:'Wednesday OM'};
+const PERIOD_NAME = {d:'Day', s:'Swing', e:'Eve', n:'Night'};
+const REG_ROLE = {
+  d: {'1':'Purple','2':'Green','3':'Fast Track','4':'SSU','5':'Purple'},
+  s: {'1':'Green','2':'Purple','3':'Green','4':'Green','5':'Purple','6':'Purple'},
+  e: {'1':'Purple','2':'Green','3':'Fast Track','4':'Green','5':'Purple','6':'Fast Track','7':'Purple','8':'Green','9':'Purple','z':'Green','01':'Purple','02':'Green'},
+  n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track'},
+};
+const PERIOD_COLOR = {
+  d: {bg:'#FBF6D9', ink:'#A6942A'},
+  s: {bg:'#EAF6F0', ink:'#1E8F63'},
+  e: {bg:'#E3F2FB', ink:'#3B7EA8'},
+  n: {bg:'#F7E3DC', ink:'#A4462E'},
+};
+
+function decodeCode(raw, role) {
+  if (!raw) return null;
+  let lower = raw.toLowerCase();
+  let hasTraining = false;
+  if (lower.endsWith('-t')) { hasTraining = true; lower = lower.slice(0, -2); }
+  const withTraining = (result) => {
+    if (result && hasTraining) result.text += ' + Teaching';
+    return result;
+  };
+  if (lower === 'x' || lower === 'l' || lower === 'cl' || lower === 'sl' || lower === 'bl' || lower === 'el' || lower.startsWith('pl')) return null;
+  if (lower === '8') return withTraining({ text: 'CST', period: null });
+  if (lower === 'rt') return { text: 'Teaching', period: null };
+  if (PERIOD_NAME[lower]) return withTraining({ text: PERIOD_NAME[lower], period: lower });
+
+  let m = lower.match(/^d([xyz])$/);
+  if (m) return withTraining({ text: WED_ROLE[m[1]], period: 'd' });
+
+  m = lower.match(/^([dsen])(0?[0-9]{1,2}|z)([ac])?$/);
+  if (m) {
+    const period = m[1], num = m[2], suffix = m[3];
+    const onCall = suffix === 'c';
+    let text;
+    if (role === 'C' && period === 'd' && DAY_ROLE[num]) text = 'Day - ' + DAY_ROLE[num];
+    else if (role === 'C' && period === 'e' && EVENING_ROLE[num]) text = 'Eve - ' + EVENING_ROLE[num];
+    else if (role === 'R' && REG_ROLE[period] && REG_ROLE[period][num]) text = PERIOD_NAME[period] + ' - ' + REG_ROLE[period][num];
+    else text = PERIOD_NAME[period] + ' ' + num;
+    if (onCall) text += ' (On call)';
+    return withTraining({ text, period });
+  }
+  return { text: raw, period: null };
+}
+
+function personShiftMap(name, role) {
+  const rec = PEOPLE.find(p => p.n === name && p.r === role);
+  const map = {};
+  if (!rec) return map;
+  const dates = rec.d.split('|');
+  const codes = rec.v.split('|');
+  dates.forEach((d, i) => { map[d] = codes[i]; });
+  return map;
+}
+
+function fmtWeekday(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short' }); }
+function fmtDayNum(dateStr) { return new Date(dateStr + 'T00:00:00').getDate(); }
+function fmtMonAbbrev(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { month: 'short' }); }
+function fmtGroupLabel(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const t = new Date(todayStr + 'T00:00:00');
+  const diffDays = Math.round((d - t) / 86400000);
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays < 0) return 'Recent';
+  return d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'short' });
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function renderShifts() {
+  if (!currentPerson) {
+    content.innerHTML = '<div class="empty-state">Pick your name above to see your upcoming shifts.</div>';
+    downloadBar.style.display = 'none';
+    return;
+  }
+  const shiftMap = personShiftMap(currentPerson.n, currentPerson.r);
+  const dates = Object.keys(shiftMap).sort();
+
+  let html = '';
+  let lastGroupLabel = null;
+  let any = false;
+  dates.forEach(d => {
+    const decoded = decodeCode(shiftMap[d], currentPerson.r);
+    if (!decoded) return;
+    any = true;
+    const groupLabel = fmtGroupLabel(d);
+    if (groupLabel !== lastGroupLabel) {
+      html += '<div class="day-group-label">' + escapeHtml(groupLabel) + '</div>';
+      lastGroupLabel = groupLabel;
+    }
+    const colors = PERIOD_COLOR[decoded.period] || { bg: '#eef1fb', ink: '#2a3550' };
+    const isToday = d === todayStr;
+    html += '<div class="shift-card' + (isToday ? ' today' : '') + '">' +
+      '<div class="date-block"><div class="dow">' + fmtWeekday(d) + '</div>' +
+      '<div class="num">' + fmtDayNum(d) + '</div>' +
+      '<div class="mon">' + fmtMonAbbrev(d) + '</div></div>' +
+      '<div class="shift-info"><div class="shift-text" style="color:' + colors.ink + '">' + escapeHtml(decoded.text) + '</div></div>' +
+      '</div>';
+  });
+
+  content.innerHTML = any ? html : '<div class="empty-state">No upcoming shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
+  downloadBar.style.display = any ? 'block' : 'none';
+}
+
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+function icsEscape(s) { return String(s).replace(/([,;])/g, '\\$1'); }
+
+function buildICS(person) {
+  const shiftMap = personShiftMap(person.n, person.r);
+  const dates = Object.keys(shiftMap).sort();
+  const now = new Date();
+  const stamp = now.getUTCFullYear() + pad2(now.getUTCMonth() + 1) + pad2(now.getUTCDate()) +
+    'T' + pad2(now.getUTCHours()) + pad2(now.getUTCMinutes()) + pad2(now.getUTCSeconds()) + 'Z';
+  let lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//My Shifts//EN', 'CALSCALE:GREGORIAN'];
+
+  const SHIFT_TIMES = { d: ['08:00','17:30',false], s: ['11:00','20:30',false], e: ['14:30','00:00',true], n: ['23:00','08:30',true] };
+
+  dates.forEach((dateStr, i) => {
+    const decoded = decodeCode(shiftMap[dateStr], person.r);
+    if (!decoded) return;
+    const dateCompact = dateStr.replace(/-/g, '');
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + dateCompact + '-' + i + '-myshifts@rostercal');
+    lines.push('DTSTAMP:' + stamp);
+
+    let times = decoded.period ? SHIFT_TIMES[decoded.period] : null;
+    if (decoded.period === 'e' && person.r === 'C' && /e1/i.test(decoded.text)) times = ['15:30','01:00',true];
+
+    if (times) {
+      const startCompact = dateCompact + 'T' + times[0].replace(':','') + '00';
+      const endDateObj = new Date(dateStr + 'T00:00:00');
+      if (times[2]) endDateObj.setDate(endDateObj.getDate() + 1);
+      const endCompact = endDateObj.getFullYear() + pad2(endDateObj.getMonth()+1) + pad2(endDateObj.getDate()) + 'T' + times[1].replace(':','') + '00';
+      lines.push('DTSTART:' + startCompact);
+      lines.push('DTEND:' + endCompact);
+    } else {
+      const nextDay = new Date(dateStr + 'T00:00:00');
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextCompact = nextDay.getFullYear() + pad2(nextDay.getMonth()+1) + pad2(nextDay.getDate());
+      lines.push('DTSTART;VALUE=DATE:' + dateCompact);
+      lines.push('DTEND;VALUE=DATE:' + nextCompact);
+    }
+    lines.push('SUMMARY:' + icsEscape(decoded.text));
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (!currentPerson) return;
+  const ics = buildICS(currentPerson);
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = currentPerson.n.replace(/[^a-z0-9]/gi, '_') + '-shifts.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+select.addEventListener('change', () => {
+  if (!select.value) { currentPerson = null; renderShifts(); return; }
+  const [name, role] = select.value.split('|');
+  currentPerson = { n: name, r: role };
+  renderShifts();
+});
+
+async function loadRoster() {
+  try {
+    const res = await fetch(DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    PEOPLE = await res.json();
+
+    const prevValue = select.value;
+    select.innerHTML = '<option value="">Choose your name...</option>';
+    const consultants = PEOPLE.filter(p => p.r === 'C').sort((a, b) => a.n.localeCompare(b.n));
+    const registrars = PEOPLE.filter(p => p.r === 'R').sort((a, b) => a.n.localeCompare(b.n));
+    [['Consultants', consultants], ['Registrars', registrars]].forEach(([label, list]) => {
+      const group = document.createElement('optgroup');
+      group.label = label;
+      list.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.n + '|' + p.r;
+        opt.textContent = p.n;
+        group.appendChild(opt);
+      });
+      select.appendChild(group);
+    });
+    if (prevValue) select.value = prevValue;
+  } catch (err) {
+    console.error('Roster load error:', err);
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+loadRoster();
+renderShifts();
+setInterval(loadRoster, 5 * 60 * 1000);
+</script>
+</body>
+</html>

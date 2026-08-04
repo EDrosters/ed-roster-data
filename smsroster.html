@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SMS Roster</title>
+<meta name="theme-color" content="#C97A1E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SMS Roster">
+<link rel="manifest" href="smsroster-manifest.json">
+<link rel="apple-touch-icon" href="icons/smsroster-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #f0f2f6;
+    --ink: #1b2130;
+    --ink-soft: #4b5262;
+    --ink-faint: #838a99;
+    --line: #e6e8ee;
+    --accent: #C97A1E;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--canvas);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top) + 0.9rem) 1.1rem 0.9rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+  }
+  .date-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  input#dateInput {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  input#dateInput::-webkit-calendar-picker-indicator { filter: invert(1); }
+  .nav-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .nav-btn:active { background: rgba(255,255,255,0.3); }
+
+  .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
+  .empty-state { text-align: center; color: var(--ink-faint); padding: 3rem 1rem; font-size: 0.95rem; }
+
+  .shift-block {
+    border-radius: 12px;
+    padding: 0.9rem 1rem 1rem;
+    margin-bottom: 0.9rem;
+    background: var(--shiftbg);
+    border-left: 4px solid var(--shiftaccent);
+  }
+  .shift-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--shiftaccent);
+    margin-bottom: 0.5rem;
+  }
+  .zone-card {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  .zone-card:last-child { margin-bottom: 0; }
+  .zone-banner {
+    padding: 0.4rem 0.8rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #fff;
+  }
+  .role-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    border-top: 1px solid #f1f1f4;
+    font-size: 0.88rem;
+  }
+  .role-row:first-of-type { border-top: none; }
+  .role-name { color: var(--ink-faint); font-weight: 500; flex-shrink: 0; }
+  .role-people { color: var(--ink); font-weight: 600; text-align: right; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SMS Roster</h1>
+  <div class="date-row">
+    <button class="nav-btn" id="prevBtn">&#8249;</button>
+    <input type="date" id="dateInput">
+    <button class="nav-btn" id="nextBtn">&#8250;</button>
+  </div>
+</header>
+
+<div class="content" id="content">
+  <div class="empty-state">Loading roster...</div>
+</div>
+
+<script>
+const DATA_URL = "https://edrosters.github.io/ed-roster-data/consultant_roster.json";
+let PERIODS = [];
+
+const dateInput = document.getElementById('dateInput');
+const content = document.getElementById('content');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+const DAY_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Purple',7:'Green',9:'Green'};
+const EVENING_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Green',7:'Purple',9:'Green'};
+const WED_ROLE = {x:'Wednesday Purple', y:'Wednesday Fast Track', z:'Wednesday OM'};
+const PERIOD_NAME = {d:'Day', s:'Swing', e:'Eve', n:'Night'};
+const SHIFT_ACCENTS = { d: '#C97A1E', s: '#1E8F63', e: '#4553C4', n: '#2B3A55' };
+const SHIFT_BG = { d: '#FCF3E7', s: '#EAF6F0', e: '#EEF0FC', n: '#EAECF1' };
+const ZONE_DOT = { epic:'#D6423C', purple:'#8A6BB0', green:'#28B065', 'fast track':'#5B8FC7', ssu:'#D57BC4' };
+
+function decodeCode(raw) {
+  if (!raw) return null;
+  let lower = raw.toLowerCase();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  if (lower === 'x' || lower === 'l' || lower === '8' || lower === 'rt' || lower === 'cl' || lower === 'sl' || lower === 'bl' || lower === 'el' || lower.startsWith('pl')) return null;
+  if (PERIOD_NAME[lower]) return null; // bare D/S/E/N with no zone - not useful for this view
+
+  let m = lower.match(/^d([xyz])$/);
+  if (m) return { role: WED_ROLE[m[1]], period: 'd', zone: 'Other' };
+
+  m = lower.match(/^([dsen])(0?[0-9]{1,2})([ac])?$/);
+  if (m) {
+    const period = m[1], num = m[2], onCall = m[3] === 'c';
+    let zone = null;
+    if (period === 'd' && DAY_ROLE[num]) zone = DAY_ROLE[num];
+    else if (period === 'e' && EVENING_ROLE[num]) zone = EVENING_ROLE[num];
+    if (!zone) return null;
+    return { role: 'Consultant' + (onCall ? ' (On call)' : ''), period, zone };
+  }
+  return null;
+}
+
+function zoneKey(z) { return z.trim().toLowerCase(); }
+function zoneDot(z) { return ZONE_DOT[zoneKey(z)] || '#9aa1ab'; }
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function periodFor(dt) {
+  return PERIODS.find(p => p.c.length && dt >= p.s && dt <= p.e);
+}
+
+function renderDate(dt) {
+  const period = periodFor(dt);
+  if (!period) {
+    content.innerHTML = '<div class="empty-state">No roster data available for this date.</div>';
+    return;
+  }
+  const idx = period.d.split('|').indexOf(dt);
+  if (idx === -1) {
+    content.innerHTML = '<div class="empty-state">No roster data available for this date.</div>';
+    return;
+  }
+
+  // shift -> zone -> role -> [names]
+  const shifts = {};
+  period.c.forEach(person => {
+    const code = person.v.split('|')[idx];
+    const decoded = decodeCode(code);
+    if (!decoded) return;
+    const s = shifts[decoded.period] || (shifts[decoded.period] = {});
+    const z = s[decoded.zone] || (s[decoded.zone] = {});
+    const r = z[decoded.role] || (z[decoded.role] = []);
+    if (!r.includes(person.n)) r.push(person.n);
+  });
+
+  const order = ['d', 's', 'e', 'n'];
+  let html = '';
+  let any = false;
+  order.forEach(periodKey => {
+    const zones = shifts[periodKey];
+    if (!zones) return;
+    any = true;
+    html += '<div class="shift-block" style="--shiftaccent:' + SHIFT_ACCENTS[periodKey] + ';--shiftbg:' + SHIFT_BG[periodKey] + '">' +
+      '<div class="shift-name">' + PERIOD_NAME[periodKey] + '</div>';
+    Object.keys(zones).forEach(zoneName => {
+      html += '<div class="zone-card"><div class="zone-banner" style="background:' + zoneDot(zoneName) + '">' + escapeHtml(zoneName) + '</div>';
+      Object.keys(zones[zoneName]).forEach(roleName => {
+        html += '<div class="role-row"><span class="role-name">' + escapeHtml(roleName) + '</span>' +
+          '<span class="role-people">' + zones[zoneName][roleName].map(n => escapeHtml(n)).join('<br>') + '</span></div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  content.innerHTML = any ? html : '<div class="empty-state">No consultant zone assignments found for this date.</div>';
+}
+
+function shiftDate(days) {
+  const d = new Date(dateInput.value + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  dateInput.value = d.toISOString().slice(0, 10);
+  renderDate(dateInput.value);
+}
+
+dateInput.addEventListener('change', () => renderDate(dateInput.value));
+prevBtn.addEventListener('click', () => shiftDate(-1));
+nextBtn.addEventListener('click', () => shiftDate(1));
+
+async function loadRoster() {
+  try {
+    const res = await fetch(DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    PERIODS = await res.json();
+    if (!dateInput.value) {
+      dateInput.value = new Date().toISOString().slice(0, 10);
+    }
+    renderDate(dateInput.value);
+  } catch (err) {
+    console.error('Roster load error:', err);
+    content.innerHTML = '<div class="empty-state">Unable to load roster data. Pull to refresh or try again shortly.</div>';
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+loadRoster();
+setInterval(loadRoster, 5 * 60 * 1000);
+</script>
+</body>
+</html>

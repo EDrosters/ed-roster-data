@@ -1,0 +1,15 @@
+{
+  "name": "Reg Roster",
+  "short_name": "Reg Roster",
+  "description": "Registrar roster by date",
+  "start_url": "regroster.html",
+  "scope": "regroster.html",
+  "display": "standalone",
+  "background_color": "#f0f2f6",
+  "theme_color": "#1E8F63",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/regroster-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/regroster-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

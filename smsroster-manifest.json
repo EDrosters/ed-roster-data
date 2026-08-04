@@ -1,0 +1,15 @@
+{
+  "name": "SMS Roster",
+  "short_name": "SMS Roster",
+  "description": "Consultant (SMS) roster by date",
+  "start_url": "smsroster.html",
+  "scope": "smsroster.html",
+  "display": "standalone",
+  "background_color": "#f0f2f6",
+  "theme_color": "#C97A1E",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icons/smsroster-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/smsroster-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
