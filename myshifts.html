@@ -120,6 +120,17 @@
   }
   .day-group-label:first-child { margin-top: 0; }
 
+  .site-link {
+    text-align: center;
+    padding: 0.5rem 1rem 1.5rem;
+  }
+  .site-link a {
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+  .site-link a:active { color: var(--accent); }
+
   .download-bar {
     position: sticky;
     bottom: 0;
@@ -151,6 +162,8 @@
 <div class="content" id="content">
   <div class="empty-state">Pick your name above to see your upcoming shifts.</div>
 </div>
+
+<div class="site-link"><a href="https://edrosters.com" target="_blank" rel="noopener">edrosters.com</a></div>
 
 <div class="download-bar" id="downloadBar" style="display:none;">
   <button class="download-btn" id="downloadBtn">Add to Calendar</button>
