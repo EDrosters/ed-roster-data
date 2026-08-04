@@ -385,10 +385,18 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+const STORAGE_KEY = 'myShifts.selectedPerson';
+
 select.addEventListener('change', () => {
-  if (!select.value) { currentPerson = null; renderShifts(); return; }
+  if (!select.value) {
+    currentPerson = null;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    renderShifts();
+    return;
+  }
   const [name, role] = select.value.split('|');
   currentPerson = { n: name, r: role };
+  try { localStorage.setItem(STORAGE_KEY, select.value); } catch (e) {}
   renderShifts();
 });
 
@@ -398,7 +406,10 @@ async function loadRoster() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     PEOPLE = await res.json();
 
-    const prevValue = select.value;
+    let prevValue = select.value;
+    if (!prevValue) {
+      try { prevValue = localStorage.getItem(STORAGE_KEY) || ''; } catch (e) { prevValue = ''; }
+    }
     select.innerHTML = '<option value="">Choose your name...</option>';
     const consultants = PEOPLE.filter(p => p.r === 'C').sort((a, b) => a.n.localeCompare(b.n));
     const registrars = PEOPLE.filter(p => p.r === 'R').sort((a, b) => a.n.localeCompare(b.n));
@@ -413,7 +424,14 @@ async function loadRoster() {
       });
       select.appendChild(group);
     });
-    if (prevValue) select.value = prevValue;
+    if (prevValue && [...select.options].some(o => o.value === prevValue)) {
+      select.value = prevValue;
+      if (!currentPerson) {
+        const [name, role] = prevValue.split('|');
+        currentPerson = { n: name, r: role };
+        renderShifts();
+      }
+    }
   } catch (err) {
     console.error('Roster load error:', err);
   }
