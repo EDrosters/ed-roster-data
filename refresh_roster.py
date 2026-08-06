@@ -15,6 +15,7 @@ Runs in GitHub Actions on a schedule. Steps:
 import os, re, sys, json, base64
 from io import BytesIO
 from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 
 import requests
 import openpyxl
@@ -29,8 +30,17 @@ GH_REPOSITORY = os.environ.get("GITHUB_REPOSITORY")   # auto-set by Actions, e.g
 
 ROSTER_FILENAME_SEARCH = os.environ.get("ROSTER_FILENAME", "Master Roster")
 
-TODAY = date.today().isoformat()
-TOMORROW = (date.today() + timedelta(days=1)).isoformat()
+MELBOURNE_TZ = ZoneInfo("Australia/Melbourne")
+
+def local_today():
+    """Melbourne's current calendar date - NOT the server's UTC date.
+    GitHub Actions runners run on UTC, and Melbourne is 10-11 hours ahead,
+    so using the server's own date.today() would show yesterday's roster
+    for several hours every morning."""
+    return datetime.now(MELBOURNE_TZ).date()
+
+TODAY = local_today().isoformat()
+TOMORROW = (local_today() + timedelta(days=1)).isoformat()
 
 # ============================================================
 # STEP 1 - Refresh the access token (and rotate the stored secret)
@@ -766,13 +776,16 @@ def build_my_roster_data(consultant_periods, registrar_periods):
                 if code and d:
                     bucket[d] = code
 
-    window_start = (date.today() - timedelta(days=30)).isoformat()
+    window_start = (local_today() - timedelta(days=30)).isoformat()
 
     def pack(name_dict, role):
         out = []
         for name, shifts in sorted(name_dict.items()):
             items = sorted((d, c) for d, c in shifts.items() if d >= window_start)
             if not items:
+                continue
+            has_real_shift = any(c.strip().lower() != "x" for _, c in items)
+            if not has_real_shift:
                 continue
             out.append({
                 "n": name, "r": role,
@@ -858,7 +871,7 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
 
         return {"d": "|".join(dates), "oncall": "|".join(oncall), "shifts": shifts}
 
-    today = date.today()
+    today = local_today()
     monday_start = today - timedelta(days=today.weekday())
 
     weeks = []
