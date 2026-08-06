@@ -530,12 +530,6 @@
             "zone": "Purple",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "Marina Guertin"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Liu Alfred (PEM)",
