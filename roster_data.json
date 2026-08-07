@@ -600,6 +600,17 @@
                 ]
               }
             ]
+          },
+          {
+            "zone": "Rapid Stay",
+            "roles": [
+              {
+                "role": "JMO",
+                "names": [
+                  "Jasmine Chan"
+                ]
+              }
+            ]
           }
         ]
       },
