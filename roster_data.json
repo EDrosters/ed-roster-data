@@ -43,7 +43,8 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Ben McKenzie"
+                  "Ben McKenzie",
+                  "Bjorn Makein"
                 ]
               },
               {
@@ -121,17 +122,6 @@
                 "role": "JMO",
                 "names": [
                   "Calum Haggett (PGY4)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Unallocated",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Bjorn Makein"
                 ]
               }
             ]
