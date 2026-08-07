@@ -70,6 +70,9 @@
 
   .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
   .empty-state { text-align: center; color: var(--ink-faint); padding: 3rem 1rem; font-size: 0.95rem; }
+  .site-link { text-align: center; padding: 0.5rem 1rem 1.5rem; }
+  .site-link a { color: var(--ink-faint); font-size: 0.8rem; text-decoration: none; }
+  .site-link a:active { color: var(--accent); }
 
   .shift-block {
     border-radius: 12px;
@@ -126,6 +129,8 @@
   <div class="empty-state">Loading roster...</div>
 </div>
 
+<div class="site-link"><a href="https://edrosters.com" target="_blank" rel="noopener">edrosters.com</a></div>
+
 <script>
 const DATA_URL = "https://edrosters.github.io/ed-roster-data/registrar_roster.json";
 let TERMS = [];
@@ -142,7 +147,7 @@ const REG_ROLE = {
   d: {'1':'Purple','2':'Green','3':'Fast Track','4':'SSU','5':'Purple'},
   s: {'1':'Green','2':'Purple','3':'Green','4':'Green','5':'Purple','6':'Purple'},
   e: {'1':'Purple','2':'Green','3':'Fast Track','4':'Green','5':'Purple','6':'Fast Track','7':'Purple','8':'Green','9':'Purple','z':'Green','01':'Purple','02':'Green'},
-  n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track'},
+  n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track','6':'Purple'},
 };
 const ZONE_DOT = { eric:'#D6423C', purple:'#8A6BB0', green:'#28B065', 'fast track':'#5B8FC7', ssu:'#D57BC4' };
 
