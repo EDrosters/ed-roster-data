@@ -387,12 +387,29 @@ def extract_all_registrars(wb):
 
 
 def build_date_col_map(ws, date_row, col_start=2, col_end=200):
+    """Some sheets repeat the same calendar date in more than one column
+    (a duplicate/leftover week block). The first occurrence consistently
+    holds the real data and later duplicates are blank, so keep the first
+    one found rather than letting a later duplicate silently overwrite it."""
     m = {}
     for c in range(col_start, col_end):
         v = ws.cell(row=date_row, column=c).value
         if isinstance(v, datetime):
-            m[v.strftime("%Y-%m-%d")] = c
+            key = v.strftime("%Y-%m-%d")
+            if key not in m:
+                m[key] = c
     return m
+
+def is_legend_row(name):
+    """Some sheets embed a code legend/reference table below the real staff
+    list (e.g. 'Role/Code', 'DO1 (SSU 1-12)', 'D = 0800 - 1630'). These aren't
+    real people - stop scanning as soon as one is hit."""
+    low = name.strip().lower()
+    if low == "role/code":
+        return True
+    if " = " in name:
+        return True
+    return False
 
 def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
     people = {}
@@ -400,6 +417,8 @@ def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
         name = fmt_code(ws.cell(row=r, column=name_col).value)
         if not name:
             continue
+        if is_legend_row(name):
+            break
         codes = {}
         for date_str, col in date_col_map.items():
             code = fmt_code(ws.cell(row=r, column=col).value)
@@ -553,7 +572,11 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         for name, codes in jmo_people.items():
             raw = codes.get(dt, "")
             if raw and strip_suffix(raw).lower() == target:
-                return name
+                core = raw.strip().lower()
+                if core.endswith("-t"):
+                    core = core[:-2]
+                has_p = core.endswith("p")
+                return ("~" + name) if has_p else name
         return ""
 
     def npamp_lookup(dt, shift_name, people_dict):
