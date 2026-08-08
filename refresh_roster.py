@@ -564,7 +564,7 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         for c in p["c"]:
             codes = c["v"].split("|")
             if idx < len(codes) and strip_suffix(codes[idx]).lower() == target:
-                return reverse_registrar_name(c["n"])
+                return c["n"]
         return ""
 
     def jmo_lookup(dt, code):
@@ -651,7 +651,7 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
                     continue
                 period = code_period(stripped)
                 if period:
-                    result["Registrars"].setdefault(period, []).append(reverse_registrar_name(c["n"]))
+                    result["Registrars"].setdefault(period, []).append(c["n"])
         return result
 
     return SimpleNamespace(
