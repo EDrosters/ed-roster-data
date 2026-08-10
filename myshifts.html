@@ -379,7 +379,8 @@ function buildICS(person) {
     lines.push('DTSTAMP:' + stamp);
 
     let times = decoded.period ? SHIFT_TIMES[decoded.period] : null;
-    if (decoded.period === 'e' && person.r === 'C' && /e1/i.test(decoded.text)) times = ['15:30','01:00',true];
+    const rawLower = (shiftMap[dateStr] || '').trim().toLowerCase();
+    if (decoded.period === 'e' && person.r === 'C' && /^e1[ac]?(-t)?$/.test(rawLower)) times = ['15:30','01:00',true];
 
     if (times) {
       const startCompact = dateCompact + 'T' + times[0].replace(':','') + '00';
