@@ -436,9 +436,9 @@ def extract_jmo_np(wb):
     np_dates = build_date_col_map(ws_np, 1, 2, 70)
     np_people = extract_name_rows(ws_np, np_dates, 1, 3, 40)
 
-    ws_amp = wb["AMP2"]
-    amp_dates = build_date_col_map(ws_amp, 2, 2, 65)
-    amp_people = extract_name_rows(ws_amp, amp_dates, 1, 3, 22)
+    # AMP2 tab was renamed/merged into "AMP 2026" - reuse the same
+    # self-correcting extraction used for the standalone AMP Roster page.
+    amp_people = extract_amp2026(wb)
 
     return jmo_people, np_people, amp_people
 
