@@ -697,7 +697,10 @@ def build_today_data(consultant_periods, registrar_periods, jmo_people, np_peopl
                     if name:
                         entry["top_notes"].append(["FACEM on Call, " + meta["time"], name])
                 else:
-                    name = facem_oncall_lookup(dt, which)
+                    # This note is grouped under "Night" (which spans into the
+                    # following morning), so the 0430-0800 slot belongs to
+                    # whoever is on call for the FOLLOWING day, not this one.
+                    name = facem_oncall_lookup(next_day(dt), which)
                     if name:
                         pending_day_facem_note = ["FACEM on Call, " + meta["time"], name]
                 continue
