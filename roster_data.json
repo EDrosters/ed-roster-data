@@ -227,12 +227,6 @@
                 ]
               },
               {
-                "role": "Registrars",
-                "names": [
-                  "Emma Watkinson (u)"
-                ]
-              },
-              {
                 "role": "Nurse Prac",
                 "names": [
                   "Alex Sepulveda"
@@ -307,12 +301,23 @@
             ]
           },
           {
+            "zone": "Green",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Anthony Wishart (TS4 IC)"
+                ]
+              }
+            ]
+          },
+          {
             "zone": "Fast Track",
             "roles": [
               {
                 "role": "Registrars",
                 "names": [
-                  "Lara Knowles (TS2)"
+                  "Emma Watkinson (u)"
                 ]
               },
               {
@@ -326,12 +331,6 @@
           {
             "zone": "SSU/HUB",
             "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Anthony Wishart (TS4 IC)"
-                ]
-              },
               {
                 "role": "JMO",
                 "names": [
