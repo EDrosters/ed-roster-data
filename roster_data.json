@@ -110,8 +110,7 @@
                 "role": "JMO",
                 "names": [
                   "Meg Wark (PGY1)",
-                  "Lawrence Lin (PGY1)",
-                  "Francis Grant (PGY4)"
+                  "Lawrence Lin (PGY1)"
                 ]
               }
             ]
@@ -319,12 +318,6 @@
                 "names": [
                   "Lara Knowles (TS2)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Clare Leslie (PGY3)"
-                ]
               }
             ]
           },
@@ -401,6 +394,12 @@
                 "role": "Registrars",
                 "names": [
                   "Nathan Clinton (TS4 IC)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "~Stephenie Pillainayagam (ED PGY3)"
                 ]
               }
             ]
