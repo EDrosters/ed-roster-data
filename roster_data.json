@@ -307,17 +307,6 @@
             ]
           },
           {
-            "zone": "Green",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Daniel Coghill (TS4 IC)"
-                ]
-              }
-            ]
-          },
-          {
             "zone": "Fast Track",
             "roles": [
               {
@@ -674,12 +663,6 @@
           {
             "zone": "Fast Track",
             "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Daniel Coghill (TS4 IC)"
-                ]
-              },
               {
                 "role": "JMO",
                 "names": [
