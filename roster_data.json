@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Monday 17 August",
     "oncall": "Nick Hooper",
-    "comment": "Stephenie Pillainayagam - nightshift (NA1) HMO P'Leave, MWU to confirm backfill",
+    "comment": "Stephenie Pillainayagam - nightshift (NA1) HMO P'Leave.  MWU confirmed Kirsten Hunt backfilling.",
     "shifts": [
       {
         "name": "Day",
@@ -306,6 +306,12 @@
                 "role": "Registrars",
                 "names": [
                   "Stacey Lo (TS1)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Kirsten Hunt"
                 ]
               }
             ]
