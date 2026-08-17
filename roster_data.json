@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Monday 17 August",
     "oncall": "Nick Hooper",
-    "comment": "",
+    "comment": "Stephenie Pillainayagam - nightshift HMP P'Leave, MWU to confirm backfill",
     "shifts": [
       {
         "name": "Day",
@@ -306,12 +306,6 @@
                 "role": "Registrars",
                 "names": [
                   "Stacey Lo (TS1)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Stephenie Pillainayagam (ED PGY3)"
                 ]
               }
             ]
