@@ -327,7 +327,7 @@
   "panel2": {
     "date": "Thursday 20 August",
     "oncall": "Sarah Whitelaw",
-    "comment": "",
+    "comment": "Ben Pang - HMO day shift (P/L)",
     "shifts": [
       {
         "name": "Day",
@@ -400,12 +400,6 @@
                 "role": "Adv Musc Physio",
                 "names": [
                   "Alice Wilcox"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Ben Pang (PGY6)"
                 ]
               }
             ]
