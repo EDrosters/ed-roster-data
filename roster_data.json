@@ -535,12 +535,6 @@
                   "Lynn Moreau (TS4 IC)",
                   "Alison Huynh (TS4 IC)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Stephenie Pillainayagam (ED PGY3)"
-                ]
               }
             ]
           },
@@ -582,6 +576,17 @@
                   "Safwan Aziz (PGY1)",
                   "Teresa Heath (PGY1)",
                   "Jeff Wong (PGY5)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Rapid Stay",
+            "roles": [
+              {
+                "role": "JMO",
+                "names": [
+                  "Stephenie Pillainayagam (ED PGY3)"
                 ]
               }
             ]
