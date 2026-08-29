@@ -270,12 +270,6 @@
                 "names": [
                   "Giovanni Naselli (TS2)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Chris Harmer (PGY4)"
-                ]
               }
             ]
           },
@@ -286,6 +280,12 @@
                 "role": "Registrars",
                 "names": [
                   "Aislinn Begley (TS3)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Chris Harmer (PGY4)"
                 ]
               }
             ]
@@ -618,12 +618,6 @@
                 "names": [
                   "Mark Aicken (TS3)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Shaifali Kulkarni (ED PGY4)"
-                ]
               }
             ]
           },
@@ -634,6 +628,12 @@
                 "role": "Registrars",
                 "names": [
                   "Ahmed Al'khshali (TS3)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Shaifali Kulkarni (ED PGY4)"
                 ]
               }
             ]
