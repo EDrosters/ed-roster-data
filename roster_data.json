@@ -538,7 +538,6 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Sam Samour (TS2)",
                   "Chloe Doran (EP)"
                 ]
               },
@@ -673,6 +672,17 @@
                 "role": "JMO",
                 "names": [
                   "Stephenie Pillainayagam (ED PGY3)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Sam Samour (TS2)"
                 ]
               }
             ]
