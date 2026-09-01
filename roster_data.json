@@ -226,12 +226,6 @@
             "zone": "Fast Track",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "James Then"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Fiona Macdonald (u)"
@@ -248,6 +242,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "James Then"
+                ]
+              },
               {
                 "role": "JMO",
                 "names": [
@@ -413,7 +413,8 @@
                 "role": "Consultants",
                 "names": [
                   "Brendon McCarthy",
-                  "Gordon Carter"
+                  "Gordon Carter",
+                  "Alex Paspaliaris"
                 ]
               },
               {
@@ -473,17 +474,6 @@
                   "Katherine Wang (PGY1)",
                   "Teresa Heath (PGY1)",
                   "Tomas Arvanitis (PGY2)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Unallocated",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Alex Paspaliaris"
                 ]
               }
             ]
