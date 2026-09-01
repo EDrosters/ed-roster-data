@@ -1,7 +1,7 @@
 {
   "panel1": {
     "date": "Tuesday 01 September",
-    "oncall": "Nick Hooper",
+    "oncall": "Sarah Whitelaw",
     "comment": "",
     "shifts": [
       {
@@ -145,7 +145,6 @@
                 "role": "Registrars",
                 "names": [
                   "Stacey Lo (TS1)",
-                  "Sophie Tighe (PEM)",
                   "Ben Wingrove (TS3)"
                 ]
               }
