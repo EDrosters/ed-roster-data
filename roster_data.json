@@ -1,7 +1,7 @@
 {
   "panel1": {
     "date": "Wednesday 02 September",
-    "oncall": "Nicki Walsham",
+    "oncall": "Nick Hooper",
     "comment": "Will Bush - nurse practitioner observer 0800-1630; Maria Neilsen Scott (PGY3) - green cubicles HMO",
     "shifts": [
       {
@@ -476,7 +476,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Dominic Gavin (TS3)"
+                  "Matthew Bray (TS4 IC)"
                 ]
               }
             ]
@@ -488,7 +488,6 @@
                 "role": "Registrars",
                 "names": [
                   "Sean Ivory (TS4 IC)",
-                  "Kathleen Malcher (TS4 IC)",
                   "Jaimee Warren (TS3)"
                 ]
               }
