@@ -471,6 +471,17 @@
         "top_notes": [],
         "zones": [
           {
+            "zone": "Purple",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Manny Karpathakis (CMO)"
+                ]
+              }
+            ]
+          },
+          {
             "zone": "Green",
             "roles": [
               {
