@@ -114,17 +114,6 @@
                 ]
               }
             ]
-          },
-          {
-            "zone": "Rapid Stay",
-            "roles": [
-              {
-                "role": "JMO",
-                "names": [
-                  "~Laurence Forsyth (PGY4)"
-                ]
-              }
-            ]
           }
         ]
       },
@@ -562,12 +551,6 @@
                   "Ben Wingrove (TS3)",
                   "Mark Douglas (TS4 IC)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Chris Harmer (PGY4)"
-                ]
               }
             ]
           },
@@ -608,7 +591,7 @@
                 "names": [
                   "Rika An (PGY1)",
                   "Thomas Sutherland (PGY1)",
-                  "Laurence Forsyth (PGY4)"
+                  "Chris Harmer (PGY4)"
                 ]
               }
             ]
