@@ -378,8 +378,7 @@
                 "role": "Consultants",
                 "names": [
                   "Yigal Reuben",
-                  "Dan Hanna",
-                  "Nicki Walsham"
+                  "Dan Hanna"
                 ]
               },
               {
@@ -488,6 +487,17 @@
                   "Nadia Kamil (u)",
                   "Amanda Chong-Halliday (TS3)",
                   "Fiona Macdonald (u)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Unallocated",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Nicki Walsham"
                 ]
               }
             ]
