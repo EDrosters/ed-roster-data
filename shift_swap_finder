@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Find a Swap</title>
+<meta name="theme-color" content="#4553C4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #f0f2f6;
+    --ink: #1b2130;
+    --ink-soft: #4b5262;
+    --ink-faint: #838a99;
+    --line: #e6e8ee;
+    --accent: #4553C4;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--canvas);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: calc(env(safe-area-inset-top) + 0.9rem) 1.1rem 0.9rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+  }
+  header .backlink {
+    display: inline-block;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.8rem;
+    text-decoration: none;
+    margin-bottom: 0.35rem;
+  }
+  select#personSelect {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  select#personSelect option { color: #1b2130; }
+
+  .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
+
+  .empty-state {
+    text-align: center;
+    color: var(--ink-faint);
+    padding: 3rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .day-group-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    margin: 1.1rem 0 0.4rem 0.2rem;
+  }
+  .day-group-label:first-child { margin-top: 0; }
+
+  .shift-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    color: inherit;
+  }
+  .shift-card:active { background: #f3f4f8; }
+  .chevron { color: var(--ink-faint); font-size: 1.3rem; flex-shrink: 0; margin-left: auto; }
+  .date-block { min-width: 48px; text-align: center; flex-shrink: 0; }
+  .date-block .dow { font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; }
+  .date-block .num { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+  .date-block .mon { font-size: 0.68rem; color: var(--ink-faint); font-weight: 600; }
+  .shift-info { flex: 1; min-width: 0; }
+  .shift-text { font-weight: 700; font-size: 0.95rem; }
+  .shift-sub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.15rem; }
+
+  .detail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    background: none;
+    border: none;
+    padding: 0.3rem 0;
+    margin-bottom: 0.6rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .summary-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
+    outline: 2px solid var(--accent);
+  }
+  .summary-card .label { font-size: 0.72rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
+  .summary-card .main { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; margin-top: 0.2rem; }
+
+  .tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+  .tab-btn {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.6rem 0;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .tab-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .controls { background: #fff; border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1rem; }
+  .field { margin-bottom: 0.7rem; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 0.3rem; }
+  .field select {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+  .checkrow { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.5rem; }
+
+  .type-toggles { display: flex; gap: 0.4rem; }
+  .type-toggle {
+    flex: 1;
+    text-align: center;
+    padding: 0.45rem 0;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--ink-faint);
+    background: #fff;
+  }
+  .type-toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .search-btn {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+  .search-btn:active { opacity: 0.85; }
+
+  .option-card { background: #fff; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); display: flex; align-items: center; gap: 0.9rem; }
+  .type-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 6px; display: inline-block; }
+  .option-info { flex: 1; }
+  .option-partner { font-weight: 700; font-size: 0.92rem; }
+  .option-meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
+  .flag { font-size: 0.7rem; color: #A6942A; background: #FBF6D9; padding: 0.1rem 0.4rem; border-radius: 5px; margin-left: 0.4rem; }
+
+  .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); }
+  .taker-chip .name { font-weight: 700; font-size: 0.92rem; }
+  .taker-chip .meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
+
+  .actions-row { margin-top: 0.6rem; margin-bottom: 1.5rem; }
+  .ghost-btn {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.55rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .site-link { text-align: center; padding: 0.5rem 1rem 1.5rem; }
+  .site-link a { color: var(--ink-faint); font-size: 0.8rem; text-decoration: none; }
+
+  .status-msg { font-size: 0.85rem; color: var(--ink-faint); text-align: center; padding: 0.6rem 0; }
+</style>
+</head>
+<body>
+<header>
+  <a class="backlink" href="myshifts.html">&larr; My Shifts</a>
+  <h1>Find a Swap</h1>
+  <select id="personSelect">
+    <option value="">Choose your name...</option>
+  </select>
+</header>
+
+<div class="content" id="content">
+  <div class="empty-state">Pick your name above to see your upcoming shifts.</div>
+</div>
+
+<div class="site-link"><a href="https://edrosters.com" target="_blank" rel="noopener">edrosters.com</a></div>
+
+<script>
+const DATA_URL = "https://edrosters.github.io/ed-roster-data/my_roster.json";
+const STORAGE_KEY = 'myShifts.selectedPerson';
+let PEOPLE = [];
+let currentPerson = null;   // { n, r }
+let selectedShift = null;   // { date, code, period, text }
+let activeTab = 'swap';
+let excludeTypeSet = new Set();
+const todayStr = new Date().toISOString().slice(0, 10);
+
+// ---------------------------------------------------------------------
+// Roster decoding — ported directly from myshifts.html so this page
+// reads shift codes exactly the same way as the roster app does.
+// ---------------------------------------------------------------------
+const DAY_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Purple',7:'Green',9:'Green'};
+const EVENING_ROLE = {1:'EPIC',2:'Purple',3:'Green',4:'Fast Track',5:'SSU',6:'Green',7:'Purple',9:'Green'};
+const WED_ROLE = {x:'Wednesday Purple', y:'Wednesday Fast Track', z:'Wednesday OM'};
+const PERIOD_NAME = {d:'Day', s:'Swing', e:'Eve', n:'Night'};
+const REG_ROLE = {
+  d: {'1':'Purple','2':'Green','3':'Fast Track','4':'SSU','5':'Purple'},
+  s: {'1':'Green','2':'Purple','3':'Green','4':'Green','5':'Purple','6':'Purple'},
+  e: {'1':'Purple','2':'Green','3':'Fast Track','4':'Green','5':'Purple','6':'Fast Track','7':'Purple','8':'Green','9':'Purple','z':'Green','01':'Purple','02':'Green'},
+  n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track','6':'Purple'},
+};
+const PERIOD_COLOR = {
+  d: {bg:'#FBF6D9', ink:'#A6942A'},
+  s: {bg:'#EAF6F0', ink:'#1E8F63'},
+  e: {bg:'#E3F2FB', ink:'#3B7EA8'},
+  n: {bg:'#F7E3DC', ink:'#A4462E'},
+};
+
+function decodeCode(raw, role) {
+  if (!raw) return null;
+  let lower = raw.toLowerCase();
+  let hasTraining = false;
+  if (lower.endsWith('-t')) { hasTraining = true; lower = lower.slice(0, -2); }
+  const withTraining = (result) => {
+    if (result && hasTraining) result.text += ' + Teaching';
+    return result;
+  };
+  if (lower === 'x' || lower === 'l' || lower === 'cl' || lower === 'sl' || lower === 'bl' || lower === 'el' || lower.startsWith('pl')) return null;
+  if (lower === '8') return withTraining({ text: 'CST', period: null });
+  if (lower === 'rt') return { text: 'Teaching', period: null };
+  if (PERIOD_NAME[lower]) return withTraining({ text: PERIOD_NAME[lower], period: lower });
+
+  let m = lower.match(/^d([xyz])$/);
+  if (m) return withTraining({ text: WED_ROLE[m[1]], period: 'd' });
+
+  m = lower.match(/^([dsen])(0?[0-9]{1,2}|z)([ac])?$/);
+  if (m) {
+    const period = m[1], num = m[2], suffix = m[3];
+    const onCall = suffix === 'c';
+    let text;
+    if (role === 'C' && period === 'd' && DAY_ROLE[num]) text = 'Day - ' + DAY_ROLE[num];
+    else if (role === 'C' && period === 'e' && EVENING_ROLE[num]) text = 'Eve - ' + EVENING_ROLE[num];
+    else if (role === 'R' && REG_ROLE[period] && REG_ROLE[period][num]) text = PERIOD_NAME[period] + ' - ' + REG_ROLE[period][num];
+    else text = PERIOD_NAME[period] + ' ' + num;
+    if (onCall) text += ' (On call)';
+    return withTraining({ text, period });
+  }
+  return { text: raw, period: null };
+}
+
+function personShiftMap(name, role) {
+  const rec = PEOPLE.find(p => p.n === name && p.r === role);
+  const map = {};
+  if (!rec) return map;
+  const dates = rec.d.split('|');
+  const codes = rec.v.split('|');
+  dates.forEach((d, i) => { map[d] = codes[i]; });
+  return map;
+}
+
+function fmtWeekday(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short' }); }
+function fmtDayNum(dateStr) { return new Date(dateStr + 'T00:00:00').getDate(); }
+function fmtMonAbbrev(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { month: 'short' }); }
+function fmtFull(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }); }
+function mondayOf(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const offset = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - offset);
+  return d;
+}
+function fmtWeekRange(mondayDate) {
+  const sunday = new Date(mondayDate);
+  sunday.setDate(sunday.getDate() + 6);
+  const sameMonth = mondayDate.getMonth() === sunday.getMonth();
+  const startStr = mondayDate.toLocaleDateString('en-AU', { day: 'numeric', month: sameMonth ? undefined : 'short' });
+  const endStr = sunday.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  return startStr + ' - ' + endStr;
+}
+function fmtGroupLabel(dateStr) {
+  const thisMonday = mondayOf(todayStr);
+  const cardMonday = mondayOf(dateStr);
+  const weekDiff = Math.round((cardMonday - thisMonday) / (7 * 86400000));
+  if (weekDiff === 0) return 'This Week';
+  if (weekDiff === 1) return 'Next Week';
+  return fmtWeekRange(cardMonday);
+}
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// ---------------------------------------------------------------------
+// EBA rest-rule engine — same rules as ed_swap_finder.py, keyed by
+// calendar day number instead of a spreadsheet row index.
+// ---------------------------------------------------------------------
+const SHIFT_TIMES = { d:{start:8.0,end:17.5}, s:{start:11.0,end:20.5}, e:{start:14.5,end:24.0}, n:{start:23.0,end:32.5} };
+const REST_DAY_SWING_EVE = 10.0, REST_SINGLE_NIGHT = 23.0, REST_MULTI_NIGHT = 48.0, REST_WITHIN_NIGHT_RUN = 10.0;
+const RADIUS = 5, EPS = 1e-9;
+
+function dayNum(dateStr) { return Math.round(Date.parse(dateStr + 'T00:00:00Z') / 86400000); }
+function dateFromDayNum(n) { return new Date(n * 86400000).toISOString().slice(0, 10); }
+
+// Consultant evening slot e1/e1a/e1c runs 15:30–01:00 instead of the
+// standard 14:30–00:00 evening window — everything else uses SHIFT_TIMES.
+function shiftTimesFor(code, role) {
+  if (!code) return null;
+  const raw = String(code).trim();
+  let lower = raw.toLowerCase();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  const decoded = decodeCode(raw, role);
+  if (!decoded || !decoded.period) return null;
+  if (decoded.period === 'e' && role === 'C' && /^e1[ac]?$/.test(lower)) return { start: 15.5, end: 25.0 };
+  return SHIFT_TIMES[decoded.period];
+}
+
+function rawCodeOn(name, role, dateStr) {
+  const map = personShiftMap(name, role);
+  return map[dateStr] || null;
+}
+function periodOn(name, role, dateStr) {
+  const raw = rawCodeOn(name, role, dateStr);
+  if (!raw) return null;
+  const decoded = decodeCode(raw, role);
+  return decoded ? decoded.period : null;
+}
+function isFreeOn(name, role, dateStr) {
+  return !rawCodeOn(name, role, dateStr);
+}
+function textOn(name, role, dateStr) {
+  const raw = rawCodeOn(name, role, dateStr);
+  const decoded = decodeCode(raw, role);
+  return decoded ? decoded.text : raw;
+}
+
+// Map of day -> { period, start, end } for every workable shift a person holds.
+function personDayInfo(name, role) {
+  const map = personShiftMap(name, role);
+  const out = new Map();
+  Object.keys(map).forEach(dateStr => {
+    const raw = map[dateStr];
+    if (!raw) return;
+    const decoded = decodeCode(raw, role);
+    if (!decoded || !decoded.period) return;
+    const times = shiftTimesFor(raw, role);
+    out.set(dayNum(dateStr), { period: decoded.period, start: times.start, end: times.end });
+  });
+  return out;
+}
+
+function restRequiredAfter(dayInfo, day) {
+  const info = dayInfo.get(day);
+  if (!info) return 0.0;
+  if (info.period !== 'n') return REST_DAY_SWING_EVE;
+  if ((dayInfo.get(day + 1) || {}).period === 'n') return REST_WITHIN_NIGHT_RUN;
+  let run = 1;
+  while ((dayInfo.get(day - run) || {}).period === 'n') run++;
+  return run === 1 ? REST_SINGLE_NIGHT : REST_MULTI_NIGHT;
+}
+
+function restBreaches(dayInfo, focusDays) {
+  if (dayInfo.size === 0) return new Set();
+  const lo = Math.min(...focusDays) - RADIUS, hi = Math.max(...focusDays) + RADIUS;
+  const days = Array.from(dayInfo.keys()).sort((a, b) => a - b);
+  const out = new Set();
+  for (let i = 0; i < days.length - 1; i++) {
+    const a = days[i], b = days[i + 1];
+    if (b < lo || a > hi) continue;
+    const end = a * 24 + dayInfo.get(a).end;
+    const start = b * 24 + dayInfo.get(b).start;
+    if (start - end < restRequiredAfter(dayInfo, a) - EPS) out.add(a + ',' + b);
+  }
+  return out;
+}
+
+// takeCode is the actual roster code being picked up (so e1's special
+// timing carries through correctly); role is shared by both parties
+// since swaps only happen within the same role group.
+function swapIsLegal(name, role, giveDay, takeDay, takeCode) {
+  const base = personDayInfo(name, role);
+  const focus = [giveDay, takeDay];
+  const before = restBreaches(base, focus);
+  const after = new Map(base);
+  after.delete(giveDay);
+  const decoded = decodeCode(takeCode, role);
+  const times = shiftTimesFor(takeCode, role);
+  after.set(takeDay, { period: decoded.period, start: times.start, end: times.end });
+  const afterBreaches = restBreaches(after, focus);
+  for (const k of afterBreaches) if (!before.has(k)) return false;
+  return true;
+}
+
+function canPickUpExtraShift(name, role, day, giveCode) {
+  const base = personDayInfo(name, role);
+  const focus = [day];
+  const before = restBreaches(base, focus);
+  const after = new Map(base);
+  const decoded = decodeCode(giveCode, role);
+  const times = shiftTimesFor(giveCode, role);
+  after.set(day, { period: decoded.period, start: times.start, end: times.end });
+  const afterBreaches = restBreaches(after, focus);
+  for (const k of afterBreaches) if (!before.has(k)) return false;
+  return true;
+}
+
+function breaksNightRun(name, role, day, periodOverride) {
+  const info = personDayInfo(name, role);
+  const period = periodOverride !== undefined ? periodOverride : (info.get(day) || {}).period;
+  if (period !== 'n') return false;
+  const prevN = (info.get(day - 1) || {}).period === 'n';
+  const nextN = (info.get(day + 1) || {}).period === 'n';
+  return prevN && nextN;
+}
+
+// ---------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------
+function peopleOfRole(role) {
+  return PEOPLE.filter(p => p.r === role).map(p => p.n).sort((a, b) => a.localeCompare(b));
+}
+
+function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, excludeTypes, allowSameDay) {
+  const giveDay = dayNum(giveDateStr);
+  const giveType = periodOn(doctor, role, giveDateStr);
+  if (!giveType) throw new Error('That no longer looks like a workable shift.');
+  const giveCode = rawCodeOn(doctor, role, giveDateStr);
+
+  const options = [];
+  for (const partner of peopleOfRole(role)) {
+    if (partner === doctor) continue;
+    if (!isFreeOn(partner, role, giveDateStr)) {
+      if (periodOn(partner, role, giveDateStr) === null) continue; // on leave / non-workable — hard stop
+    }
+    for (let offset = -windowDays; offset <= windowDays; offset++) {
+      const takeDay = giveDay + offset;
+      const takeDateStr = dateFromDayNum(takeDay);
+      const takeType = periodOn(partner, role, takeDateStr);
+      if (!takeType) continue;
+      const takeCode = rawCodeOn(partner, role, takeDateStr);
+
+      const sameDay = offset === 0;
+      if (sameDay) {
+        if (!allowSameDay || takeType === giveType) continue;
+      } else {
+        if (!isFreeOn(partner, role, giveDateStr)) continue;
+        if (!isFreeOn(doctor, role, takeDateStr)) continue;
+      }
+
+      if (sameTypeOnly && takeType !== giveType) continue;
+      if (excludeTypes.has(takeType)) continue;
+
+      if (!swapIsLegal(doctor, role, giveDay, takeDay, takeCode)) continue;
+      if (!swapIsLegal(partner, role, takeDay, giveDay, giveCode)) continue;
+
+      options.push({
+        date: takeDateStr,
+        shiftType: takeType,
+        shiftText: textOn(partner, role, takeDateStr),
+        partner,
+        sameDay,
+        weekend: new Date(takeDateStr + 'T00:00:00').getDay() % 6 === 0,
+        breaksPartnerNightRun: breaksNightRun(partner, role, takeDay),
+      });
+    }
+  }
+  return { doctor, giveDateStr, giveType, giveText: textOn(doctor, role, giveDateStr), options };
+}
+
+function findTakers(doctor, role, giveDateStr) {
+  const giveDay = dayNum(giveDateStr);
+  const giveType = periodOn(doctor, role, giveDateStr);
+  if (!giveType) throw new Error('That no longer looks like a workable shift.');
+  const giveCode = rawCodeOn(doctor, role, giveDateStr);
+
+  const takers = [];
+  for (const partner of peopleOfRole(role)) {
+    if (partner === doctor) continue;
+    if (!isFreeOn(partner, role, giveDateStr)) continue;
+    if (!canPickUpExtraShift(partner, role, giveDay, giveCode)) continue;
+    takers.push({ partner, breaksNightRun: breaksNightRun(partner, role, giveDay, giveType) });
+  }
+  return { doctor, giveDateStr, giveType, giveText: textOn(doctor, role, giveDateStr), takers };
+}
+
+// ---------------------------------------------------------------------
+// UI
+// ---------------------------------------------------------------------
+const select = document.getElementById('personSelect');
+const content = document.getElementById('content');
+
+select.addEventListener('change', () => {
+  selectedShift = null;
+  if (!select.value) {
+    currentPerson = null;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    renderShiftList();
+    return;
+  }
+  const [name, role] = select.value.split('|');
+  currentPerson = { n: name, r: role };
+  try { localStorage.setItem(STORAGE_KEY, select.value); } catch (e) {}
+  renderShiftList();
+});
+
+function renderShiftList() {
+  if (!currentPerson) {
+    content.innerHTML = '<div class="empty-state">Pick your name above to see your upcoming shifts.</div>';
+    return;
+  }
+  const map = personShiftMap(currentPerson.n, currentPerson.r);
+  const dates = Object.keys(map).filter(d => d >= todayStr).sort();
+  let html = '';
+  let lastGroup = null;
+  let any = false;
+  dates.forEach(d => {
+    const decoded = decodeCode(map[d], currentPerson.r);
+    if (!decoded || !decoded.period) return;
+    any = true;
+    const group = fmtGroupLabel(d);
+    if (group !== lastGroup) {
+      html += '<div class="day-group-label">' + escapeHtml(group) + '</div>';
+      lastGroup = group;
+    }
+    const colors = PERIOD_COLOR[decoded.period];
+    html += '<button class="shift-card" data-date="' + d + '">' +
+      '<div class="date-block"><div class="dow">' + fmtWeekday(d) + '</div>' +
+      '<div class="num">' + fmtDayNum(d) + '</div>' +
+      '<div class="mon">' + fmtMonAbbrev(d) + '</div></div>' +
+      '<div class="shift-info"><div class="shift-text" style="color:' + colors.ink + '">' + escapeHtml(decoded.text) + '</div>' +
+      '<div class="shift-sub">Tap to find a swap or give it away</div></div>' +
+      '<div class="chevron">&#8250;</div></button>';
+  });
+  content.innerHTML = any ? html : '<div class="empty-state">No upcoming shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
+  content.querySelectorAll('.shift-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedShift = { date: btn.dataset.date };
+      activeTab = 'swap';
+      renderDetail();
+    });
+  });
+}
+
+function renderDetail() {
+  const d = selectedShift.date;
+  const decoded = decodeCode(personShiftMap(currentPerson.n, currentPerson.r)[d], currentPerson.r);
+  const colors = PERIOD_COLOR[decoded.period];
+
+  let html = '<button class="detail-back" id="backBtn">&larr; Your shifts</button>';
+  html += '<div class="summary-card"><div class="label">Looking to move</div>' +
+    '<div class="main" style="color:' + colors.ink + '">' + escapeHtml(fmtFull(d)) + ' &middot; ' + escapeHtml(decoded.text) + '</div></div>';
+
+  html += '<div class="tabs">' +
+    '<button class="tab-btn' + (activeTab === 'swap' ? ' active' : '') + '" data-tab="swap">Find a swap</button>' +
+    '<button class="tab-btn' + (activeTab === 'taker' ? ' active' : '') + '" data-tab="taker">Give it away</button>' +
+    '</div>';
+
+  html += '<div id="tabBody"></div>';
+  content.innerHTML = html;
+
+  document.getElementById('backBtn').addEventListener('click', () => { selectedShift = null; renderShiftList(); });
+  content.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => { activeTab = btn.dataset.tab; renderDetail(); });
+  });
+
+  if (activeTab === 'swap') renderSwapTab();
+  else renderTakerTab();
+}
+
+function renderSwapTab() {
+  const body = document.getElementById('tabBody');
+  body.innerHTML =
+    '<div class="controls">' +
+      '<div class="field"><label>Search window</label>' +
+        '<select id="windowSelect"><option value="7">1 week either side</option><option value="14" selected>2 weeks either side</option><option value="28">4 weeks either side</option></select>' +
+      '</div>' +
+      '<div class="field"><label>Never take these back</label>' +
+        '<div class="type-toggles">' +
+          '<div class="type-toggle" data-type="d">D</div><div class="type-toggle" data-type="s">S</div>' +
+          '<div class="type-toggle" data-type="e">E</div><div class="type-toggle" data-type="n">N</div>' +
+        '</div>' +
+      '</div>' +
+      '<label class="checkrow"><input type="checkbox" id="sameTypeOnly"> Only offer the same shift type back</label>' +
+      '<label class="checkrow"><input type="checkbox" id="allowSameDay" checked> Allow a same-day, different-type swap</label>' +
+    '</div>' +
+    '<button class="search-btn" id="searchBtn">Search</button>' +
+    '<div id="resultsBody"></div>';
+
+  body.querySelectorAll('.type-toggle').forEach(el => {
+    if (excludeTypeSet.has(el.dataset.type)) el.classList.add('on');
+    el.addEventListener('click', () => {
+      const t = el.dataset.type;
+      if (excludeTypeSet.has(t)) { excludeTypeSet.delete(t); el.classList.remove('on'); }
+      else { excludeTypeSet.add(t); el.classList.add('on'); }
+    });
+  });
+
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const windowDays = parseInt(document.getElementById('windowSelect').value, 10);
+    const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
+    const allowSameDay = document.getElementById('allowSameDay').checked;
+    try {
+      const result = findSwaps(currentPerson.n, currentPerson.r, selectedShift.date, windowDays, sameTypeOnly, excludeTypeSet, allowSameDay);
+      renderSwapResults(result);
+    } catch (err) {
+      document.getElementById('resultsBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
+    }
+  });
+}
+
+function renderSwapResults(result) {
+  const out = document.getElementById('resultsBody');
+  if (!result.options.length) {
+    out.innerHTML = '<div class="status-msg">No legal swaps found in this window. Try a wider search window or relax the shift-type restriction.</div>';
+    return;
+  }
+  const byGroup = new Map();
+  result.options.sort((a, b) => a.date.localeCompare(b.date) || a.partner.localeCompare(b.partner));
+  result.options.forEach(o => {
+    const g = fmtGroupLabel(o.date);
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g).push(o);
+  });
+  let html = '';
+  for (const [g, opts] of byGroup) {
+    html += '<div class="day-group-label">' + escapeHtml(g) + '</div>';
+    opts.forEach(o => {
+      const colors = PERIOD_COLOR[o.shiftType];
+      html += '<div class="option-card">' +
+        '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
+        '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
+        '<div class="option-meta">' + escapeHtml(fmtFull(o.date)) + ' &middot; ' + escapeHtml(o.shiftText) +
+        (o.sameDay ? '<span class="flag">same day</span>' : '') +
+        (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
+        '</div></div></div>';
+    });
+  }
+  html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn">Download CSV</button></div>';
+  out.innerHTML = html;
+  document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(result));
+}
+
+function renderTakerTab() {
+  const body = document.getElementById('tabBody');
+  body.innerHTML = '<div id="takerBody"><div class="status-msg">Checking who could take this…</div></div>';
+  try {
+    const result = findTakers(currentPerson.n, currentPerson.r, selectedShift.date);
+    renderTakerResults(result);
+  } catch (err) {
+    document.getElementById('takerBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
+  }
+}
+
+function renderTakerResults(result) {
+  const out = document.getElementById('takerBody');
+  if (!result.takers.length) {
+    out.innerHTML = '<div class="status-msg">No one is free and legally able to take this shift outright.</div>';
+    return;
+  }
+  let html = '';
+  result.takers.sort((a, b) => a.partner.localeCompare(b.partner)).forEach(t => {
+    html += '<div class="taker-chip"><div class="name">' + escapeHtml(t.partner) + '</div>' +
+      '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') + '</div></div>';
+  });
+  html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn2">Download CSV</button></div>';
+  out.innerHTML = html;
+  document.getElementById('csvBtn2').addEventListener('click', () => downloadTakerCsv(result));
+}
+
+function csvDownload(filename, rows) {
+  const csv = rows.map(r => r.map(v => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function downloadSwapCsv(result) {
+  const rows = [['date', 'shift_type', 'shift_text', 'partner', 'same_day', 'weekend', 'breaks_partner_night_run']];
+  result.options.forEach(o => rows.push([o.date, o.shiftType, o.shiftText, o.partner, o.sameDay, o.weekend, o.breaksPartnerNightRun]));
+  csvDownload('swap-options-' + result.doctor.replace(/\s+/g, '_') + '-' + result.giveDateStr + '.csv', rows);
+}
+function downloadTakerCsv(result) {
+  const rows = [['partner', 'breaks_night_run']];
+  result.takers.forEach(t => rows.push([t.partner, t.breaksNightRun]));
+  csvDownload('takers-' + result.doctor.replace(/\s+/g, '_') + '-' + result.giveDateStr + '.csv', rows);
+}
+
+// ---------------------------------------------------------------------
+// Load roster
+// ---------------------------------------------------------------------
+async function loadRoster() {
+  try {
+    const res = await fetch(DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    PEOPLE = await res.json();
+
+    let prevValue = select.value;
+    if (!prevValue) {
+      try { prevValue = localStorage.getItem(STORAGE_KEY) || ''; } catch (e) { prevValue = ''; }
+    }
+    select.innerHTML = '<option value="">Choose your name...</option>';
+    const consultants = PEOPLE.filter(p => p.r === 'C').sort((a, b) => a.n.localeCompare(b.n));
+    const registrarsList = PEOPLE.filter(p => p.r === 'R').sort((a, b) => a.n.localeCompare(b.n));
+    [['Consultants', consultants], ['Registrars', registrarsList]].forEach(([label, list]) => {
+      const group = document.createElement('optgroup');
+      group.label = label;
+      list.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.n + '|' + p.r;
+        opt.textContent = p.n;
+        group.appendChild(opt);
+      });
+      select.appendChild(group);
+    });
+    if (prevValue && [...select.options].some(o => o.value === prevValue)) {
+      select.value = prevValue;
+      if (!currentPerson) {
+        const [name, role] = prevValue.split('|');
+        currentPerson = { n: name, r: role };
+      }
+    }
+    if (selectedShift) renderDetail(); else renderShiftList();
+  } catch (err) {
+    console.error('Roster load error:', err);
+    content.innerHTML = '<div class="empty-state">Couldn\'t load the roster right now. Try again shortly.</div>';
+  }
+}
+
+loadRoster();
+setInterval(loadRoster, 5 * 60 * 1000);
+</script>
+</body>
+</html>
