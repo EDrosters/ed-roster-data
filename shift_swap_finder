@@ -38,15 +38,10 @@
     font-size: 1.3rem;
     font-weight: 700;
     margin: 0 0 0.6rem;
+    text-align: center;
   }
-  header .backlink {
-    display: inline-block;
-    color: rgba(255,255,255,0.8);
-    font-size: 0.8rem;
-    text-decoration: none;
-    margin-bottom: 0.35rem;
-  }
-  select#personSelect {
+  .person-row { display: flex; flex-direction: column; gap: 0.5rem; }
+  select.person-select {
     width: 100%;
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
@@ -56,7 +51,7 @@
     background: rgba(255,255,255,0.15);
     color: #fff;
   }
-  select#personSelect option { color: #1b2130; }
+  select.person-select option { color: #1b2130; }
 
   .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
 
@@ -189,12 +184,35 @@
   }
   .search-btn:active { opacity: 0.85; }
 
+  .cal-wrap { margin-bottom: 0.6rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-headrow { margin-bottom: 3px; }
+  .cal-head-cell { font-size: 0.62rem; font-weight: 700; color: var(--ink-faint); text-align: center; text-transform: uppercase; }
+  .cal-cell {
+    background: #fff;
+    border-radius: 8px;
+    min-height: 48px;
+    padding: 4px 3px;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
+  }
+  .cal-cell.cal-outside { background: transparent; box-shadow: none; }
+  .cal-cell.cal-give { outline: 2px solid var(--accent); }
+  .cal-cell.has-opts { cursor: pointer; }
+  .cal-cell.selected { outline: 2px solid var(--ink); }
+  .cal-daynum { font-size: 0.7rem; font-weight: 700; color: var(--ink-soft); }
+  .cal-dots { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; }
+  .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .cal-more { font-size: 0.58rem; color: var(--ink-faint); margin-top: 1px; }
+  .cal-legend { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
+  .cal-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: var(--ink-faint); }
+
   .option-card { background: #fff; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); display: flex; align-items: center; gap: 0.9rem; }
   .type-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 6px; display: inline-block; }
   .option-info { flex: 1; }
   .option-partner { font-weight: 700; font-size: 0.92rem; }
   .option-meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
   .flag { font-size: 0.7rem; color: #A6942A; background: #FBF6D9; padding: 0.1rem 0.4rem; border-radius: 5px; margin-left: 0.4rem; }
+  .flag.good { color: #1E8F63; background: #EAF6F0; }
 
   .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); }
   .taker-chip .name { font-weight: 700; font-size: 0.92rem; }
@@ -221,11 +239,15 @@
 </head>
 <body>
 <header>
-  <a class="backlink" href="myshifts.html">&larr; My Shifts</a>
   <h1>Find a Swap</h1>
-  <select id="personSelect">
-    <option value="">Choose your name...</option>
-  </select>
+  <div class="person-row">
+    <select class="person-select" id="consultantSelect">
+      <option value="">Choose consultant...</option>
+    </select>
+    <select class="person-select" id="registrarSelect">
+      <option value="">Choose registrar...</option>
+    </select>
+  </div>
 </header>
 
 <div class="content" id="content">
@@ -239,9 +261,9 @@ const DATA_URL = "https://edrosters.github.io/ed-roster-data/my_roster.json";
 const STORAGE_KEY = 'myShifts.selectedPerson';
 let PEOPLE = [];
 let currentPerson = null;   // { n, r }
-let selectedShift = null;   // { date, code, period, text }
+let selectedShift = null;   // { date }
 let activeTab = 'swap';
-let excludeTypeSet = new Set();
+let acceptTypeSet = new Set(); // "accept swaps of these shifts only" — empty = accept any type
 const todayStr = new Date().toISOString().slice(0, 10);
 
 // ---------------------------------------------------------------------
@@ -382,7 +404,7 @@ function textOn(name, role, dateStr) {
   return decoded ? decoded.text : raw;
 }
 
-// Map of day -> { period, start, end } for every workable shift a person holds.
+// Map of day -> { period, start, end } for every workable D/S/E/N shift a person holds.
 function personDayInfo(name, role) {
   const map = personShiftMap(name, role);
   const out = new Map();
@@ -461,6 +483,74 @@ function breaksNightRun(name, role, day, periodOverride) {
   return prevN && nextN;
 }
 
+// "Similar shift types in a row" score: +1 for each neighbouring day
+// (before/after) that already has the same shift type being taken on.
+function continuityScore(name, role, day, type) {
+  const info = personDayInfo(name, role);
+  let score = 0;
+  if ((info.get(day - 1) || {}).period === type) score++;
+  if ((info.get(day + 1) || {}).period === type) score++;
+  return score;
+}
+
+// ---------------------------------------------------------------------
+// Consecutive-worked-day run check (7+ in a row is declined). A day
+// counts as "worked" for this check if it's a D/S/E/N shift OR a
+// Wednesday teaching day ("rt"), even though teaching isn't itself a
+// swappable shift.
+// ---------------------------------------------------------------------
+function isWorkedDay(name, role, dateStr) {
+  const raw = rawCodeOn(name, role, dateStr);
+  if (!raw) return false;
+  const decoded = decodeCode(raw, role);
+  if (decoded && decoded.period) return true;
+  let lower = raw.trim().toLowerCase();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  return lower === 'rt';
+}
+
+function buildWorkedSet(name, role) {
+  const map = personShiftMap(name, role);
+  const set = new Set();
+  Object.keys(map).forEach(dateStr => {
+    if (isWorkedDay(name, role, dateStr)) set.add(dayNum(dateStr));
+  });
+  return set;
+}
+
+function longestRunTouching(workedSet, day) {
+  if (!workedSet.has(day)) return 0;
+  let start = day, end = day;
+  while (workedSet.has(start - 1)) start--;
+  while (workedSet.has(end + 1)) end++;
+  return end - start + 1;
+}
+
+// True (OK) unless this specific change creates a fresh run of 7+
+// consecutive worked days. A run that already existed regardless of
+// this change is not blamed on the swap.
+function swapKeepsRunsOk(name, role, removeDay, addDay) {
+  if (removeDay === addDay) return true; // same-day swap: worked pattern unchanged
+  const base = buildWorkedSet(name, role);
+  const after = new Set(base);
+  after.delete(removeDay);
+  after.add(addDay);
+  if (longestRunTouching(after, addDay) < 7) return true;
+  const leftRun = longestRunTouching(base, addDay - 1);
+  const rightRun = longestRunTouching(base, addDay + 1);
+  return Math.max(leftRun, rightRun) >= 7;
+}
+
+function extraShiftKeepsRunsOk(name, role, addDay) {
+  const base = buildWorkedSet(name, role);
+  const after = new Set(base);
+  after.add(addDay);
+  if (longestRunTouching(after, addDay) < 7) return true;
+  const leftRun = longestRunTouching(base, addDay - 1);
+  const rightRun = longestRunTouching(base, addDay + 1);
+  return Math.max(leftRun, rightRun) >= 7;
+}
+
 // ---------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------
@@ -468,7 +558,7 @@ function peopleOfRole(role) {
   return PEOPLE.filter(p => p.r === role).map(p => p.n).sort((a, b) => a.localeCompare(b));
 }
 
-function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, excludeTypes, allowSameDay) {
+function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTypes, allowSameDay) {
   const giveDay = dayNum(giveDateStr);
   const giveType = periodOn(doctor, role, giveDateStr);
   if (!giveType) throw new Error('That no longer looks like a workable shift.');
@@ -496,10 +586,15 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, excludeT
       }
 
       if (sameTypeOnly && takeType !== giveType) continue;
-      if (excludeTypes.has(takeType)) continue;
+      if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
 
       if (!swapIsLegal(doctor, role, giveDay, takeDay, takeCode)) continue;
       if (!swapIsLegal(partner, role, takeDay, giveDay, giveCode)) continue;
+
+      if (!swapKeepsRunsOk(doctor, role, giveDay, takeDay)) continue;
+      if (!swapKeepsRunsOk(partner, role, takeDay, giveDay)) continue;
+
+      const score = continuityScore(doctor, role, takeDay, takeType) + continuityScore(partner, role, giveDay, giveType);
 
       options.push({
         date: takeDateStr,
@@ -509,10 +604,12 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, excludeT
         sameDay,
         weekend: new Date(takeDateStr + 'T00:00:00').getDay() % 6 === 0,
         breaksPartnerNightRun: breaksNightRun(partner, role, takeDay),
+        continuityScore: score,
       });
     }
   }
-  return { doctor, giveDateStr, giveType, giveText: textOn(doctor, role, giveDateStr), options };
+  options.sort((a, b) => b.continuityScore - a.continuityScore || a.date.localeCompare(b.date));
+  return { doctor, giveDateStr, giveType, giveText: textOn(doctor, role, giveDateStr), options, windowDays };
 }
 
 function findTakers(doctor, role, giveDateStr) {
@@ -526,29 +623,41 @@ function findTakers(doctor, role, giveDateStr) {
     if (partner === doctor) continue;
     if (!isFreeOn(partner, role, giveDateStr)) continue;
     if (!canPickUpExtraShift(partner, role, giveDay, giveCode)) continue;
-    takers.push({ partner, breaksNightRun: breaksNightRun(partner, role, giveDay, giveType) });
+    if (!extraShiftKeepsRunsOk(partner, role, giveDay)) continue;
+    takers.push({
+      partner,
+      breaksNightRun: breaksNightRun(partner, role, giveDay, giveType),
+      continuityScore: continuityScore(partner, role, giveDay, giveType),
+    });
   }
+  takers.sort((a, b) => b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
   return { doctor, giveDateStr, giveType, giveText: textOn(doctor, role, giveDateStr), takers };
 }
 
 // ---------------------------------------------------------------------
 // UI
 // ---------------------------------------------------------------------
-const select = document.getElementById('personSelect');
+const consultantSelect = document.getElementById('consultantSelect');
+const registrarSelect = document.getElementById('registrarSelect');
 const content = document.getElementById('content');
 
-select.addEventListener('change', () => {
+function selectPerson(name, role) {
   selectedShift = null;
-  if (!select.value) {
-    currentPerson = null;
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-    renderShiftList();
-    return;
-  }
-  const [name, role] = select.value.split('|');
-  currentPerson = { n: name, r: role };
-  try { localStorage.setItem(STORAGE_KEY, select.value); } catch (e) {}
+  currentPerson = name ? { n: name, r: role } : null;
+  try {
+    if (currentPerson) localStorage.setItem(STORAGE_KEY, name + '|' + role);
+    else localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {}
   renderShiftList();
+}
+
+consultantSelect.addEventListener('change', () => {
+  if (consultantSelect.value) { registrarSelect.value = ''; selectPerson(consultantSelect.value, 'C'); }
+  else selectPerson('', null);
+});
+registrarSelect.addEventListener('change', () => {
+  if (registrarSelect.value) { consultantSelect.value = ''; selectPerson(registrarSelect.value, 'R'); }
+  else selectPerson('', null);
 });
 
 function renderShiftList() {
@@ -584,6 +693,7 @@ function renderShiftList() {
     btn.addEventListener('click', () => {
       selectedShift = { date: btn.dataset.date };
       activeTab = 'swap';
+      acceptTypeSet = new Set();
       renderDetail();
     });
   });
@@ -617,12 +727,13 @@ function renderDetail() {
 
 function renderSwapTab() {
   const body = document.getElementById('tabBody');
+  const giveType = periodOn(currentPerson.n, currentPerson.r, selectedShift.date);
   body.innerHTML =
     '<div class="controls">' +
       '<div class="field"><label>Search window</label>' +
         '<select id="windowSelect"><option value="7">1 week either side</option><option value="14" selected>2 weeks either side</option><option value="28">4 weeks either side</option></select>' +
       '</div>' +
-      '<div class="field"><label>Never take these back</label>' +
+      '<div class="field"><label>Accept swaps of these shifts only</label>' +
         '<div class="type-toggles">' +
           '<div class="type-toggle" data-type="d">D</div><div class="type-toggle" data-type="s">S</div>' +
           '<div class="type-toggle" data-type="e">E</div><div class="type-toggle" data-type="n">N</div>' +
@@ -634,13 +745,24 @@ function renderSwapTab() {
     '<button class="search-btn" id="searchBtn">Search</button>' +
     '<div id="resultsBody"></div>';
 
+  function refreshToggleStyles() {
+    body.querySelectorAll('.type-toggle').forEach(el => el.classList.toggle('on', acceptTypeSet.has(el.dataset.type)));
+  }
+  refreshToggleStyles();
+
   body.querySelectorAll('.type-toggle').forEach(el => {
-    if (excludeTypeSet.has(el.dataset.type)) el.classList.add('on');
     el.addEventListener('click', () => {
       const t = el.dataset.type;
-      if (excludeTypeSet.has(t)) { excludeTypeSet.delete(t); el.classList.remove('on'); }
-      else { excludeTypeSet.add(t); el.classList.add('on'); }
+      if (acceptTypeSet.has(t)) acceptTypeSet.delete(t);
+      else acceptTypeSet.add(t);
+      refreshToggleStyles();
     });
+  });
+
+  document.getElementById('sameTypeOnly').addEventListener('change', (e) => {
+    acceptTypeSet.clear();
+    if (e.target.checked && giveType) acceptTypeSet.add(giveType);
+    refreshToggleStyles();
   });
 
   document.getElementById('searchBtn').addEventListener('click', () => {
@@ -648,7 +770,7 @@ function renderSwapTab() {
     const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
     const allowSameDay = document.getElementById('allowSameDay').checked;
     try {
-      const result = findSwaps(currentPerson.n, currentPerson.r, selectedShift.date, windowDays, sameTypeOnly, excludeTypeSet, allowSameDay);
+      const result = findSwaps(currentPerson.n, currentPerson.r, selectedShift.date, windowDays, sameTypeOnly, acceptTypeSet, allowSameDay);
       renderSwapResults(result);
     } catch (err) {
       document.getElementById('resultsBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
@@ -662,30 +784,86 @@ function renderSwapResults(result) {
     out.innerHTML = '<div class="status-msg">No legal swaps found in this window. Try a wider search window or relax the shift-type restriction.</div>';
     return;
   }
-  const byGroup = new Map();
-  result.options.sort((a, b) => a.date.localeCompare(b.date) || a.partner.localeCompare(b.partner));
+
+  const byDate = new Map();
   result.options.forEach(o => {
-    const g = fmtGroupLabel(o.date);
-    if (!byGroup.has(g)) byGroup.set(g, []);
-    byGroup.get(g).push(o);
+    if (!byDate.has(o.date)) byDate.set(o.date, []);
+    byDate.get(o.date).push(o);
   });
-  let html = '';
-  for (const [g, opts] of byGroup) {
-    html += '<div class="day-group-label">' + escapeHtml(g) + '</div>';
-    opts.forEach(o => {
-      const colors = PERIOD_COLOR[o.shiftType];
-      html += '<div class="option-card">' +
-        '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
-        '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
-        '<div class="option-meta">' + escapeHtml(fmtFull(o.date)) + ' &middot; ' + escapeHtml(o.shiftText) +
-        (o.sameDay ? '<span class="flag">same day</span>' : '') +
-        (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
-        '</div></div></div>';
-    });
+
+  const giveDay = dayNum(result.giveDateStr);
+  const rangeStartStr = dateFromDayNum(giveDay - result.windowDays);
+  const rangeEndStr = dateFromDayNum(giveDay + result.windowDays);
+  const gridStart = mondayOf(rangeStartStr);
+  const endMonday = mondayOf(rangeEndStr);
+  const gridEnd = new Date(endMonday);
+  gridEnd.setDate(gridEnd.getDate() + 6);
+
+  const wdNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let html = '<div class="cal-wrap">' +
+    '<div class="cal-grid cal-headrow">' + wdNames.map(w => '<div class="cal-head-cell">' + w + '</div>').join('') + '</div>' +
+    '<div class="cal-grid">';
+
+  let cur = new Date(gridStart);
+  let defaultDate = null;
+  while (cur <= gridEnd) {
+    const dStr = cur.toISOString().slice(0, 10);
+    const inWindow = dStr >= rangeStartStr && dStr <= rangeEndStr;
+    const opts = (byDate.get(dStr) || []).slice().sort((a, b) => b.continuityScore - a.continuityScore);
+    if (!defaultDate && opts.length) defaultDate = dStr;
+    let cls = 'cal-cell';
+    if (!inWindow) cls += ' cal-outside';
+    if (dStr === result.giveDateStr) cls += ' cal-give';
+    if (opts.length) cls += ' has-opts';
+    html += '<div class="' + cls + '" data-date="' + dStr + '"><div class="cal-daynum">' + cur.getDate() + '</div>';
+    if (opts.length) {
+      html += '<div class="cal-dots">' + opts.slice(0, 4).map(o => '<span class="cal-dot" style="background:' + PERIOD_COLOR[o.shiftType].ink + '"></span>').join('') + '</div>';
+      if (opts.length > 4) html += '<div class="cal-more">+' + (opts.length - 4) + '</div>';
+    }
+    html += '</div>';
+    cur.setDate(cur.getDate() + 1);
   }
+  html += '</div></div>';
+  html += '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
+    '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
+  html += '<div id="calDetail"></div>';
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn">Download CSV</button></div>';
   out.innerHTML = html;
+
+  out.querySelectorAll('.cal-cell.has-opts').forEach(cell => {
+    cell.addEventListener('click', () => {
+      out.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
+      cell.classList.add('selected');
+      renderCalDetail(byDate.get(cell.dataset.date), cell.dataset.date);
+    });
+  });
+
+  if (defaultDate) {
+    const cell = out.querySelector('.cal-cell[data-date="' + defaultDate + '"]');
+    if (cell) cell.classList.add('selected');
+    renderCalDetail(byDate.get(defaultDate), defaultDate);
+  }
+
   document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(result));
+}
+
+function renderCalDetail(opts, dateStr) {
+  const box = document.getElementById('calDetail');
+  if (!opts || !opts.length) { box.innerHTML = ''; return; }
+  const sorted = opts.slice().sort((a, b) => b.continuityScore - a.continuityScore);
+  let html = '<div class="day-group-label">' + escapeHtml(fmtFull(dateStr)) + '</div>';
+  sorted.forEach(o => {
+    const colors = PERIOD_COLOR[o.shiftType];
+    html += '<div class="option-card">' +
+      '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
+      '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
+      '<div class="option-meta">' + escapeHtml(o.shiftText) +
+      (o.sameDay ? '<span class="flag">same day</span>' : '') +
+      (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
+      (o.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
+      '</div></div></div>';
+  });
+  box.innerHTML = html;
 }
 
 function renderTakerTab() {
@@ -706,9 +884,10 @@ function renderTakerResults(result) {
     return;
   }
   let html = '';
-  result.takers.sort((a, b) => a.partner.localeCompare(b.partner)).forEach(t => {
+  result.takers.forEach(t => {
     html += '<div class="taker-chip"><div class="name">' + escapeHtml(t.partner) + '</div>' +
-      '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') + '</div></div>';
+      '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
+      (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') + '</div></div>';
   });
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn2">Download CSV</button></div>';
   out.innerHTML = html;
@@ -728,13 +907,13 @@ function csvDownload(filename, rows) {
   URL.revokeObjectURL(url);
 }
 function downloadSwapCsv(result) {
-  const rows = [['date', 'shift_type', 'shift_text', 'partner', 'same_day', 'weekend', 'breaks_partner_night_run']];
-  result.options.forEach(o => rows.push([o.date, o.shiftType, o.shiftText, o.partner, o.sameDay, o.weekend, o.breaksPartnerNightRun]));
+  const rows = [['date', 'shift_type', 'shift_text', 'partner', 'same_day', 'weekend', 'breaks_partner_night_run', 'continuity_score']];
+  result.options.forEach(o => rows.push([o.date, o.shiftType, o.shiftText, o.partner, o.sameDay, o.weekend, o.breaksPartnerNightRun, o.continuityScore]));
   csvDownload('swap-options-' + result.doctor.replace(/\s+/g, '_') + '-' + result.giveDateStr + '.csv', rows);
 }
 function downloadTakerCsv(result) {
-  const rows = [['partner', 'breaks_night_run']];
-  result.takers.forEach(t => rows.push([t.partner, t.breaksNightRun]));
+  const rows = [['partner', 'breaks_night_run', 'continuity_score']];
+  result.takers.forEach(t => rows.push([t.partner, t.breaksNightRun, t.continuityScore]));
   csvDownload('takers-' + result.doctor.replace(/\s+/g, '_') + '-' + result.giveDateStr + '.csv', rows);
 }
 
@@ -747,31 +926,24 @@ async function loadRoster() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     PEOPLE = await res.json();
 
-    let prevValue = select.value;
-    if (!prevValue) {
-      try { prevValue = localStorage.getItem(STORAGE_KEY) || ''; } catch (e) { prevValue = ''; }
-    }
-    select.innerHTML = '<option value="">Choose your name...</option>';
+    let prevValue = '';
+    if (currentPerson) prevValue = currentPerson.n + '|' + currentPerson.r;
+    else { try { prevValue = localStorage.getItem(STORAGE_KEY) || ''; } catch (e) {} }
+
     const consultants = PEOPLE.filter(p => p.r === 'C').sort((a, b) => a.n.localeCompare(b.n));
     const registrarsList = PEOPLE.filter(p => p.r === 'R').sort((a, b) => a.n.localeCompare(b.n));
-    [['Consultants', consultants], ['Registrars', registrarsList]].forEach(([label, list]) => {
-      const group = document.createElement('optgroup');
-      group.label = label;
-      list.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.n + '|' + p.r;
-        opt.textContent = p.n;
-        group.appendChild(opt);
-      });
-      select.appendChild(group);
-    });
-    if (prevValue && [...select.options].some(o => o.value === prevValue)) {
-      select.value = prevValue;
-      if (!currentPerson) {
-        const [name, role] = prevValue.split('|');
-        currentPerson = { n: name, r: role };
-      }
+
+    consultantSelect.innerHTML = '<option value="">Choose consultant...</option>' +
+      consultants.map(p => '<option value="' + escapeHtml(p.n) + '">' + escapeHtml(p.n) + '</option>').join('');
+    registrarSelect.innerHTML = '<option value="">Choose registrar...</option>' +
+      registrarsList.map(p => '<option value="' + escapeHtml(p.n) + '">' + escapeHtml(p.n) + '</option>').join('');
+
+    if (prevValue) {
+      const [name, role] = prevValue.split('|');
+      if (role === 'C' && consultants.some(p => p.n === name)) { consultantSelect.value = name; currentPerson = { n: name, r: 'C' }; }
+      else if (role === 'R' && registrarsList.some(p => p.n === name)) { registrarSelect.value = name; currentPerson = { n: name, r: 'R' }; }
     }
+
     if (selectedShift) renderDetail(); else renderShiftList();
   } catch (err) {
     console.error('Roster load error:', err);
