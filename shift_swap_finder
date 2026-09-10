@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Find a Swap</title>
-<meta name="theme-color" content="#4553C4">
+<meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,12 +26,14 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   header {
-    background: var(--accent);
-    color: #fff;
+    background: #fff;
+    color: var(--ink);
     padding: calc(env(safe-area-inset-top) + 0.9rem) 1.1rem 0.9rem;
     position: sticky;
     top: 0;
     z-index: 10;
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
   }
   header h1 {
     font-family: 'Space Grotesk', sans-serif;
@@ -39,6 +41,7 @@
     font-weight: 700;
     margin: 0 0 0.6rem;
     text-align: center;
+    color: var(--ink);
   }
   .person-row { display: flex; flex-direction: column; gap: 0.5rem; }
   select.person-select {
@@ -47,9 +50,9 @@
     font-size: 1rem;
     padding: 0.7rem 0.8rem;
     border-radius: 10px;
-    border: none;
-    background: rgba(255,255,255,0.15);
-    color: #fff;
+    border: 1px solid var(--line);
+    background: var(--canvas);
+    color: var(--ink);
   }
   select.person-select option { color: #1b2130; }
 
@@ -72,27 +75,50 @@
   }
   .day-group-label:first-child { margin-top: 0; }
 
-  .cal-wrap { margin-bottom: 0.6rem; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-headrow { margin-bottom: 3px; }
-  .cal-head-cell { font-size: 0.62rem; font-weight: 700; color: var(--ink-faint); text-align: center; text-transform: uppercase; }
-  .cal-cell {
-    background: #fff;
-    border-radius: 8px;
-    min-height: 56px;
-    padding: 4px 3px;
-    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
-  }
-  .cal-cell.cal-past { opacity: 0.45; }
-  .cal-cell.cal-today { outline: 2px solid var(--accent); }
-  .cal-cell.has-opts { cursor: pointer; }
-  .cal-cell.has-opts:active { background: #f3f4f8; }
-  .cal-daynum { font-size: 0.7rem; font-weight: 700; color: var(--ink-soft); }
-  .cal-shift-badge { margin-top: 4px; font-size: 0.64rem; font-weight: 700; padding: 2px 4px; border-radius: 5px; text-align: center; }
-  .cal-shift-note { margin-top: 4px; font-size: 0.58rem; color: var(--ink-faint); line-height: 1.2; }
   .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-  .cal-legend { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
-  .cal-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: var(--ink-faint); }
+  .cal-legend { display: flex; gap: 0.9rem; flex-wrap: wrap; margin: 0 0 0.8rem 0.1rem; }
+  .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
+
+  .cal-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 0.8rem; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); }
+  .cal-nav button {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink-soft);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .cal-nav button:active { background: var(--canvas); }
+  .cal-month-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--ink); }
+  .cal-weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--line); }
+  .cal-weekday-row div { text-align: center; padding: 0.55rem 0; font-size: 0.62rem; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; }
+  .cal-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-daycell {
+    min-height: 78px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0.4rem 0.35rem;
+  }
+  .cal-daycell.off-month { background: #fafafb; }
+  .cal-daynum { display: inline-block; font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); }
+  .cal-daynum.today {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--ink); color: #fff; font-weight: 700;
+  }
+  .cal-shift-box {
+    margin-top: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.25rem 0.4rem;
+    border-radius: 7px;
+    line-height: 1.25;
+    cursor: pointer;
+  }
+  .cal-shift-box.not-clickable { cursor: default; }
 
 
   .detail-back {
@@ -627,69 +653,89 @@ registrarSelect.addEventListener('change', () => {
   else selectPerson('', null);
 });
 
+let viewYear = null;
+let viewMonthIdx = null; // 0-based
+
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function fmtMonthTitle(year, monthIdx) {
+  return new Date(Date.UTC(year, monthIdx, 1)).toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
 function renderShiftList() {
   if (!currentPerson) {
     content.innerHTML = '<div class="empty-state">Pick your name above to see your upcoming shifts.</div>';
     return;
   }
-  const map = personShiftMap(currentPerson.n, currentPerson.r);
-  const allDates = Object.keys(map).sort();
-  if (!allDates.length) {
-    content.innerHTML = '<div class="empty-state">No shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
-    return;
+  if (viewYear === null) {
+    const t = new Date(todayStr + 'T00:00:00Z');
+    viewYear = t.getUTCFullYear();
+    viewMonthIdx = t.getUTCMonth();
   }
 
-  const lastDate = allDates[allDates.length - 1];
-  const gridStart = mondayOf(todayStr);
-  const lastMonday = mondayOf(lastDate);
-  const gridEnd = new Date(lastMonday);
-  gridEnd.setDate(gridEnd.getDate() + 6);
+  const map = personShiftMap(currentPerson.n, currentPerson.r);
+  const firstOfMonth = new Date(Date.UTC(viewYear, viewMonthIdx, 1));
+  const daysInMo = new Date(Date.UTC(viewYear, viewMonthIdx + 1, 0)).getUTCDate();
+  const leadOffset = (firstOfMonth.getUTCDay() + 6) % 7; // Monday-first
+
+  let html = '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
+    '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
+
+  html += '<div class="cal-card">' +
+    '<div class="cal-nav"><button id="calPrev">&lsaquo;</button>' +
+    '<div class="cal-month-title">' + fmtMonthTitle(viewYear, viewMonthIdx) + '</div>' +
+    '<button id="calNext">&rsaquo;</button></div>';
 
   const wdNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  let html = '<div class="cal-wrap">' +
-    '<div class="cal-grid cal-headrow">' + wdNames.map(w => '<div class="cal-head-cell">' + w + '</div>').join('') + '</div>' +
-    '<div class="cal-grid">';
+  html += '<div class="cal-weekday-row">' + wdNames.map(w => '<div>' + w + '</div>').join('') + '</div>';
 
-  let cur = new Date(gridStart);
-  let anyWorkable = false;
-  while (cur <= gridEnd) {
-    const dStr = cur.toISOString().slice(0, 10);
+  html += '<div class="cal-body">';
+  for (let i = 0; i < leadOffset; i++) html += '<div class="cal-daycell off-month"></div>';
+
+  for (let day = 1; day <= daysInMo; day++) {
+    const dStr = viewYear + '-' + pad2(viewMonthIdx + 1) + '-' + pad2(day);
     const raw = map[dStr];
     const decoded = raw ? decodeCode(raw, currentPerson.r) : null;
-    const isPast = dStr < todayStr;
     const isToday = dStr === todayStr;
-    const workable = !!(decoded && decoded.period);
-    if (workable && !isPast) anyWorkable = true;
+    const clickable = !!(decoded && decoded.period) && dStr >= todayStr;
 
-    let cls = 'cal-cell';
-    if (isPast) cls += ' cal-past';
-    if (isToday) cls += ' cal-today';
-    if (workable && !isPast) cls += ' has-opts';
-
-    html += '<div class="' + cls + '" data-date="' + dStr + '">' +
-      '<div class="cal-daynum">' + cur.getDate() + '</div>';
-    if (workable) {
+    html += '<div class="cal-daycell" data-date="' + dStr + '">' +
+      '<div class="cal-daynum' + (isToday ? ' today' : '') + '">' + day + '</div>';
+    if (decoded && decoded.period) {
       const colors = PERIOD_COLOR[decoded.period];
-      html += '<div class="cal-shift-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[decoded.period] + '</div>';
+      html += '<div class="cal-shift-box' + (clickable ? '' : ' not-clickable') + '" style="background:' + colors.bg + ';color:' + colors.ink + '"' + (clickable ? ' data-clickable="1"' : '') + '>' + escapeHtml(decoded.text) + '</div>';
     } else if (decoded) {
-      html += '<div class="cal-shift-note">' + escapeHtml(decoded.text) + '</div>';
+      html += '<div class="cal-shift-box not-clickable" style="background:#ECEDF6;color:var(--ink)">' + escapeHtml(decoded.text) + '</div>';
     }
     html += '</div>';
-    cur.setDate(cur.getDate() + 1);
   }
+  const totalCells = leadOffset + daysInMo;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for (let i = 0; i < trailing; i++) html += '<div class="cal-daycell off-month"></div>';
   html += '</div></div>';
-  html += '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
-    '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
-  html += '<div class="status-msg">Tap an upcoming shift to find a swap or give it away.</div>';
 
-  content.innerHTML = anyWorkable ? html : '<div class="empty-state">No upcoming shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
-  content.querySelectorAll('.cal-cell.has-opts').forEach(cell => {
-    cell.addEventListener('click', () => {
+  html += '<div class="status-msg">Tap an upcoming shift to find a swap or give it away.</div>';
+  content.innerHTML = html;
+
+  content.querySelectorAll('.cal-shift-box[data-clickable="1"]').forEach(box => {
+    box.addEventListener('click', () => {
+      const cell = box.closest('.cal-daycell');
       selectedShift = { date: cell.dataset.date };
       activeTab = 'swap';
       acceptTypeSet = new Set();
       renderDetail();
     });
+  });
+
+  document.getElementById('calPrev').addEventListener('click', () => {
+    viewMonthIdx--;
+    if (viewMonthIdx < 0) { viewMonthIdx = 11; viewYear--; }
+    renderShiftList();
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    viewMonthIdx++;
+    if (viewMonthIdx > 11) { viewMonthIdx = 0; viewYear++; }
+    renderShiftList();
   });
 }
 
