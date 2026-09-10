@@ -460,12 +460,6 @@
             "zone": "SSU/HUB",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "Yemin Swe"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "David Sparkhall (TS4 IC)"
