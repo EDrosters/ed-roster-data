@@ -362,7 +362,7 @@
   "panel2": {
     "date": "Friday 11 September",
     "oncall": "George Plunkett",
-    "comment": "",
+    "comment": "Dave Canner 11-5 extra",
     "shifts": [
       {
         "name": "Day",
@@ -403,8 +403,8 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Jess Thomas",
-                  "Evan O\u2019Neill"
+                  "Evan O\u2019Neill",
+                  "David Canner"
                 ]
               },
               {
@@ -459,6 +459,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Jess Thomas"
+                ]
+              },
               {
                 "role": "Registrars",
                 "names": [
