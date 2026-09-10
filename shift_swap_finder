@@ -32,7 +32,8 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid var(--line);
+    border: 4px solid;
+    border-image: linear-gradient(90deg, #A6942A, #1E8F63, #3B7EA8, #A4462E) 1;
     box-shadow: 0 1px 2px rgba(20,20,40,0.04);
   }
   header h1 {
@@ -192,6 +193,21 @@
   }
   .type-toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 
+  .day-toggles { display: flex; gap: 0.3rem; }
+  .day-toggle {
+    flex: 1;
+    text-align: center;
+    padding: 0.4rem 0;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-weight: 600;
+    font-size: 0.66rem;
+    cursor: pointer;
+    color: var(--ink-faint);
+    background: #fff;
+  }
+  .day-toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
   .search-btn {
     width: 100%;
     font-family: 'Space Grotesk', sans-serif;
@@ -264,6 +280,7 @@ let currentPerson = null;   // { n, r }
 let selectedShift = null;   // { date }
 let activeTab = 'swap';
 let acceptTypeSet = new Set(); // "accept swaps of these shifts only" — empty = accept any type
+let acceptDaySet = new Set(); // "accept swaps on these days only" (0=Mon..6=Sun) — empty = accept any day
 const todayStr = new Date().toISOString().slice(0, 10);
 
 // ---------------------------------------------------------------------
@@ -555,11 +572,12 @@ function peopleOfRole(role) {
   return PEOPLE.filter(p => p.r === role).map(p => p.n).sort((a, b) => a.localeCompare(b));
 }
 
-function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTypes, allowSameDay) {
+function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay) {
   const giveDay = dayNum(giveDateStr);
   const giveType = periodOn(doctor, role, giveDateStr);
   if (!giveType) throw new Error('That no longer looks like a workable shift.');
   const giveCode = rawCodeOn(doctor, role, giveDateStr);
+  const tomorrowStr = dateFromDayNum(dayNum(todayStr) + 1);
 
   const options = [];
   for (const partner of peopleOfRole(role)) {
@@ -570,6 +588,7 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
     for (let offset = -windowDays; offset <= windowDays; offset++) {
       const takeDay = giveDay + offset;
       const takeDateStr = dateFromDayNum(takeDay);
+      if (takeDateStr < tomorrowStr) continue; // only show results from tomorrow onward
       const takeType = periodOn(partner, role, takeDateStr);
       if (!takeType) continue;
       const takeCode = rawCodeOn(partner, role, takeDateStr);
@@ -584,6 +603,8 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
 
       if (sameTypeOnly && takeType !== giveType) continue;
       if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
+      const weekdayIdx = (new Date(takeDateStr + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0=Mon..6=Sun
+      if (acceptDays.size > 0 && !acceptDays.has(weekdayIdx)) continue;
 
       if (!swapIsLegal(doctor, role, giveDay, takeDay, takeCode)) continue;
       if (!swapIsLegal(partner, role, takeDay, giveDay, giveCode)) continue;
@@ -723,6 +744,7 @@ function renderShiftList() {
       selectedShift = { date: cell.dataset.date };
       activeTab = 'swap';
       acceptTypeSet = new Set();
+      acceptDaySet = new Set();
       renderDetail();
     });
   });
@@ -768,6 +790,7 @@ function renderDetail() {
 function renderSwapTab() {
   const body = document.getElementById('tabBody');
   const giveType = periodOn(currentPerson.n, currentPerson.r, selectedShift.date);
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   body.innerHTML =
     '<div class="controls">' +
       '<div class="field"><label>Search window</label>' +
@@ -779,6 +802,9 @@ function renderSwapTab() {
           '<div class="type-toggle" data-type="e">E</div><div class="type-toggle" data-type="n">N</div>' +
         '</div>' +
       '</div>' +
+      '<div class="field"><label>Accept swaps on these days only</label>' +
+        '<div class="day-toggles">' + dayLabels.map((d, i) => '<div class="day-toggle" data-day="' + i + '">' + d + '</div>').join('') + '</div>' +
+      '</div>' +
       '<label class="checkrow"><input type="checkbox" id="sameTypeOnly"> Only offer the same shift type back</label>' +
       '<label class="checkrow"><input type="checkbox" id="allowSameDay" checked> Allow a same-day, different-type swap</label>' +
     '</div>' +
@@ -787,6 +813,7 @@ function renderSwapTab() {
 
   function refreshToggleStyles() {
     body.querySelectorAll('.type-toggle').forEach(el => el.classList.toggle('on', acceptTypeSet.has(el.dataset.type)));
+    body.querySelectorAll('.day-toggle').forEach(el => el.classList.toggle('on', acceptDaySet.has(parseInt(el.dataset.day, 10))));
   }
   refreshToggleStyles();
 
@@ -795,6 +822,15 @@ function renderSwapTab() {
       const t = el.dataset.type;
       if (acceptTypeSet.has(t)) acceptTypeSet.delete(t);
       else acceptTypeSet.add(t);
+      refreshToggleStyles();
+    });
+  });
+
+  body.querySelectorAll('.day-toggle').forEach(el => {
+    el.addEventListener('click', () => {
+      const d = parseInt(el.dataset.day, 10);
+      if (acceptDaySet.has(d)) acceptDaySet.delete(d);
+      else acceptDaySet.add(d);
       refreshToggleStyles();
     });
   });
@@ -810,7 +846,7 @@ function renderSwapTab() {
     const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
     const allowSameDay = document.getElementById('allowSameDay').checked;
     try {
-      const result = findSwaps(currentPerson.n, currentPerson.r, selectedShift.date, windowDays, sameTypeOnly, acceptTypeSet, allowSameDay);
+      const result = findSwaps(currentPerson.n, currentPerson.r, selectedShift.date, windowDays, sameTypeOnly, acceptTypeSet, acceptDaySet, allowSameDay);
       renderSwapResults(result);
     } catch (err) {
       document.getElementById('resultsBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
