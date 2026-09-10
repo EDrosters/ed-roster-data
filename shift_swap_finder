@@ -72,31 +72,28 @@
   }
   .day-group-label:first-child { margin-top: 0; }
 
-  .shift-card {
+  .cal-wrap { margin-bottom: 0.6rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-headrow { margin-bottom: 3px; }
+  .cal-head-cell { font-size: 0.62rem; font-weight: 700; color: var(--ink-faint); text-align: center; text-transform: uppercase; }
+  .cal-cell {
     background: #fff;
-    border-radius: 12px;
-    padding: 0.85rem 1rem;
-    margin-bottom: 0.6rem;
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
+    border-radius: 8px;
+    min-height: 56px;
+    padding: 4px 3px;
     box-shadow: 0 1px 2px rgba(20,20,40,0.04);
-    border: none;
-    width: 100%;
-    text-align: left;
-    font-family: inherit;
-    cursor: pointer;
-    color: inherit;
   }
-  .shift-card:active { background: #f3f4f8; }
-  .chevron { color: var(--ink-faint); font-size: 1.3rem; flex-shrink: 0; margin-left: auto; }
-  .date-block { min-width: 48px; text-align: center; flex-shrink: 0; }
-  .date-block .dow { font-size: 0.68rem; color: var(--ink-faint); text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; }
-  .date-block .num { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
-  .date-block .mon { font-size: 0.68rem; color: var(--ink-faint); font-weight: 600; }
-  .shift-info { flex: 1; min-width: 0; }
-  .shift-text { font-weight: 700; font-size: 0.95rem; }
-  .shift-sub { font-size: 0.78rem; color: var(--ink-faint); margin-top: 0.15rem; }
+  .cal-cell.cal-past { opacity: 0.45; }
+  .cal-cell.cal-today { outline: 2px solid var(--accent); }
+  .cal-cell.has-opts { cursor: pointer; }
+  .cal-cell.has-opts:active { background: #f3f4f8; }
+  .cal-daynum { font-size: 0.7rem; font-weight: 700; color: var(--ink-soft); }
+  .cal-shift-badge { margin-top: 4px; font-size: 0.64rem; font-weight: 700; padding: 2px 4px; border-radius: 5px; text-align: center; }
+  .cal-shift-note { margin-top: 4px; font-size: 0.58rem; color: var(--ink-faint); line-height: 1.2; }
+  .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .cal-legend { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
+  .cal-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: var(--ink-faint); }
+
 
   .detail-back {
     display: inline-flex;
@@ -184,28 +181,6 @@
   }
   .search-btn:active { opacity: 0.85; }
 
-  .cal-wrap { margin-bottom: 0.6rem; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-headrow { margin-bottom: 3px; }
-  .cal-head-cell { font-size: 0.62rem; font-weight: 700; color: var(--ink-faint); text-align: center; text-transform: uppercase; }
-  .cal-cell {
-    background: #fff;
-    border-radius: 8px;
-    min-height: 48px;
-    padding: 4px 3px;
-    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
-  }
-  .cal-cell.cal-outside { background: transparent; box-shadow: none; }
-  .cal-cell.cal-give { outline: 2px solid var(--accent); }
-  .cal-cell.has-opts { cursor: pointer; }
-  .cal-cell.selected { outline: 2px solid var(--ink); }
-  .cal-daynum { font-size: 0.7rem; font-weight: 700; color: var(--ink-soft); }
-  .cal-dots { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; }
-  .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-  .cal-more { font-size: 0.58rem; color: var(--ink-faint); margin-top: 1px; }
-  .cal-legend { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
-  .cal-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: var(--ink-faint); }
-
   .option-card { background: #fff; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); display: flex; align-items: center; gap: 0.9rem; }
   .type-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 6px; display: inline-block; }
   .option-info { flex: 1; }
@@ -258,7 +233,6 @@
 
 <script>
 const DATA_URL = "https://edrosters.github.io/ed-roster-data/my_roster.json";
-const STORAGE_KEY = 'myShifts.selectedPerson';
 let PEOPLE = [];
 let currentPerson = null;   // { n, r }
 let selectedShift = null;   // { date }
@@ -329,9 +303,6 @@ function personShiftMap(name, role) {
   return map;
 }
 
-function fmtWeekday(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short' }); }
-function fmtDayNum(dateStr) { return new Date(dateStr + 'T00:00:00').getDate(); }
-function fmtMonAbbrev(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { month: 'short' }); }
 function fmtFull(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }); }
 function mondayOf(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -644,10 +615,6 @@ const content = document.getElementById('content');
 function selectPerson(name, role) {
   selectedShift = null;
   currentPerson = name ? { n: name, r: role } : null;
-  try {
-    if (currentPerson) localStorage.setItem(STORAGE_KEY, name + '|' + role);
-    else localStorage.removeItem(STORAGE_KEY);
-  } catch (e) {}
   renderShiftList();
 }
 
@@ -666,32 +633,59 @@ function renderShiftList() {
     return;
   }
   const map = personShiftMap(currentPerson.n, currentPerson.r);
-  const dates = Object.keys(map).filter(d => d >= todayStr).sort();
-  let html = '';
-  let lastGroup = null;
-  let any = false;
-  dates.forEach(d => {
-    const decoded = decodeCode(map[d], currentPerson.r);
-    if (!decoded || !decoded.period) return;
-    any = true;
-    const group = fmtGroupLabel(d);
-    if (group !== lastGroup) {
-      html += '<div class="day-group-label">' + escapeHtml(group) + '</div>';
-      lastGroup = group;
+  const allDates = Object.keys(map).sort();
+  if (!allDates.length) {
+    content.innerHTML = '<div class="empty-state">No shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
+    return;
+  }
+
+  const lastDate = allDates[allDates.length - 1];
+  const gridStart = mondayOf(todayStr);
+  const lastMonday = mondayOf(lastDate);
+  const gridEnd = new Date(lastMonday);
+  gridEnd.setDate(gridEnd.getDate() + 6);
+
+  const wdNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  let html = '<div class="cal-wrap">' +
+    '<div class="cal-grid cal-headrow">' + wdNames.map(w => '<div class="cal-head-cell">' + w + '</div>').join('') + '</div>' +
+    '<div class="cal-grid">';
+
+  let cur = new Date(gridStart);
+  let anyWorkable = false;
+  while (cur <= gridEnd) {
+    const dStr = cur.toISOString().slice(0, 10);
+    const raw = map[dStr];
+    const decoded = raw ? decodeCode(raw, currentPerson.r) : null;
+    const isPast = dStr < todayStr;
+    const isToday = dStr === todayStr;
+    const workable = !!(decoded && decoded.period);
+    if (workable && !isPast) anyWorkable = true;
+
+    let cls = 'cal-cell';
+    if (isPast) cls += ' cal-past';
+    if (isToday) cls += ' cal-today';
+    if (workable && !isPast) cls += ' has-opts';
+
+    html += '<div class="' + cls + '" data-date="' + dStr + '">' +
+      '<div class="cal-daynum">' + cur.getDate() + '</div>';
+    if (workable) {
+      const colors = PERIOD_COLOR[decoded.period];
+      html += '<div class="cal-shift-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[decoded.period] + '</div>';
+    } else if (decoded) {
+      html += '<div class="cal-shift-note">' + escapeHtml(decoded.text) + '</div>';
     }
-    const colors = PERIOD_COLOR[decoded.period];
-    html += '<button class="shift-card" data-date="' + d + '">' +
-      '<div class="date-block"><div class="dow">' + fmtWeekday(d) + '</div>' +
-      '<div class="num">' + fmtDayNum(d) + '</div>' +
-      '<div class="mon">' + fmtMonAbbrev(d) + '</div></div>' +
-      '<div class="shift-info"><div class="shift-text" style="color:' + colors.ink + '">' + escapeHtml(decoded.text) + '</div>' +
-      '<div class="shift-sub">Tap to find a swap or give it away</div></div>' +
-      '<div class="chevron">&#8250;</div></button>';
-  });
-  content.innerHTML = any ? html : '<div class="empty-state">No upcoming shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
-  content.querySelectorAll('.shift-card').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedShift = { date: btn.dataset.date };
+    html += '</div>';
+    cur.setDate(cur.getDate() + 1);
+  }
+  html += '</div></div>';
+  html += '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
+    '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
+  html += '<div class="status-msg">Tap an upcoming shift to find a swap or give it away.</div>';
+
+  content.innerHTML = anyWorkable ? html : '<div class="empty-state">No upcoming shifts found for ' + escapeHtml(currentPerson.n) + '.</div>';
+  content.querySelectorAll('.cal-cell.has-opts').forEach(cell => {
+    cell.addEventListener('click', () => {
+      selectedShift = { date: cell.dataset.date };
       activeTab = 'swap';
       acceptTypeSet = new Set();
       renderDetail();
@@ -785,85 +779,33 @@ function renderSwapResults(result) {
     return;
   }
 
-  const byDate = new Map();
-  result.options.forEach(o => {
-    if (!byDate.has(o.date)) byDate.set(o.date, []);
-    byDate.get(o.date).push(o);
+  const byGroup = new Map();
+  const chronological = result.options.slice().sort((a, b) => a.date.localeCompare(b.date) || b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
+  chronological.forEach(o => {
+    const g = fmtGroupLabel(o.date);
+    if (!byGroup.has(g)) byGroup.set(g, []);
+    byGroup.get(g).push(o);
   });
 
-  const giveDay = dayNum(result.giveDateStr);
-  const rangeStartStr = dateFromDayNum(giveDay - result.windowDays);
-  const rangeEndStr = dateFromDayNum(giveDay + result.windowDays);
-  const gridStart = mondayOf(rangeStartStr);
-  const endMonday = mondayOf(rangeEndStr);
-  const gridEnd = new Date(endMonday);
-  gridEnd.setDate(gridEnd.getDate() + 6);
-
-  const wdNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  let html = '<div class="cal-wrap">' +
-    '<div class="cal-grid cal-headrow">' + wdNames.map(w => '<div class="cal-head-cell">' + w + '</div>').join('') + '</div>' +
-    '<div class="cal-grid">';
-
-  let cur = new Date(gridStart);
-  let defaultDate = null;
-  while (cur <= gridEnd) {
-    const dStr = cur.toISOString().slice(0, 10);
-    const inWindow = dStr >= rangeStartStr && dStr <= rangeEndStr;
-    const opts = (byDate.get(dStr) || []).slice().sort((a, b) => b.continuityScore - a.continuityScore);
-    if (!defaultDate && opts.length) defaultDate = dStr;
-    let cls = 'cal-cell';
-    if (!inWindow) cls += ' cal-outside';
-    if (dStr === result.giveDateStr) cls += ' cal-give';
-    if (opts.length) cls += ' has-opts';
-    html += '<div class="' + cls + '" data-date="' + dStr + '"><div class="cal-daynum">' + cur.getDate() + '</div>';
-    if (opts.length) {
-      html += '<div class="cal-dots">' + opts.slice(0, 4).map(o => '<span class="cal-dot" style="background:' + PERIOD_COLOR[o.shiftType].ink + '"></span>').join('') + '</div>';
-      if (opts.length > 4) html += '<div class="cal-more">+' + (opts.length - 4) + '</div>';
-    }
-    html += '</div>';
-    cur.setDate(cur.getDate() + 1);
+  let html = '';
+  for (const [g, opts] of byGroup) {
+    html += '<div class="day-group-label">' + escapeHtml(g) + '</div>';
+    opts.forEach(o => {
+      const colors = PERIOD_COLOR[o.shiftType];
+      html += '<div class="option-card">' +
+        '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
+        '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
+        '<div class="option-meta">' + escapeHtml(fmtFull(o.date)) + ' &middot; ' + escapeHtml(o.shiftText) +
+        (o.sameDay ? '<span class="flag">same day</span>' : '') +
+        (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
+        (o.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
+        '</div></div></div>';
+    });
   }
-  html += '</div></div>';
-  html += '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
-    '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
-  html += '<div id="calDetail"></div>';
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn">Download CSV</button></div>';
   out.innerHTML = html;
 
-  out.querySelectorAll('.cal-cell.has-opts').forEach(cell => {
-    cell.addEventListener('click', () => {
-      out.querySelectorAll('.cal-cell').forEach(c => c.classList.remove('selected'));
-      cell.classList.add('selected');
-      renderCalDetail(byDate.get(cell.dataset.date), cell.dataset.date);
-    });
-  });
-
-  if (defaultDate) {
-    const cell = out.querySelector('.cal-cell[data-date="' + defaultDate + '"]');
-    if (cell) cell.classList.add('selected');
-    renderCalDetail(byDate.get(defaultDate), defaultDate);
-  }
-
   document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(result));
-}
-
-function renderCalDetail(opts, dateStr) {
-  const box = document.getElementById('calDetail');
-  if (!opts || !opts.length) { box.innerHTML = ''; return; }
-  const sorted = opts.slice().sort((a, b) => b.continuityScore - a.continuityScore);
-  let html = '<div class="day-group-label">' + escapeHtml(fmtFull(dateStr)) + '</div>';
-  sorted.forEach(o => {
-    const colors = PERIOD_COLOR[o.shiftType];
-    html += '<div class="option-card">' +
-      '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
-      '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
-      '<div class="option-meta">' + escapeHtml(o.shiftText) +
-      (o.sameDay ? '<span class="flag">same day</span>' : '') +
-      (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
-      (o.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
-      '</div></div></div>';
-  });
-  box.innerHTML = html;
 }
 
 function renderTakerTab() {
@@ -926,9 +868,7 @@ async function loadRoster() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     PEOPLE = await res.json();
 
-    let prevValue = '';
-    if (currentPerson) prevValue = currentPerson.n + '|' + currentPerson.r;
-    else { try { prevValue = localStorage.getItem(STORAGE_KEY) || ''; } catch (e) {} }
+    const prevValue = currentPerson ? currentPerson.n + '|' + currentPerson.r : '';
 
     const consultants = PEOPLE.filter(p => p.r === 'C').sort((a, b) => a.n.localeCompare(b.n));
     const registrarsList = PEOPLE.filter(p => p.r === 'R').sort((a, b) => a.n.localeCompare(b.n));
