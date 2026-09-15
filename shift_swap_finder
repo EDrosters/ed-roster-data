@@ -856,34 +856,38 @@ function renderSwapTab() {
   });
 }
 
+function firstName(name) {
+  return (name || '').trim().split(/\s+/)[0] || name;
+}
+
 const SWAP_BODY_VARIANTS = [
   (result, o) =>
-    'Hi ' + o.partner + ',\n\n' +
+    'Hi ' + firstName(o.partner) + ',\n\n' +
     'I\'d like to propose a shift swap:\n\n' +
     '- I\'ll take your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift\n' +
     '- You\'ll take my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift\n\n' +
-    'Let me know if that works for you.\n\n' +
-    'Thanks,\n' + result.doctor,
+    'Let me know!\n\n' +
+    'Thanks,\n' + firstName(result.doctor),
   (result, o) =>
-    'Hey ' + o.partner + '!\n\n' +
+    'Hey ' + firstName(o.partner) + '!\n\n' +
     'Hope you\'re doing well. I was wondering if you\'d be up for swapping a shift with me:\n\n' +
     '- I\'d take your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift\n' +
     '- You\'d take my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift\n\n' +
-    'No worries at all if it doesn\'t suit - just let me know either way!\n\n' +
-    'Thanks so much,\n' + result.doctor,
+    'Let me know!\n\n' +
+    'Thanks so much,\n' + firstName(result.doctor),
   (result, o) =>
-    'Hi ' + o.partner + ',\n\n' +
+    'Hi ' + firstName(o.partner) + ',\n\n' +
     'I hope you are well. I would like to ask whether you would be open to swapping a shift with me:\n\n' +
     '- I would take your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift\n' +
     '- You would take my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift\n\n' +
-    'Please let me know if this would work for you, or if you have any questions.\n\n' +
-    'Kind regards,\n' + result.doctor,
+    'Let me know!\n\n' +
+    'Kind regards,\n' + firstName(result.doctor),
   (result, o) =>
-    'Hi ' + o.partner + ',\n\n' +
+    'Hi ' + firstName(o.partner) + ',\n\n' +
     'I hope you are well. Would you be able to do my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift, ' +
     'and I can do your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift?\n\n' +
-    'Please let me know if this would work for you, or if you have any questions.\n\n' +
-    'Kind regards,\n' + result.doctor,
+    'Let me know!\n\n' +
+    'Kind regards,\n' + firstName(result.doctor),
 ];
 
 function buildSwapMailto(result, o) {
@@ -896,11 +900,11 @@ function buildSwapMailto(result, o) {
 function buildTakerMailto(result, t) {
   const subject = 'Shift giveaway request - ' + fmtFull(result.giveDateStr);
   const body =
-    'Hi ' + t.partner + ',\n\n' +
+    'Hi ' + firstName(t.partner) + ',\n\n' +
     'I hope you are well. I am looking to give away my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift; ' +
     'no shift would be owed in return. Would you be available and willing to take it?\n\n' +
-    'Please let me know either way, and thank you for considering it.\n\n' +
-    'Kind regards,\n' + result.doctor;
+    'Let me know!\n\n' +
+    'Kind regards,\n' + firstName(result.doctor);
   return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 }
 
