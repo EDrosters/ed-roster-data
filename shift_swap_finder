@@ -223,7 +223,8 @@
   }
   .search-btn:active { opacity: 0.85; }
 
-  .option-card { background: #fff; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); display: flex; align-items: center; gap: 0.9rem; }
+  .option-card { background: #fff; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); display: flex; align-items: center; gap: 0.9rem; cursor: pointer; }
+  .option-card:active { background: #f3f4f8; }
   .type-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 6px; display: inline-block; }
   .option-info { flex: 1; }
   .option-partner { font-weight: 700; font-size: 0.92rem; }
@@ -231,7 +232,8 @@
   .flag { font-size: 0.7rem; color: #A6942A; background: #FBF6D9; padding: 0.1rem 0.4rem; border-radius: 5px; margin-left: 0.4rem; }
   .flag.good { color: #1E8F63; background: #EAF6F0; }
 
-  .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); }
+  .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); cursor: pointer; }
+  .taker-chip:active { background: #f3f4f8; }
   .taker-chip .name { font-weight: 700; font-size: 0.92rem; }
   .taker-chip .meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
 
@@ -854,6 +856,54 @@ function renderSwapTab() {
   });
 }
 
+const SWAP_BODY_VARIANTS = [
+  (result, o) =>
+    'Hi ' + o.partner + ',\n\n' +
+    'I\'d like to propose a shift swap:\n\n' +
+    '- I\'ll take your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift\n' +
+    '- You\'ll take my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift\n\n' +
+    'Let me know if that works for you.\n\n' +
+    'Thanks,\n' + result.doctor,
+  (result, o) =>
+    'Hey ' + o.partner + '!\n\n' +
+    'Hope you\'re doing well. I was wondering if you\'d be up for swapping a shift with me:\n\n' +
+    '- I\'d take your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift\n' +
+    '- You\'d take my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift\n\n' +
+    'No worries at all if it doesn\'t suit - just let me know either way!\n\n' +
+    'Thanks so much,\n' + result.doctor,
+  (result, o) =>
+    'Hi ' + o.partner + ',\n\n' +
+    'I hope you are well. I would like to ask whether you would be open to swapping a shift with me:\n\n' +
+    '- I would take your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift\n' +
+    '- You would take my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift\n\n' +
+    'Please let me know if this would work for you, or if you have any questions.\n\n' +
+    'Kind regards,\n' + result.doctor,
+  (result, o) =>
+    'Hi ' + o.partner + ',\n\n' +
+    'I hope you are well. Would you be able to do my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift, ' +
+    'and I can do your ' + fmtFull(o.date) + ' ' + o.shiftText + ' shift?\n\n' +
+    'Please let me know if this would work for you, or if you have any questions.\n\n' +
+    'Kind regards,\n' + result.doctor,
+];
+
+function buildSwapMailto(result, o) {
+  const subject = 'Shift swap request - ' + fmtFull(result.giveDateStr);
+  const variant = SWAP_BODY_VARIANTS[Math.floor(Math.random() * SWAP_BODY_VARIANTS.length)];
+  const body = variant(result, o);
+  return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+function buildTakerMailto(result, t) {
+  const subject = 'Shift giveaway request - ' + fmtFull(result.giveDateStr);
+  const body =
+    'Hi ' + t.partner + ',\n\n' +
+    'I hope you are well. I am looking to give away my ' + fmtFull(result.giveDateStr) + ' ' + result.giveText + ' shift; ' +
+    'no shift would be owed in return. Would you be available and willing to take it?\n\n' +
+    'Please let me know either way, and thank you for considering it.\n\n' +
+    'Kind regards,\n' + result.doctor;
+  return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
 function renderSwapResults(result) {
   const out = document.getElementById('resultsBody');
   if (!result.options.length) {
@@ -863,7 +913,8 @@ function renderSwapResults(result) {
 
   const byGroup = new Map();
   const chronological = result.options.slice().sort((a, b) => a.date.localeCompare(b.date) || b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
-  chronological.forEach(o => {
+  chronological.forEach((o, idx) => {
+    o._idx = idx;
     const g = fmtGroupLabel(o.date);
     if (!byGroup.has(g)) byGroup.set(g, []);
     byGroup.get(g).push(o);
@@ -874,7 +925,7 @@ function renderSwapResults(result) {
     html += '<div class="day-group-label">' + escapeHtml(g) + '</div>';
     opts.forEach(o => {
       const colors = PERIOD_COLOR[o.shiftType];
-      html += '<div class="option-card">' +
+      html += '<div class="option-card" data-idx="' + o._idx + '">' +
         '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
         '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
         '<div class="option-meta">' + escapeHtml(fmtFull(o.date)) + ' &middot; ' + escapeHtml(o.shiftText) +
@@ -884,8 +935,14 @@ function renderSwapResults(result) {
         '</div></div></div>';
     });
   }
+  html += '<div class="status-msg">Tap a swap to email a request.</div>';
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn">Download CSV</button></div>';
   out.innerHTML = html;
+
+  out.querySelectorAll('.option-card').forEach(card => {
+    const o = chronological[parseInt(card.dataset.idx, 10)];
+    card.addEventListener('click', () => { window.location.href = buildSwapMailto(result, o); });
+  });
 
   document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(result));
 }
@@ -908,13 +965,20 @@ function renderTakerResults(result) {
     return;
   }
   let html = '';
-  result.takers.forEach(t => {
-    html += '<div class="taker-chip"><div class="name">' + escapeHtml(t.partner) + '</div>' +
+  result.takers.forEach((t, idx) => {
+    html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
       '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
       (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') + '</div></div>';
   });
+  html += '<div class="status-msg">Tap a name to email a request.</div>';
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn2">Download CSV</button></div>';
   out.innerHTML = html;
+
+  out.querySelectorAll('.taker-chip').forEach(chip => {
+    const t = result.takers[parseInt(chip.dataset.idx, 10)];
+    chip.addEventListener('click', () => { window.location.href = buildTakerMailto(result, t); });
+  });
+
   document.getElementById('csvBtn2').addEventListener('click', () => downloadTakerCsv(result));
 }
 
