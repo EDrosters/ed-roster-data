@@ -1,382 +1,5 @@
 {
   "panel1": {
-    "date": "Tuesday 15 September",
-    "oncall": "George Plunkett",
-    "comment": "",
-    "shifts": [
-      {
-        "name": "Day",
-        "top_notes": [
-          [
-            "EPIC",
-            "Marina Guertin"
-          ]
-        ],
-        "zones": [
-          {
-            "zone": "Purple",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Alex Paspaliaris"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Alex Burman (TS4 IC)",
-                  "Sean Ivory (TS4 IC)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Teresa Heath (PGY1)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Green",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Amy McAllister",
-                  "Catriona Moynihan"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Natalia Evertsz (ICU)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Fast Track",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Glenn Harrison"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Ahmed Al'khshali (TS3)"
-                ]
-              },
-              {
-                "role": "Nurse Prac",
-                "names": [
-                  "Tim Byrne"
-                ]
-              },
-              {
-                "role": "Adv Musc Physio",
-                "names": [
-                  "Alice Wilcox"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Kiro Assad (PGY2)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "SSU/HUB",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Andrew Wallace"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Fiona Macdonald (u)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Vivien Dang (PGY1)",
-                  "Kareem El-Deen Zaghlool (PGY1)",
-                  "Ashish Yadav (PGY3)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Rapid Stay",
-            "roles": [
-              {
-                "role": "JMO",
-                "names": [
-                  "Arnav Sharma (PGY4)"
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "Swing",
-        "top_notes": [],
-        "zones": [
-          {
-            "zone": "Purple",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Alison Huynh (TS4 IC)",
-                  "David See (TS4 IC)",
-                  "Nadia Kamil (u)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Green",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "David Sparkhall (TS4 IC)",
-                  "Anthony Wishart (TS4 IC)",
-                  "Lara Knowles (TS2)"
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "Eve",
-        "top_notes": [
-          [
-            "EPIC",
-            "Mazdak Mansoury"
-          ]
-        ],
-        "zones": [
-          {
-            "zone": "Purple",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Jonathan Stevenson",
-                  "Jess Thomas"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Mark Aicken (TS3)",
-                  "Fatima Elyousfi (TS4 IC)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Jibran Haddad (PGY1)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Green",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Treena Quarin",
-                  "Jonathan Papson"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Dominic Gavin (TS3)",
-                  "Niamh Rees (u)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Jeff Wong (PGY5)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Fast Track",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Elyssia Bourke"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Jaimee Warren (TS3)"
-                ]
-              },
-              {
-                "role": "Nurse Prac",
-                "names": [
-                  "Meredith S",
-                  "Alex Sepulveda"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "SSU/HUB",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Amy Robotham"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Meg Wark (PGY1)",
-                  "Rika An (PGY1)",
-                  "Lisa Du (PGY3)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Rapid Stay",
-            "roles": [
-              {
-                "role": "JMO",
-                "names": [
-                  "Clare Leslie (PGY3)"
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "Night",
-        "top_notes": [
-          [
-            "FACEM on Call, 0100-0430",
-            "Mazdak Mansoury"
-          ],
-          [
-            "FACEM on Call, 0430-0800",
-            "Glenn Harrison"
-          ],
-          [
-            "EPIC",
-            "Zaheer Jayhoon (TS4 IC)"
-          ]
-        ],
-        "zones": [
-          {
-            "zone": "Purple",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Chloe Doran (EP)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "~Calum Haggett (PGY4)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Green",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Alfred Liu (PEM)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Varun Tandon"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Fast Track",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Stacey Lo (TS1)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Ben Pang (PGY6)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "SSU/HUB",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Thanh Truong (TS3)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Acacia Steel (PGY1)",
-                  "Stephen Lenaghan"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Rapid Stay",
-            "roles": [
-              {
-                "role": "JMO",
-                "names": [
-                  "James Heneghan (PGY3)"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  "panel2": {
     "date": "Wednesday 16 September",
     "oncall": "Nicki Walsham",
     "comment": "",
@@ -700,6 +323,364 @@
                 "role": "JMO",
                 "names": [
                   "~Calum Haggett (PGY4)"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "panel2": {
+    "date": "Thursday 17 September",
+    "oncall": "Mark Putland",
+    "comment": "",
+    "shifts": [
+      {
+        "name": "Day",
+        "top_notes": [
+          [
+            "EPIC",
+            "Laura Castle"
+          ]
+        ],
+        "zones": [
+          {
+            "zone": "Purple",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Emma West",
+                  "Bruce Garbutt"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Ben Wingrove (TS3)",
+                  "Giovanni Naselli (TS2)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Green",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Jonathan Papson",
+                  "Yigal Reuben"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Kathleen Malcher (TS4 IC)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Melinda Truesdale"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Aislinn Begley (TS3)"
+                ]
+              },
+              {
+                "role": "Nurse Prac",
+                "names": [
+                  "Paul C"
+                ]
+              },
+              {
+                "role": "Adv Musc Physio",
+                "names": [
+                  "Alice Wilcox"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Serena Waters (PGY3)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "SSU/HUB",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Treena Quarin"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Kim Pham (TS4 IC)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Lucy Monk (PGY1)",
+                  "Teresa Heath (PGY1)",
+                  "Tom Hunt"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Rapid Stay",
+            "roles": [
+              {
+                "role": "JMO",
+                "names": [
+                  "Arnav Sharma (PGY4)"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Swing",
+        "top_notes": [],
+        "zones": [
+          {
+            "zone": "Purple",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Jaimee Warren (TS3)",
+                  "Amanda Chong-Halliday (TS3)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Green",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "David Fitter (TS4 IC)",
+                  "Lynn Moreau (TS4 IC)",
+                  "Dominic Gavin (TS3)"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Eve",
+        "top_notes": [
+          [
+            "EPIC",
+            "Jason Gabriel-Anyassor"
+          ]
+        ],
+        "zones": [
+          {
+            "zone": "Purple",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Catriona Moynihan"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Sophie Tighe (PEM)",
+                  "Alison Huynh (TS4 IC)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Green",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Michael Dunne",
+                  "Wei Lum"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Ahmed Al'khshali (TS3)",
+                  "Manny Karpathakis (CMO)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Chris Harmer (PGY4)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "George Plunkett"
+                ]
+              },
+              {
+                "role": "Registrars",
+                "names": [
+                  "Lara Knowles (TS2)",
+                  "Niamh Rees (u)"
+                ]
+              },
+              {
+                "role": "Nurse Prac",
+                "names": [
+                  "Shea H"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "SSU/HUB",
+            "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Glenn Harrison"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Thomas Sutherland (PGY1)",
+                  "Rika An (PGY1)",
+                  "~Jeff Wong (PGY5)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Rapid Stay",
+            "roles": [
+              {
+                "role": "JMO",
+                "names": [
+                  "Stephenie Pillainayagam (ED PGY3)"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Night",
+        "top_notes": [
+          [
+            "FACEM on Call, 0100-0430",
+            "Jason Gabriel-Anyassor"
+          ],
+          [
+            "FACEM on Call, 0430-0800",
+            "Tania Florez Cordoba"
+          ],
+          [
+            "EPIC",
+            "Fatima Elyousfi (TS4 IC)"
+          ]
+        ],
+        "zones": [
+          {
+            "zone": "Purple",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Alfred Liu (PEM)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Green",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Emma Watkinson (u)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Shaifali Kulkarni (ED PGY4)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Harriet Evans (TS3)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Varun Tandon"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "SSU/HUB",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Mark Douglas (TS4 IC)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Samuel Robinson (PGY1)",
+                  "Maria Nielsen Scott (PGY3)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Rapid Stay",
+            "roles": [
+              {
+                "role": "JMO",
+                "names": [
+                  "Ben Pang (PGY6)"
                 ]
               }
             ]
