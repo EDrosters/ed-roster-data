@@ -76,8 +76,43 @@
   }
   .day-group-label:first-child { margin-top: 0; }
 
+  .shift-cols-wrap {
+    display: flex;
+    gap: 0.7rem;
+    overflow-x: auto;
+    margin: 0 -1rem;
+    padding: 0 1rem 0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .shift-col { flex: 0 0 78vw; max-width: 260px; min-width: 200px; }
+  .shift-col-head {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .shift-col-body { max-height: 65vh; overflow-y: auto; padding-right: 2px; }
+  .shift-col .option-card, .shift-col .taker-chip { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+  .shift-col .type-badge { align-self: flex-start; }
+
   .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
   .cal-legend { display: flex; gap: 0.9rem; flex-wrap: wrap; margin: 0 0 0.8rem 0.1rem; }
+  .mode-row { margin: 0 0 0.8rem; }
+  .mode-toggle-btn {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 0.4rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .mode-toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
 
   .cal-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 0.8rem; }
@@ -120,6 +155,27 @@
     cursor: pointer;
   }
   .cal-shift-box.not-clickable { cursor: default; }
+  .cal-shift-box.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cal-check { margin-right: 0.2rem; }
+
+  .select-bar {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+    margin: 0.6rem 0 1rem;
+    box-shadow: 0 2px 8px rgba(20,20,40,0.08);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .select-bar-actions { display: flex; gap: 0.5rem; align-items: center; }
 
 
   .detail-back {
@@ -279,7 +335,8 @@
 const DATA_URL = "https://edrosters.github.io/ed-roster-data/my_roster.json";
 let PEOPLE = [];
 let currentPerson = null;   // { n, r }
-let selectedShift = null;   // { date }
+let selectedShifts = new Set(); // dates picked for swap/giveaway — sequential or not
+let multiSelectMode = false;
 let activeTab = 'swap';
 let acceptTypeSet = new Set(); // "accept swaps of these shifts only" — empty = accept any type
 let acceptDaySet = new Set(); // "accept swaps on these days only" (0=Mon..6=Sun) — empty = accept any day
@@ -662,7 +719,7 @@ const registrarSelect = document.getElementById('registrarSelect');
 const content = document.getElementById('content');
 
 function selectPerson(name, role) {
-  selectedShift = null;
+  selectedShifts = new Set();
   currentPerson = name ? { n: name, r: role } : null;
   renderShiftList();
 }
@@ -704,6 +761,8 @@ function renderShiftList() {
   let html = '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
     '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
 
+  html += '<div class="mode-row"><button id="multiModeBtn" class="mode-toggle-btn' + (multiSelectMode ? ' active' : '') + '">Multi-shift swap</button></div>';
+
   html += '<div class="cal-card">' +
     '<div class="cal-nav"><button id="calPrev">&lsaquo;</button>' +
     '<div class="cal-month-title">' + fmtMonthTitle(viewYear, viewMonthIdx) + '</div>' +
@@ -721,12 +780,15 @@ function renderShiftList() {
     const decoded = raw ? decodeCode(raw, currentPerson.r) : null;
     const isToday = dStr === todayStr;
     const clickable = !!(decoded && decoded.period) && dStr >= todayStr;
+    const isSelected = selectedShifts.has(dStr);
 
     html += '<div class="cal-daycell" data-date="' + dStr + '">' +
       '<div class="cal-daynum' + (isToday ? ' today' : '') + '">' + day + '</div>';
     if (decoded && decoded.period) {
       const colors = PERIOD_COLOR[decoded.period];
-      html += '<div class="cal-shift-box' + (clickable ? '' : ' not-clickable') + '" style="background:' + colors.bg + ';color:' + colors.ink + '"' + (clickable ? ' data-clickable="1"' : '') + '>' + escapeHtml(decoded.text) + '</div>';
+      html += '<div class="cal-shift-box' + (clickable ? '' : ' not-clickable') + (isSelected ? ' selected' : '') +
+        '" style="background:' + colors.bg + ';color:' + colors.ink + '"' + (clickable ? ' data-clickable="1"' : '') + '>' +
+        (isSelected ? '<span class="cal-check">&#10003;</span>' : '') + escapeHtml(decoded.text) + '</div>';
     } else if (decoded) {
       html += '<div class="cal-shift-box not-clickable" style="background:#ECEDF6;color:var(--ink)">' + escapeHtml(decoded.text) + '</div>';
     }
@@ -737,19 +799,58 @@ function renderShiftList() {
   for (let i = 0; i < trailing; i++) html += '<div class="cal-daycell off-month"></div>';
   html += '</div></div>';
 
-  html += '<div class="status-msg">Tap an upcoming shift to find a swap or give it away.</div>';
+  const n = selectedShifts.size;
+  html += '<div class="status-msg">' + (multiSelectMode
+    ? 'Tap one or more upcoming shifts (in any order), then continue.'
+    : 'Tap an upcoming shift to find a swap or give it away.') + '</div>';
+  if (multiSelectMode && n > 0) {
+    html += '<div class="select-bar">' +
+      '<span>' + n + ' shift' + (n > 1 ? 's' : '') + ' selected</span>' +
+      '<div class="select-bar-actions"><button class="ghost-btn" id="clearSelBtn">Clear</button>' +
+      '<button class="search-btn" id="continueBtn" style="margin:0;width:auto;padding:0.6rem 1rem;">Continue</button></div></div>';
+  }
   content.innerHTML = html;
+
+  document.getElementById('multiModeBtn').addEventListener('click', () => {
+    multiSelectMode = !multiSelectMode;
+    selectedShifts = new Set();
+    renderShiftList();
+  });
 
   content.querySelectorAll('.cal-shift-box[data-clickable="1"]').forEach(box => {
     box.addEventListener('click', () => {
       const cell = box.closest('.cal-daycell');
-      selectedShift = { date: cell.dataset.date };
+      const d = cell.dataset.date;
+      if (multiSelectMode) {
+        if (selectedShifts.has(d)) selectedShifts.delete(d);
+        else selectedShifts.add(d);
+        renderShiftList();
+      } else {
+        selectedShifts = new Set([d]);
+        activeTab = 'swap';
+        acceptTypeSet = new Set();
+        acceptDaySet = new Set();
+        renderDetail();
+      }
+    });
+  });
+
+  const continueBtn = document.getElementById('continueBtn');
+  if (continueBtn) {
+    continueBtn.addEventListener('click', () => {
       activeTab = 'swap';
       acceptTypeSet = new Set();
       acceptDaySet = new Set();
       renderDetail();
     });
-  });
+  }
+  const clearSelBtn = document.getElementById('clearSelBtn');
+  if (clearSelBtn) {
+    clearSelBtn.addEventListener('click', () => {
+      selectedShifts = new Set();
+      renderShiftList();
+    });
+  }
 
   document.getElementById('calPrev').addEventListener('click', () => {
     viewMonthIdx--;
@@ -763,14 +864,22 @@ function renderShiftList() {
   });
 }
 
+function selectedShiftDates() {
+  return Array.from(selectedShifts).sort();
+}
+
 function renderDetail() {
-  const d = selectedShift.date;
-  const decoded = decodeCode(personShiftMap(currentPerson.n, currentPerson.r)[d], currentPerson.r);
-  const colors = PERIOD_COLOR[decoded.period];
+  const dates = selectedShiftDates();
+  if (!dates.length) { renderShiftList(); return; }
 
   let html = '<button class="detail-back" id="backBtn">&larr; Your shifts</button>';
-  html += '<div class="summary-card"><div class="label">Looking to move</div>' +
-    '<div class="main" style="color:' + colors.ink + '">' + escapeHtml(fmtFull(d)) + ' &middot; ' + escapeHtml(decoded.text) + '</div></div>';
+  html += '<div class="summary-card"><div class="label">Looking to move (' + dates.length + ')</div>';
+  dates.forEach(d => {
+    const decoded = decodeCode(personShiftMap(currentPerson.n, currentPerson.r)[d], currentPerson.r);
+    const colors = PERIOD_COLOR[decoded.period];
+    html += '<div class="main" style="color:' + colors.ink + '">' + escapeHtml(fmtFull(d)) + ' &middot; ' + escapeHtml(decoded.text) + '</div>';
+  });
+  html += '</div>';
 
   html += '<div class="tabs">' +
     '<button class="tab-btn' + (activeTab === 'swap' ? ' active' : '') + '" data-tab="swap">Find a swap</button>' +
@@ -780,7 +889,7 @@ function renderDetail() {
   html += '<div id="tabBody"></div>';
   content.innerHTML = html;
 
-  document.getElementById('backBtn').addEventListener('click', () => { selectedShift = null; renderShiftList(); });
+  document.getElementById('backBtn').addEventListener('click', () => { selectedShifts = new Set(); renderShiftList(); });
   content.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => { activeTab = btn.dataset.tab; renderDetail(); });
   });
@@ -791,7 +900,9 @@ function renderDetail() {
 
 function renderSwapTab() {
   const body = document.getElementById('tabBody');
-  const giveType = periodOn(currentPerson.n, currentPerson.r, selectedShift.date);
+  const dates = selectedShiftDates();
+  const giveTypes = new Set(dates.map(d => periodOn(currentPerson.n, currentPerson.r, d)));
+  const giveType = giveTypes.size === 1 ? Array.from(giveTypes)[0] : null; // only auto-fill "same type" when every selected shift shares one type
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   body.innerHTML =
     '<div class="controls">' +
@@ -847,11 +958,12 @@ function renderSwapTab() {
     const windowDays = parseInt(document.getElementById('windowSelect').value, 10);
     const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
     const allowSameDay = document.getElementById('allowSameDay').checked;
+    const resultsBody = document.getElementById('resultsBody');
     try {
-      const result = findSwaps(currentPerson.n, currentPerson.r, selectedShift.date, windowDays, sameTypeOnly, acceptTypeSet, acceptDaySet, allowSameDay);
-      renderSwapResults(result);
+      const results = dates.map(d => findSwaps(currentPerson.n, currentPerson.r, d, windowDays, sameTypeOnly, acceptTypeSet, acceptDaySet, allowSameDay));
+      renderSwapResults(results);
     } catch (err) {
-      document.getElementById('resultsBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
+      resultsBody.innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
     }
   });
 }
@@ -908,28 +1020,24 @@ function buildTakerMailto(result, t) {
   return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 }
 
-function renderSwapResults(result) {
+function renderSwapResults(results) {
   const out = document.getElementById('resultsBody');
-  if (!result.options.length) {
-    out.innerHTML = '<div class="status-msg">No legal swaps found in this window. Try a wider search window or relax the shift-type restriction.</div>';
+  const withOptions = results.filter(r => r.options.length > 0);
+  if (!withOptions.length) {
+    out.innerHTML = '<div class="status-msg">No legal swaps found for any selected shift in this window. Try a wider search window or relax the shift-type restriction.</div>';
     return;
   }
 
-  const byGroup = new Map();
-  const chronological = result.options.slice().sort((a, b) => a.date.localeCompare(b.date) || b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
-  chronological.forEach((o, idx) => {
-    o._idx = idx;
-    const g = fmtGroupLabel(o.date);
-    if (!byGroup.has(g)) byGroup.set(g, []);
-    byGroup.get(g).push(o);
-  });
-
-  let html = '';
-  for (const [g, opts] of byGroup) {
-    html += '<div class="day-group-label">' + escapeHtml(g) + '</div>';
-    opts.forEach(o => {
+  const flat = []; // { result, option }
+  let html = '<div class="shift-cols-wrap">';
+  withOptions.forEach(result => {
+    const chronological = result.options.slice().sort((a, b) => a.date.localeCompare(b.date) || b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
+    html += '<div class="shift-col"><div class="shift-col-head">' + escapeHtml(fmtFull(result.giveDateStr)) + '<br>' + escapeHtml(result.giveText) + '</div><div class="shift-col-body">';
+    chronological.forEach(o => {
+      const idx = flat.length;
+      flat.push({ result, option: o });
       const colors = PERIOD_COLOR[o.shiftType];
-      html += '<div class="option-card" data-idx="' + o._idx + '">' +
+      html += '<div class="option-card" data-idx="' + idx + '">' +
         '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
         '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
         '<div class="option-meta">' + escapeHtml(fmtFull(o.date)) + ' &middot; ' + escapeHtml(o.shiftText) +
@@ -938,52 +1046,63 @@ function renderSwapResults(result) {
         (o.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
         '</div></div></div>';
     });
-  }
+    html += '</div></div>';
+  });
+  html += '</div>';
   html += '<div class="status-msg">Tap a swap to email a request.</div>';
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn">Download CSV</button></div>';
   out.innerHTML = html;
 
   out.querySelectorAll('.option-card').forEach(card => {
-    const o = chronological[parseInt(card.dataset.idx, 10)];
-    card.addEventListener('click', () => { window.location.href = buildSwapMailto(result, o); });
+    const pair = flat[parseInt(card.dataset.idx, 10)];
+    card.addEventListener('click', () => { window.location.href = buildSwapMailto(pair.result, pair.option); });
   });
 
-  document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(result));
+  document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(results));
 }
 
 function renderTakerTab() {
   const body = document.getElementById('tabBody');
-  body.innerHTML = '<div id="takerBody"><div class="status-msg">Checking who could take this…</div></div>';
+  body.innerHTML = '<div id="takerBody"><div class="status-msg">Checking who could take these…</div></div>';
   try {
-    const result = findTakers(currentPerson.n, currentPerson.r, selectedShift.date);
-    renderTakerResults(result);
+    const results = selectedShiftDates().map(d => findTakers(currentPerson.n, currentPerson.r, d));
+    renderTakerResults(results);
   } catch (err) {
     document.getElementById('takerBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
   }
 }
 
-function renderTakerResults(result) {
+function renderTakerResults(results) {
   const out = document.getElementById('takerBody');
-  if (!result.takers.length) {
-    out.innerHTML = '<div class="status-msg">No one is free and legally able to take this shift outright.</div>';
+  const withTakers = results.filter(r => r.takers.length > 0);
+  if (!withTakers.length) {
+    out.innerHTML = '<div class="status-msg">No one is free and legally able to take any of these shifts outright.</div>';
     return;
   }
-  let html = '';
-  result.takers.forEach((t, idx) => {
-    html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
-      '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
-      (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') + '</div></div>';
+  const flat = []; // { result, taker }
+  let html = '<div class="shift-cols-wrap">';
+  withTakers.forEach(result => {
+    html += '<div class="shift-col"><div class="shift-col-head">' + escapeHtml(fmtFull(result.giveDateStr)) + '<br>' + escapeHtml(result.giveText) + '</div><div class="shift-col-body">';
+    result.takers.forEach(t => {
+      const idx = flat.length;
+      flat.push({ result, taker: t });
+      html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
+        '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
+        (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') + '</div></div>';
+    });
+    html += '</div></div>';
   });
+  html += '</div>';
   html += '<div class="status-msg">Tap a name to email a request.</div>';
   html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn2">Download CSV</button></div>';
   out.innerHTML = html;
 
   out.querySelectorAll('.taker-chip').forEach(chip => {
-    const t = result.takers[parseInt(chip.dataset.idx, 10)];
-    chip.addEventListener('click', () => { window.location.href = buildTakerMailto(result, t); });
+    const pair = flat[parseInt(chip.dataset.idx, 10)];
+    chip.addEventListener('click', () => { window.location.href = buildTakerMailto(pair.result, pair.taker); });
   });
 
-  document.getElementById('csvBtn2').addEventListener('click', () => downloadTakerCsv(result));
+  document.getElementById('csvBtn2').addEventListener('click', () => downloadTakerCsv(results));
 }
 
 function csvDownload(filename, rows) {
@@ -998,15 +1117,21 @@ function csvDownload(filename, rows) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-function downloadSwapCsv(result) {
-  const rows = [['date', 'shift_type', 'shift_text', 'partner', 'same_day', 'weekend', 'breaks_partner_night_run', 'continuity_score']];
-  result.options.forEach(o => rows.push([o.date, o.shiftType, o.shiftText, o.partner, o.sameDay, o.weekend, o.breaksPartnerNightRun, o.continuityScore]));
-  csvDownload('swap-options-' + result.doctor.replace(/\s+/g, '_') + '-' + result.giveDateStr + '.csv', rows);
+function downloadSwapCsv(results) {
+  const rows = [['give_date', 'give_shift', 'date', 'shift_type', 'shift_text', 'partner', 'same_day', 'weekend', 'breaks_partner_night_run', 'continuity_score']];
+  results.forEach(result => {
+    result.options.forEach(o => rows.push([result.giveDateStr, result.giveText, o.date, o.shiftType, o.shiftText, o.partner, o.sameDay, o.weekend, o.breaksPartnerNightRun, o.continuityScore]));
+  });
+  const doctor = results[0].doctor;
+  csvDownload('swap-options-' + doctor.replace(/\s+/g, '_') + '.csv', rows);
 }
-function downloadTakerCsv(result) {
-  const rows = [['partner', 'breaks_night_run', 'continuity_score']];
-  result.takers.forEach(t => rows.push([t.partner, t.breaksNightRun, t.continuityScore]));
-  csvDownload('takers-' + result.doctor.replace(/\s+/g, '_') + '-' + result.giveDateStr + '.csv', rows);
+function downloadTakerCsv(results) {
+  const rows = [['give_date', 'give_shift', 'partner', 'breaks_night_run', 'continuity_score']];
+  results.forEach(result => {
+    result.takers.forEach(t => rows.push([result.giveDateStr, result.giveText, t.partner, t.breaksNightRun, t.continuityScore]));
+  });
+  const doctor = results[0].doctor;
+  csvDownload('takers-' + doctor.replace(/\s+/g, '_') + '.csv', rows);
 }
 
 // ---------------------------------------------------------------------
@@ -1034,7 +1159,7 @@ async function loadRoster() {
       else if (role === 'R' && registrarsList.some(p => p.n === name)) { registrarSelect.value = name; currentPerson = { n: name, r: 'R' }; }
     }
 
-    if (selectedShift) renderDetail(); else renderShiftList();
+    if (selectedShifts.size) renderDetail(); else renderShiftList();
   } catch (err) {
     console.error('Roster load error:', err);
     content.innerHTML = '<div class="empty-state">Couldn\'t load the roster right now. Try again shortly.</div>';
