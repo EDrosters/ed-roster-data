@@ -178,13 +178,14 @@ METRIC_KEY_MAP = {
     "facem total": "facem", "registrars": "reg",
     "jmos rostered": "jmo", "director on call": "oncall",
 }
-REG_TABS = ["Reg T1 2025", "Reg T2 2025", "Reg T3 2025", "Reg T4 2025",
-            "Reg T1 2026", "Reg T2 2026", "Reg T3 2026"]
-TERM_LABELS = {
-    "Reg T1 2025": "Term 1, 2025", "Reg T2 2025": "Term 2, 2025",
-    "Reg T3 2025": "Term 3, 2025", "Reg T4 2025": "Term 4, 2025",
-    "Reg T1 2026": "Term 1, 2026", "Reg T2 2026": "Term 2, 2026",
-    "Reg T3 2026": "Term 3, 2026",
+REG_TAB_RE = re.compile(r"^Reg\s*T(\d+)\s*(\d{4})$", re.IGNORECASE)
+
+def term_label_from_tab(tab_name):
+    m = REG_TAB_RE.match(tab_name.strip())
+    if not m:
+        return None
+    term_num, year = m.group(1), m.group(2)
+    return f"Term {term_num}, {year}"
 }
 
 def norm(s):
@@ -377,11 +378,15 @@ def extract_registrar_term(ws, tab_name):
 
 def extract_all_registrars(wb):
     periods = []
-    for tab in REG_TABS:
-        if tab in wb.sheetnames:
-            result = extract_registrar_term(wb[tab], tab)
-            if result:
-                periods.append(result)
+    matching_tabs = [(name, term_label_from_tab(name)) for name in wb.sheetnames]
+    matching_tabs = [(name, label) for name, label in matching_tabs if label]
+    matching_tabs.sort(key=lambda x: tuple(map(int, REG_TAB_RE.match(x[0]).groups())))
+
+    for tab, label in matching_tabs:
+        result = extract_registrar_term(wb[tab], tab)
+        if result:
+            result["t"] = label
+            periods.append(result)
     periods.sort(key=lambda p: p["s"] or "")
     return periods
 
