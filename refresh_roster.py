@@ -186,7 +186,6 @@ def term_label_from_tab(tab_name):
         return None
     term_num, year = m.group(1), m.group(2)
     return f"Term {term_num}, {year}"
-}
 
 def norm(s):
     return re.sub(r"\s+", " ", str(s)).strip().lower()
@@ -372,7 +371,7 @@ def extract_registrar_term(ws, tab_name):
 
     start_date = next((d for d in dates if d), None)
     end_date = next((d for d in reversed(dates) if d), None)
-    return {"t": TERM_LABELS.get(tab_name, tab_name), "s": start_date, "e": end_date,
+    return {"t": tab_name, "s": start_date, "e": end_date,
             "d": "|".join(d or "" for d in dates), "w": "|".join(weekdays), "c": registrars}
 
 
