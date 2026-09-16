@@ -146,7 +146,6 @@
                 "role": "Registrars",
                 "names": [
                   "Nadia Kamil (u)",
-                  "Lara Knowles (TS2)",
                   "David Sparkhall (TS4 IC)",
                   "Sophie Tighe (PEM)",
                   "Abhishek Kulkarni (u)"
@@ -334,7 +333,7 @@
   "panel2": {
     "date": "Thursday 17 September",
     "oncall": "Mark Putland",
-    "comment": "",
+    "comment": "Kim Pham (TS4 IC) - day purple reg",
     "shifts": [
       {
         "name": "Day",
@@ -429,7 +428,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Kim Pham (TS4 IC)"
+                  "Lara Knowles (TS2)"
                 ]
               },
               {
@@ -550,7 +549,6 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Lara Knowles (TS2)",
                   "Niamh Rees (u)"
                 ]
               },
