@@ -287,6 +287,7 @@
   .option-meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
   .flag { font-size: 0.7rem; color: #A6942A; background: #FBF6D9; padding: 0.1rem 0.4rem; border-radius: 5px; margin-left: 0.4rem; }
   .flag.good { color: #1E8F63; background: #EAF6F0; }
+  .flag.bundle { color: var(--accent); background: #EDEEFA; }
 
   .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); cursor: pointer; }
   .taker-chip:active { background: #f3f4f8; }
@@ -310,6 +311,13 @@
   .site-link a { color: var(--ink-faint); font-size: 0.8rem; text-decoration: none; }
 
   .status-msg { font-size: 0.85rem; color: var(--ink-faint); text-align: center; padding: 0.6rem 0; }
+  .bundle-chip { outline: 2px solid var(--accent); }
+  .search-btn.bundle-btn {
+    background: #fff;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+  .option-card.bundle-match { cursor: pointer; }
 </style>
 </head>
 <body>
@@ -362,6 +370,18 @@ const PERIOD_COLOR = {
   e: {bg:'#E3F2FB', ink:'#3B7EA8'},
   n: {bg:'#F7E3DC', ink:'#A4462E'},
 };
+
+// ---------------------------------------------------------------------
+// ERIC-capable registrars — mirrors column C of the roster spreadsheet.
+// This isn't in the live JSON feed, so it's maintained here by hand.
+// Update this list whenever it changes during the term (names must
+// match the roster exactly, including the "(TS3)"/"(u)" etc. suffix).
+// ---------------------------------------------------------------------
+const ERIC_CAPABLE_REGS = [
+  // "Joyce Chan (TS1)",
+  // "Alfred Liu (PEM)",
+];
+function isEricCapable(name) { return ERIC_CAPABLE_REGS.includes(name); }
 
 function decodeCode(raw, role) {
   if (!raw) return null;
@@ -624,11 +644,58 @@ function extraShiftKeepsRunsOk(name, role, addDay) {
   return Math.max(leftRun, rightRun) >= 7;
 }
 
+// Bundle versions: check taking on several extra shifts (all at once, not
+// one-at-a-time) is still rest-compliant and doesn't create a 7+ day run.
+function canPickUpBundle(name, role, days, codes) {
+  const base = personDayInfo(name, role);
+  const before = restBreaches(base, days);
+  const after = new Map(base);
+  days.forEach((day, i) => {
+    const decoded = decodeCode(codes[i], role);
+    const times = shiftTimesFor(codes[i], role);
+    after.set(day, { period: decoded.period, start: times.start, end: times.end });
+  });
+  const afterBreaches = restBreaches(after, days);
+  for (const k of afterBreaches) if (!before.has(k)) return false;
+  return true;
+}
+
+function bundleKeepsRunsOk(name, role, days) {
+  const base = buildWorkedSet(name, role);
+  const after = new Set(base);
+  days.forEach(d => after.add(d));
+  for (const d of days) {
+    if (longestRunTouching(after, d) < 7) continue;
+    const leftRun = longestRunTouching(base, d - 1);
+    const rightRun = longestRunTouching(base, d + 1);
+    if (Math.max(leftRun, rightRun) >= 7) continue; // pre-existing, not caused by the bundle
+    return false;
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------
 function peopleOfRole(role) {
   return PEOPLE.filter(p => p.r === role).map(p => p.n).sort((a, b) => a.localeCompare(b));
+}
+
+// Minimum 2 ERIC-capable registrars covering nights, whoever's actual
+// slot code they're rostered under (not tied to the n1 "ERIC" label).
+// overrides lets us ask "what would coverage be if X worked Y instead".
+function ericCountForDate(dateStr, overrides) {
+  let count = 0;
+  for (const name of peopleOfRole('R')) {
+    const period = (overrides && Object.prototype.hasOwnProperty.call(overrides, name)) ? overrides[name] : periodOn(name, 'R', dateStr);
+    if (period === 'n' && isEricCapable(name)) count++;
+  }
+  return count;
+}
+function ericMinimumHolds(dateStr, overrides) {
+  const before = ericCountForDate(dateStr, null);
+  if (before < 2) return true; // already a pre-existing gap — not this swap's fault
+  return ericCountForDate(dateStr, overrides) >= 2;
 }
 
 function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay) {
@@ -671,6 +738,18 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
       if (!swapKeepsRunsOk(doctor, role, giveDay, takeDay)) continue;
       if (!swapKeepsRunsOk(partner, role, takeDay, giveDay)) continue;
 
+      if (role === 'R') {
+        const affectedDates = new Set();
+        if (giveType === 'n') affectedDates.add(giveDateStr);
+        if (takeType === 'n') affectedDates.add(takeDateStr);
+        let ericOk = true;
+        for (const d of affectedDates) {
+          const overrides = { [doctor]: d === takeDateStr ? takeType : null, [partner]: d === giveDateStr ? giveType : null };
+          if (!ericMinimumHolds(d, overrides)) { ericOk = false; break; }
+        }
+        if (!ericOk) continue;
+      }
+
       const score = continuityScore(doctor, role, takeDay, takeType) + continuityScore(partner, role, giveDay, giveType);
 
       options.push({
@@ -701,6 +780,10 @@ function findTakers(doctor, role, giveDateStr) {
     if (!isFreeOn(partner, role, giveDateStr)) continue;
     if (!canPickUpExtraShift(partner, role, giveDay, giveCode)) continue;
     if (!extraShiftKeepsRunsOk(partner, role, giveDay)) continue;
+    if (role === 'R' && giveType === 'n') {
+      const overrides = { [doctor]: null, [partner]: giveType };
+      if (!ericMinimumHolds(giveDateStr, overrides)) continue;
+    }
     takers.push({
       partner,
       breaksNightRun: breaksNightRun(partner, role, giveDay, giveType),
@@ -709,6 +792,180 @@ function findTakers(doctor, role, giveDateStr) {
   }
   takers.sort((a, b) => b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
   return { doctor, giveDateStr, giveType, giveText: textOn(doctor, role, giveDateStr), takers };
+}
+
+// True bundle check: could this one person take every selected shift at
+// once? Verified as a single combined legality check, not shift-by-shift.
+function findBundleTakers(doctor, role, giveDates) {
+  const giveDays = giveDates.map(dayNum);
+  const giveCodes = giveDates.map(d => rawCodeOn(doctor, role, d));
+  giveDates.forEach((d, i) => {
+    if (!giveCodes[i] || !decodeCode(giveCodes[i], role).period) throw new Error('One of the selected shifts is no longer workable.');
+  });
+
+  const giveTypes = giveDates.map(d => periodOn(doctor, role, d));
+
+  const candidates = [];
+  for (const partner of peopleOfRole(role)) {
+    if (partner === doctor) continue;
+    if (!giveDates.every(d => isFreeOn(partner, role, d))) continue;
+    if (!canPickUpBundle(partner, role, giveDays, giveCodes)) continue;
+    if (!bundleKeepsRunsOk(partner, role, giveDays)) continue;
+    if (role === 'R') {
+      let ericOk = true;
+      giveDates.forEach((d, i) => {
+        if (giveTypes[i] !== 'n') return;
+        const overrides = { [doctor]: null, [partner]: giveTypes[i] };
+        if (!ericMinimumHolds(d, overrides)) ericOk = false;
+      });
+      if (!ericOk) continue;
+    }
+    candidates.push(partner);
+  }
+  candidates.sort((a, b) => a.localeCompare(b));
+  return candidates;
+}
+
+// ---------------------------------------------------------------------
+// True bundle swap: find a partner and a specific pairing of your N
+// shifts against N of theirs such that giving/taking ALL of them at
+// once, for both people simultaneously, is verified legal as one
+// combined transaction (not N independent single swaps).
+// ---------------------------------------------------------------------
+function bundleSwapIsLegal(name, role, removeDays, addDaysCodes) {
+  const base = personDayInfo(name, role);
+  const focus = removeDays.concat(addDaysCodes.map(x => x.day));
+  const before = restBreaches(base, focus);
+  const after = new Map(base);
+  removeDays.forEach(d => after.delete(d));
+  addDaysCodes.forEach(({ day, code }) => {
+    const decoded = decodeCode(code, role);
+    const times = shiftTimesFor(code, role);
+    after.set(day, { period: decoded.period, start: times.start, end: times.end });
+  });
+  const afterBreaches = restBreaches(after, focus);
+  for (const k of afterBreaches) if (!before.has(k)) return false;
+  return true;
+}
+
+function bundleSwapKeepsRunsOk(name, role, removeDays, addDays) {
+  const rawBase = buildWorkedSet(name, role);
+  const preBase = new Set(rawBase);
+  removeDays.forEach(d => preBase.delete(d)); // state after giving shifts away, before taking new ones
+  const after = new Set(preBase);
+  addDays.forEach(d => after.add(d));
+  for (const d of addDays) {
+    if (longestRunTouching(after, d) < 7) continue;
+    const leftRun = longestRunTouching(preBase, d - 1);
+    const rightRun = longestRunTouching(preBase, d + 1);
+    if (Math.max(leftRun, rightRun) >= 7) continue; // pre-existing, not caused by this bundle
+    return false;
+  }
+  return true;
+}
+
+// Search one partner for a complete, distinct pairing of give-shifts to
+// take-shifts that passes the combined legality check for both people.
+function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
+  const { windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay } = opts;
+  const giveDateSet = new Set(giveShifts.map(g => g.date));
+  const tomorrowStr = dateFromDayNum(dayNum(todayStr) + 1);
+
+  const candidatesPerShift = giveShifts.map(g => {
+    const list = [];
+    for (let offset = -windowDays; offset <= windowDays; offset++) {
+      const takeDay = g.dayNum + offset;
+      const takeDateStr = dateFromDayNum(takeDay);
+      if (takeDateStr < tomorrowStr) continue;
+      if (giveDateSet.has(takeDateStr) && takeDateStr !== g.date) continue; // don't cross into another of your own give-days
+      const takeType = periodOn(partner, role, takeDateStr);
+      if (!takeType) continue;
+      const takeCode = rawCodeOn(partner, role, takeDateStr);
+      const sameDay = offset === 0;
+      if (sameDay) {
+        if (!allowSameDay || takeType === g.type) continue;
+      } else {
+        if (!isFreeOn(partner, role, g.date)) continue;
+        if (!isFreeOn(doctor, role, takeDateStr)) continue;
+      }
+      if (sameTypeOnly && takeType !== g.type) continue;
+      if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
+      const weekdayIdx = (new Date(takeDateStr + 'T00:00:00Z').getUTCDay() + 6) % 7;
+      if (acceptDays.size > 0 && !acceptDays.has(weekdayIdx)) continue;
+      list.push({ day: takeDay, dateStr: takeDateStr, type: takeType, code: takeCode });
+    }
+    return list;
+  });
+  if (candidatesPerShift.some(list => list.length === 0)) return null;
+
+  let attempts = 0;
+  const MAX_ATTEMPTS = 300;
+
+  function verify(assignment) {
+    const doctorRemove = giveShifts.map(g => g.dayNum);
+    const doctorAdd = assignment.map(a => ({ day: a.take.day, code: a.take.code }));
+    const partnerRemove = assignment.map(a => a.take.day);
+    const partnerAdd = giveShifts.map(g => ({ day: g.dayNum, code: g.code }));
+    if (!bundleSwapIsLegal(doctor, role, doctorRemove, doctorAdd)) return false;
+    if (!bundleSwapIsLegal(partner, role, partnerRemove, partnerAdd)) return false;
+    if (!bundleSwapKeepsRunsOk(doctor, role, doctorRemove, doctorAdd.map(x => x.day))) return false;
+    if (!bundleSwapKeepsRunsOk(partner, role, partnerRemove, partnerAdd.map(x => x.day))) return false;
+
+    if (role === 'R') {
+      const affectedDates = new Set();
+      giveShifts.forEach(g => { if (g.type === 'n') affectedDates.add(g.date); });
+      assignment.forEach(a => { if (a.take.type === 'n') affectedDates.add(a.take.dateStr); });
+      for (const d of affectedDates) {
+        const giveEntry = giveShifts.find(g => g.date === d);
+        const takeEntry = assignment.find(a => a.take.dateStr === d);
+        const overrides = {
+          [doctor]: takeEntry ? takeEntry.take.type : null,
+          [partner]: giveEntry ? giveEntry.type : null,
+        };
+        if (!ericMinimumHolds(d, overrides)) return false;
+      }
+    }
+    return true;
+  }
+
+  function backtrack(idx, usedDays, assignment) {
+    if (attempts > MAX_ATTEMPTS) return null;
+    if (idx === giveShifts.length) {
+      attempts++;
+      return verify(assignment) ? assignment.slice() : null;
+    }
+    for (const cand of candidatesPerShift[idx]) {
+      if (usedDays.has(cand.day)) continue;
+      usedDays.add(cand.day);
+      assignment.push({ give: giveShifts[idx], take: cand });
+      const result = backtrack(idx + 1, usedDays, assignment);
+      if (result) return result;
+      assignment.pop();
+      usedDays.delete(cand.day);
+      if (attempts > MAX_ATTEMPTS) return null;
+    }
+    return null;
+  }
+
+  return backtrack(0, new Set(), []);
+}
+
+function findBundleSwapPartners(doctor, role, giveDates, opts) {
+  const giveShifts = giveDates.map(d => ({
+    date: d,
+    dayNum: dayNum(d),
+    type: periodOn(doctor, role, d),
+    code: rawCodeOn(doctor, role, d),
+  }));
+  if (giveShifts.some(g => !g.type)) throw new Error('One of the selected shifts is no longer workable.');
+
+  const matches = [];
+  for (const partner of peopleOfRole(role)) {
+    if (partner === doctor) continue;
+    const assignment = findBundleSwapForPartner(doctor, role, giveShifts, partner, opts);
+    if (assignment) matches.push({ partner, assignment });
+  }
+  return matches;
 }
 
 // ---------------------------------------------------------------------
@@ -922,6 +1179,8 @@ function renderSwapTab() {
       '<label class="checkrow"><input type="checkbox" id="allowSameDay" checked> Allow a same-day, different-type swap</label>' +
     '</div>' +
     '<button class="search-btn" id="searchBtn">Search</button>' +
+    (dates.length > 1 ? '<button class="search-btn bundle-btn" id="bundleBtn">Bundle swap options</button>' : '') +
+    '<div id="bundleResults"></div>' +
     '<div id="resultsBody"></div>';
 
   function refreshToggleStyles() {
@@ -965,6 +1224,51 @@ function renderSwapTab() {
     } catch (err) {
       resultsBody.innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
     }
+  });
+
+  const bundleBtn = document.getElementById('bundleBtn');
+  if (bundleBtn) {
+    bundleBtn.addEventListener('click', () => {
+      const windowDays = parseInt(document.getElementById('windowSelect').value, 10);
+      const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
+      const allowSameDay = document.getElementById('allowSameDay').checked;
+      const bundleResultsEl = document.getElementById('bundleResults');
+      bundleResultsEl.innerHTML = '<div class="status-msg">Searching for full bundle swaps…</div>';
+      setTimeout(() => {
+        try {
+          const matches = findBundleSwapPartners(currentPerson.n, currentPerson.r, dates, {
+            windowDays, sameTypeOnly, acceptTypes: acceptTypeSet, acceptDays: acceptDaySet, allowSameDay,
+          });
+          renderBundleSwapResults(bundleResultsEl, matches);
+        } catch (err) {
+          bundleResultsEl.innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
+        }
+      }, 20);
+    });
+  }
+}
+
+function renderBundleSwapResults(container, matches) {
+  if (!matches.length) {
+    container.innerHTML = '<div class="status-msg">No one can do the whole bundle as one verified swap. Try the individual results below, or widen the search window.</div>';
+    return;
+  }
+  let html = '<div class="day-group-label">Verified bundle swaps</div>';
+  matches.forEach((m, idx) => {
+    html += '<div class="option-card bundle-match" data-idx="' + idx + '">' +
+      '<div class="option-info"><div class="option-partner">' + escapeHtml(m.partner) + '<span class="flag bundle">bundle fit</span></div>' +
+      '<div class="option-meta">' + m.assignment.map(a =>
+        escapeHtml(fmtFull(a.give.date)) + ' &harr; ' + escapeHtml(fmtFull(a.take.dateStr))).join('<br>') +
+      '</div></div></div>';
+  });
+  html += '<div class="status-msg">Tap a bundle match to email the full request.</div>';
+  container.innerHTML = html;
+
+  container.querySelectorAll('.bundle-match').forEach(card => {
+    const m = matches[parseInt(card.dataset.idx, 10)];
+    card.addEventListener('click', () => {
+      window.location.href = buildBundleSwapMailto(currentPerson.n, currentPerson.r, m.partner, m.assignment);
+    });
   });
 }
 
@@ -1020,6 +1324,21 @@ function buildTakerMailto(result, t) {
   return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 }
 
+function buildBundleSwapMailto(doctor, role, partnerName, assignment) {
+  const lines = assignment.map(a =>
+    '- I\'ll take your ' + fmtFull(a.take.dateStr) + ' ' + textOn(partnerName, role, a.take.dateStr) + ' shift, ' +
+    'and you\'ll take my ' + fmtFull(a.give.date) + ' ' + textOn(doctor, role, a.give.date) + ' shift'
+  ).join('\n');
+  const subject = 'Bundle shift swap request - ' + assignment.length + ' shifts';
+  const body =
+    'Hi ' + firstName(partnerName) + ',\n\n' +
+    'I hope you are well. I would like to propose swapping the following shifts as a bundle:\n\n' +
+    lines + '\n\n' +
+    'Let me know!\n\n' +
+    'Kind regards,\n' + firstName(doctor);
+  return 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
 function renderSwapResults(results) {
   const out = document.getElementById('resultsBody');
   const withOptions = results.filter(r => r.options.length > 0);
@@ -1050,89 +1369,95 @@ function renderSwapResults(results) {
   });
   html += '</div>';
   html += '<div class="status-msg">Tap a swap to email a request.</div>';
-  html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn">Download CSV</button></div>';
   out.innerHTML = html;
 
   out.querySelectorAll('.option-card').forEach(card => {
     const pair = flat[parseInt(card.dataset.idx, 10)];
     card.addEventListener('click', () => { window.location.href = buildSwapMailto(pair.result, pair.option); });
   });
-
-  document.getElementById('csvBtn').addEventListener('click', () => downloadSwapCsv(results));
 }
 
 function renderTakerTab() {
   const body = document.getElementById('tabBody');
   body.innerHTML = '<div id="takerBody"><div class="status-msg">Checking who could take these…</div></div>';
   try {
-    const results = selectedShiftDates().map(d => findTakers(currentPerson.n, currentPerson.r, d));
-    renderTakerResults(results);
+    const dates = selectedShiftDates();
+    const results = dates.map(d => findTakers(currentPerson.n, currentPerson.r, d));
+    const bundleTakers = dates.length > 1 ? findBundleTakers(currentPerson.n, currentPerson.r, dates) : [];
+    renderTakerResults(results, bundleTakers);
   } catch (err) {
     document.getElementById('takerBody').innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
   }
 }
 
-function renderTakerResults(results) {
+function buildBundleTakerMailto(doctor, dates) {
+  const shiftLines = dates.map(d => '- ' + fmtFull(d) + ' ' + textOn(doctor.n, doctor.r, d) + ' shift').join('\n');
+  const subject = 'Shift giveaway request - ' + dates.length + ' shifts';
+  const body =
+    'Hi {name},\n\n' +
+    'I hope you are well. I am looking to give away the following shifts as a bundle; no shift would be owed in return:\n\n' +
+    shiftLines + '\n\n' +
+    'Would you be available and willing to take all of these?\n\n' +
+    'Let me know!\n\n' +
+    'Kind regards,\n' + firstName(doctor.n);
+  return { subject, body };
+}
+
+function renderTakerResults(results, bundleTakers) {
   const out = document.getElementById('takerBody');
   const withTakers = results.filter(r => r.takers.length > 0);
-  if (!withTakers.length) {
+  bundleTakers = bundleTakers || [];
+
+  let html = '';
+  if (bundleTakers.length) {
+    const dates = selectedShiftDates();
+    html += '<div class="day-group-label">Bundle - take all ' + dates.length + ' shifts</div>';
+    bundleTakers.forEach((name, idx) => {
+      html += '<div class="taker-chip bundle-chip" data-bundle-idx="' + idx + '"><div class="name">' + escapeHtml(name) + '</div>' +
+        '<div class="meta">Free and legal for every selected shift<span class="flag bundle">bundle fit</span></div></div>';
+    });
+  }
+
+  if (!withTakers.length && !bundleTakers.length) {
     out.innerHTML = '<div class="status-msg">No one is free and legally able to take any of these shifts outright.</div>';
     return;
   }
+
   const flat = []; // { result, taker }
-  let html = '<div class="shift-cols-wrap">';
-  withTakers.forEach(result => {
-    html += '<div class="shift-col"><div class="shift-col-head">' + escapeHtml(fmtFull(result.giveDateStr)) + '<br>' + escapeHtml(result.giveText) + '</div><div class="shift-col-body">';
-    result.takers.forEach(t => {
-      const idx = flat.length;
-      flat.push({ result, taker: t });
-      html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
-        '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
-        (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') + '</div></div>';
+  if (withTakers.length) {
+    html += '<div class="shift-cols-wrap">';
+    withTakers.forEach(result => {
+      html += '<div class="shift-col"><div class="shift-col-head">' + escapeHtml(fmtFull(result.giveDateStr)) + '<br>' + escapeHtml(result.giveText) + '</div><div class="shift-col-body">';
+      result.takers.forEach(t => {
+        const idx = flat.length;
+        flat.push({ result, taker: t });
+        html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
+          '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
+          (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
+          (bundleTakers.includes(t.partner) ? '<span class="flag bundle">bundle fit</span>' : '') +
+          '</div></div>';
+      });
+      html += '</div></div>';
     });
-    html += '</div></div>';
-  });
-  html += '</div>';
+    html += '</div>';
+  }
   html += '<div class="status-msg">Tap a name to email a request.</div>';
-  html += '<div class="actions-row"><button class="ghost-btn" id="csvBtn2">Download CSV</button></div>';
   out.innerHTML = html;
 
-  out.querySelectorAll('.taker-chip').forEach(chip => {
+  out.querySelectorAll('.taker-chip[data-idx]').forEach(chip => {
     const pair = flat[parseInt(chip.dataset.idx, 10)];
     chip.addEventListener('click', () => { window.location.href = buildTakerMailto(pair.result, pair.taker); });
   });
 
-  document.getElementById('csvBtn2').addEventListener('click', () => downloadTakerCsv(results));
+  out.querySelectorAll('.bundle-chip').forEach(chip => {
+    const name = bundleTakers[parseInt(chip.dataset.bundleIdx, 10)];
+    chip.addEventListener('click', () => {
+      const { subject, body } = buildBundleTakerMailto(currentPerson, selectedShiftDates());
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body.replace('{name}', firstName(name)));
+    });
+  });
 }
 
-function csvDownload(filename, rows) {
-  const csv = rows.map(r => r.map(v => {
-    const s = String(v ?? '');
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  }).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-function downloadSwapCsv(results) {
-  const rows = [['give_date', 'give_shift', 'date', 'shift_type', 'shift_text', 'partner', 'same_day', 'weekend', 'breaks_partner_night_run', 'continuity_score']];
-  results.forEach(result => {
-    result.options.forEach(o => rows.push([result.giveDateStr, result.giveText, o.date, o.shiftType, o.shiftText, o.partner, o.sameDay, o.weekend, o.breaksPartnerNightRun, o.continuityScore]));
-  });
-  const doctor = results[0].doctor;
-  csvDownload('swap-options-' + doctor.replace(/\s+/g, '_') + '.csv', rows);
-}
-function downloadTakerCsv(results) {
-  const rows = [['give_date', 'give_shift', 'partner', 'breaks_night_run', 'continuity_score']];
-  results.forEach(result => {
-    result.takers.forEach(t => rows.push([result.giveDateStr, result.giveText, t.partner, t.breaksNightRun, t.continuityScore]));
-  });
-  const doctor = results[0].doctor;
-  csvDownload('takers-' + doctor.replace(/\s+/g, '_') + '.csv', rows);
-}
 
 // ---------------------------------------------------------------------
 // Load roster
