@@ -57,7 +57,7 @@
   }
   select.person-select option { color: #1b2130; }
 
-  .content { padding: 1rem; max-width: 560px; margin: 0 auto; }
+  .content { padding: 1rem; max-width: 760px; margin: 0 auto; }
 
   .empty-state {
     text-align: center;
@@ -75,28 +75,6 @@
     margin: 1.1rem 0 0.4rem 0.2rem;
   }
   .day-group-label:first-child { margin-top: 0; }
-
-  .shift-cols-wrap {
-    display: flex;
-    gap: 0.7rem;
-    overflow-x: auto;
-    margin: 0 -1rem;
-    padding: 0 1rem 0.5rem;
-    -webkit-overflow-scrolling: touch;
-  }
-  .shift-col { flex: 0 0 78vw; max-width: 260px; min-width: 200px; }
-  .shift-col-head {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--ink-soft);
-    line-height: 1.35;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--line);
-  }
-  .shift-col-body { max-height: 65vh; overflow-y: auto; padding-right: 2px; }
-  .shift-col .option-card, .shift-col .taker-chip { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
-  .shift-col .type-badge { align-self: flex-start; }
 
   .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
   .cal-legend { display: flex; gap: 0.9rem; flex-wrap: wrap; margin: 0 0 0.8rem 0.1rem; }
@@ -279,15 +257,85 @@
   }
   .search-btn:active { opacity: 0.85; }
 
-  .option-card { background: #fff; border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); display: flex; align-items: center; gap: 0.9rem; cursor: pointer; }
-  .option-card:active { background: #f3f4f8; }
-  .type-badge { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 6px; display: inline-block; }
-  .option-info { flex: 1; }
+  .option-card {
+    background: #fff;
+    border: 1px solid #eeeaf4;
+    border-radius: 12px;
+    padding: 0.55rem 0.65rem;
+    margin-bottom: 0.45rem;
+    box-shadow: 0 1px 3px rgba(80,70,110,0.05);
+    display: grid;
+    grid-template-columns: 52px minmax(190px, 0.9fr) minmax(300px, 1.45fr);
+    align-items: start;
+    gap: 0.55rem;
+  }
+  .type-badge { font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.38rem; border-radius: 999px; display: inline-block; align-self: flex-start; }
+  .option-info { display: flex; flex-direction: column; gap: 0.22rem; min-width: 0; }
   .option-partner { font-weight: 700; font-size: 0.92rem; }
   .option-meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
   .flag { font-size: 0.7rem; color: #A6942A; background: #FBF6D9; padding: 0.1rem 0.4rem; border-radius: 5px; margin-left: 0.4rem; }
   .flag.good { color: #1E8F63; background: #EAF6F0; }
-  .flag.bundle { color: var(--accent); background: #EDEEFA; }
+
+  .option-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.22rem; width: 100%; }
+  .option-action-btn {
+    appearance: none;
+    background: #fff;
+    border: 1px solid #e4dfee;
+    border-radius: 8px;
+    padding: 0.28rem 0.42rem;
+    font-family: inherit;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    font-weight: 650;
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: normal;
+    text-align: center;
+    min-height: 27px;
+    box-shadow: 0 1px 2px rgba(80,70,110,0.04);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  }
+  .option-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(20,20,40,0.07);
+  }
+  .option-action-btn:active { background: var(--canvas); }
+.option-action-btn.person-btn:hover, .option-action-btn.shift-btn:hover, .option-action-btn.bundle-person-btn:hover, .option-action-btn.bundle-shift-btn:hover { transform: none; box-shadow: 0 1px 2px rgba(80,70,110,0.04); }
+.option-action-btn.person-btn:active, .option-action-btn.shift-btn:active, .option-action-btn.bundle-person-btn:active, .option-action-btn.bundle-shift-btn:active { background: #fff; }
+  .option-action-btn.primary { font-weight: 700; background: #faf7ff; border-color: #d9cbed; }
+  .person-btn, .shift-btn, .bundle-person-btn, .bundle-shift-btn, .cal-btn, .email-btn, .bundle-email-btn { width: 100%; }
+  .person-btn { text-align: left; padding-left: 0.38rem; cursor: default; }
+  .shift-btn { text-align: left; padding-left: 0.38rem; cursor: default; }
+
+  .option-card > .type-badge { align-self: start; justify-self: start; margin-top: 0.18rem; }
+  .option-preview { grid-column: 3; min-width: 0; }
+  .option-preview:empty { display: none; }
+  .preview-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.45rem;
+    margin-top: 0;
+  }
+  .preview-cal-wrap { overflow-x: auto; padding-bottom: 0.3rem; }
+  .preview-cal-row { display: flex; gap: 3px; margin-bottom: 3px; }
+  .preview-cal-label { flex: 0 0 46px; font-size: 0.62rem; font-weight: 700; color: var(--ink-soft); display: flex; align-items: center; }
+  .preview-cal-cell {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 42px;
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 3px 1px;
+    text-align: center;
+  }
+  .preview-cal-cell.pc-header { background: transparent; border: none; min-height: auto; }
+  .preview-cal-cell.changed { outline: 2px solid var(--accent); }
+  .preview-cal-cell.unavailable .pc-shift { background: #ECEDF6; color: var(--ink-faint); }
+  .pc-date { font-size: 0.58rem; font-weight: 700; color: var(--ink-soft); }
+  .pc-shift { margin-top: 2px; font-size: 0.56rem; font-weight: 700; border-radius: 4px; padding: 1px 1px; }
+  .pc-shift.pc-empty { color: var(--ink-faint); background: none; }
 
   .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); cursor: pointer; }
   .taker-chip:active { background: #f3f4f8; }
@@ -318,6 +366,15 @@
     border: 2px solid var(--accent);
   }
   .option-card.bundle-match { cursor: pointer; }
+  @media (max-width: 900px) {
+    .option-card { grid-template-columns: 46px minmax(0, 1fr); }
+    .option-preview { grid-column: 1 / -1; }
+  }
+  @media (max-width: 560px) {
+    .option-card { grid-template-columns: 1fr; }
+    .option-card > .type-badge { margin-top: 0; }
+    .option-preview { grid-column: 1; }
+  }
 </style>
 </head>
 <body>
@@ -382,6 +439,20 @@ const ERIC_CAPABLE_REGS = [
   // "Alfred Liu (PEM)",
 ];
 function isEricCapable(name) { return ERIC_CAPABLE_REGS.includes(name); }
+
+// ---------------------------------------------------------------------
+// Non-person rows the roster feed lists under the "C" (consultant) role
+// for reference/summary purposes only — not real people, so they must
+// never appear in the name dropdowns or be treated as swap partners.
+// ---------------------------------------------------------------------
+const NON_PERSON_NAMES = new Set([
+  'Director on call',
+  'FACEM Total',
+  'JMOs minimum',
+  'JMOs rostered',
+  'Registrars',
+  'funded',
+]);
 
 function decodeCode(raw, role) {
   if (!raw) return null;
@@ -611,6 +682,50 @@ function buildWorkedSet(name, role) {
   return set;
 }
 
+
+// New night-spacing rule: after any proposed change, reject a roster where
+// two Night shifts have exactly one genuinely empty roster cell between them
+// (N, blank, N). This is checked against the resulting roster for each
+// person affected by the proposed transaction.
+function periodOnFromMap(map, role, dateStr) {
+  const raw = map[dateStr];
+  if (!raw) return null;
+  const decoded = decodeCode(raw, role);
+  return decoded ? decoded.period : null;
+}
+
+function nightGapViolationAfterChanges(name, role, removeDays, addDaysCodes) {
+  const map = personShiftMap(name, role);
+  removeDays.forEach(d => { delete map[dateFromDayNum(d)]; });
+  addDaysCodes.forEach(({ day, code }) => { map[dateFromDayNum(day)] = code; });
+
+  const nDays = Object.keys(map)
+    .filter(dateStr => periodOnFromMap(map, role, dateStr) === 'n')
+    .map(dayNum)
+    .sort((a, b) => a - b);
+
+  for (const d of nDays) {
+    // N -> N still requires at least 2 genuinely empty cells between nights.
+    if (nDays.includes(d + 2) && !map[dateFromDayNum(d + 1)]) return true;
+
+    // After an N, the next occupied roster cell must leave enough genuinely
+    // empty cells before a following shift: 3 before D, 2 before S or E.
+    // Any occupied cell (including teaching/RT or another shift) stops this
+    // particular gap check because it is not an empty cell.
+    for (let gap = 1; gap <= 3; gap++) {
+      const raw = map[dateFromDayNum(d + gap)];
+      if (!raw) continue;
+
+      const period = periodOnFromMap(map, role, dateFromDayNum(d + gap));
+      if (period === 'd' && gap < 4) return true;
+      if ((period === 's' || period === 'e') && gap < 3) return true;
+      break;
+    }
+  }
+  return false;
+}
+
+
 function longestRunTouching(workedSet, day) {
   if (!workedSet.has(day)) return 0;
   let start = day, end = day;
@@ -737,6 +852,8 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
 
       if (!swapKeepsRunsOk(doctor, role, giveDay, takeDay)) continue;
       if (!swapKeepsRunsOk(partner, role, takeDay, giveDay)) continue;
+      if (nightGapViolationAfterChanges(doctor, role, [giveDay], [{ day: takeDay, code: takeCode }])) continue;
+      if (nightGapViolationAfterChanges(partner, role, [takeDay], [{ day: giveDay, code: giveCode }])) continue;
 
       if (role === 'R') {
         const affectedDates = new Set();
@@ -780,6 +897,8 @@ function findTakers(doctor, role, giveDateStr) {
     if (!isFreeOn(partner, role, giveDateStr)) continue;
     if (!canPickUpExtraShift(partner, role, giveDay, giveCode)) continue;
     if (!extraShiftKeepsRunsOk(partner, role, giveDay)) continue;
+    if (nightGapViolationAfterChanges(partner, role, [], [{ day: giveDay, code: giveCode }])) continue;
+    if (nightGapViolationAfterChanges(doctor, role, [giveDay], [])) continue;
     if (role === 'R' && giveType === 'n') {
       const overrides = { [doctor]: null, [partner]: giveType };
       if (!ericMinimumHolds(giveDateStr, overrides)) continue;
@@ -811,6 +930,8 @@ function findBundleTakers(doctor, role, giveDates) {
     if (!giveDates.every(d => isFreeOn(partner, role, d))) continue;
     if (!canPickUpBundle(partner, role, giveDays, giveCodes)) continue;
     if (!bundleKeepsRunsOk(partner, role, giveDays)) continue;
+    if (nightGapViolationAfterChanges(partner, role, [], giveDays.map((day, i) => ({ day, code: giveCodes[i] })))) continue;
+    if (nightGapViolationAfterChanges(doctor, role, giveDays, [])) continue;
     if (role === 'R') {
       let ericOk = true;
       giveDates.forEach((d, i) => {
@@ -910,6 +1031,8 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
     if (!bundleSwapIsLegal(partner, role, partnerRemove, partnerAdd)) return false;
     if (!bundleSwapKeepsRunsOk(doctor, role, doctorRemove, doctorAdd.map(x => x.day))) return false;
     if (!bundleSwapKeepsRunsOk(partner, role, partnerRemove, partnerAdd.map(x => x.day))) return false;
+    if (nightGapViolationAfterChanges(doctor, role, doctorRemove, doctorAdd)) return false;
+    if (nightGapViolationAfterChanges(partner, role, partnerRemove, partnerAdd)) return false;
 
     if (role === 'R') {
       const affectedDates = new Set();
@@ -1180,8 +1303,8 @@ function renderSwapTab() {
     '</div>' +
     '<button class="search-btn" id="searchBtn">Search</button>' +
     (dates.length > 1 ? '<button class="search-btn bundle-btn" id="bundleBtn">Bundle swap options</button>' : '') +
-    '<div id="bundleResults"></div>' +
-    '<div id="resultsBody"></div>';
+    '<div id="resultsBody"></div>' +
+    '<div id="bundleResults"></div>';
 
   function refreshToggleStyles() {
     body.querySelectorAll('.type-toggle').forEach(el => el.classList.toggle('on', acceptTypeSet.has(el.dataset.type)));
@@ -1240,8 +1363,13 @@ function renderSwapTab() {
             windowDays, sameTypeOnly, acceptTypes: acceptTypeSet, acceptDays: acceptDaySet, allowSameDay,
           });
           renderBundleSwapResults(bundleResultsEl, matches);
+          // Jump straight to the beginning of the bundle results.
+          const start = document.getElementById('bundleResultsStart');
+          if (start) start.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (err) {
           bundleResultsEl.innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
+          const start = document.getElementById('bundleResultsStart');
+          if (start) start.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 20);
     });
@@ -1250,26 +1378,118 @@ function renderSwapTab() {
 
 function renderBundleSwapResults(container, matches) {
   if (!matches.length) {
-    container.innerHTML = '<div class="status-msg">No one can do the whole bundle as one verified swap. Try the individual results below, or widen the search window.</div>';
+    container.innerHTML = '<div class="status-msg">No one can do the whole bundle as one verified swap. Try the individual results above, or widen the search window.</div>';
     return;
   }
-  let html = '<div class="day-group-label">Verified bundle swaps</div>';
+  let html = '<div id="bundleResultsStart"></div><div class="day-group-label">Bundle swap options</div>';
   matches.forEach((m, idx) => {
     html += '<div class="option-card bundle-match" data-idx="' + idx + '">' +
-      '<div class="option-info"><div class="option-partner">' + escapeHtml(m.partner) + '<span class="flag bundle">bundle fit</span></div>' +
-      '<div class="option-meta">' + m.assignment.map(a =>
-        escapeHtml(fmtFull(a.give.date)) + ' &harr; ' + escapeHtml(fmtFull(a.take.dateStr))).join('<br>') +
-      '</div></div></div>';
+      '<span class="type-badge" style="background:#EDEEFA;color:var(--accent)">Bundle</span>' +
+      '<div class="option-info">' +
+        '<div class="option-action-btn primary bundle-person-btn">' + escapeHtml(m.partner) + '</div>' +
+        '<div class="option-action-btn bundle-shift-btn">' +
+          escapeHtml(m.assignment.map(a => fmtFull(a.give.date) + ' ↔ ' + fmtFull(a.take.dateStr)).join(' · ')) +
+        '</div>' +
+        '<div class="option-meta">' + m.assignment.map(a => escapeHtml(textOn(currentPerson.n, currentPerson.r, a.give.date)) + ' ↔ ' + escapeHtml(textOn(m.partner, currentPerson.r, a.take.dateStr))).join('<br>') + '</div>' +
+        '<div class="option-actions">' +
+          '<button class="option-action-btn cal-btn bundle-calendar-btn" data-idx="' + idx + '">Calendar</button>' +
+          '<button class="option-action-btn bundle-email-btn" data-idx="' + idx + '">Email</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="option-preview" id="bundlePreview-' + idx + '"></div>' +
+    '</div>';
   });
-  html += '<div class="status-msg">Tap a bundle match to email the full request.</div>';
+  html += '<div class="status-msg">Each bundle option is shown vertically. Use Calendar to preview the result, or Email to send the request.</div>';
   container.innerHTML = html;
 
-  container.querySelectorAll('.bundle-match').forEach(card => {
-    const m = matches[parseInt(card.dataset.idx, 10)];
-    card.addEventListener('click', () => {
+  container.querySelectorAll('.bundle-email-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = matches[parseInt(btn.dataset.idx, 10)];
       window.location.href = buildBundleSwapMailto(currentPerson.n, currentPerson.r, m.partner, m.assignment);
     });
   });
+  container.querySelectorAll('.bundle-calendar-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = matches[parseInt(btn.dataset.idx, 10)];
+      const panel = document.getElementById('bundlePreview-' + btn.dataset.idx);
+      renderBundlePreviewCalendar(panel, currentPerson.n, currentPerson.r, m.partner, m.assignment);
+    });
+  });
+}
+
+function renderBundlePreviewCalendar(container, doctor, role, partner, assignment) {
+  const allDays = [];
+  assignment.forEach(a => {
+    allDays.push(dayNum(a.give.date), dayNum(a.take.dateStr));
+  });
+  const mondayOfDay = day => {
+    const d = new Date(dateFromDayNum(day) + 'T00:00:00Z');
+    const offset = (d.getUTCDay() + 6) % 7;
+    return day - offset;
+  };
+  const weekStarts = [...new Set(allDays.map(mondayOfDay))].sort((a,b) => a-b);
+
+  // Build the actual post-swap rosters explicitly:
+  // - doctor gives their selected shifts and receives the partner's shifts
+  // - partner gives the matched shifts and receives the doctor's selected shifts
+  const doctorMap = personShiftMap(doctor, role);
+  const partnerMap = personShiftMap(partner, role);
+  const postDoctor = { ...doctorMap };
+  const postPartner = { ...partnerMap };
+
+  assignment.forEach(a => {
+    // Remove the shifts being given away.
+    delete postDoctor[a.give.date];
+    delete postPartner[a.take.dateStr];
+
+    // Put the exchanged shifts onto their new owners at the swap dates.
+    postDoctor[a.take.dateStr] = partnerMap[a.take.dateStr];
+    postPartner[a.give.date] = doctorMap[a.give.date];
+  });
+
+  function postBundleRaw(name, day) {
+    const dateStr = dateFromDayNum(day);
+    if (name === doctor) return postDoctor[dateStr] || null;
+    if (name === partner) return postPartner[dateStr] || null;
+    return rawCodeOn(name, role, dateStr);
+  }
+
+  function cellHtml(name, day) {
+    const raw = postBundleRaw(name, day);
+    const changed = assignment.some(a =>
+      (name === doctor && day === dayNum(a.give.date)) ||
+      (name === doctor && day === dayNum(a.take.dateStr)) ||
+      (name === partner && day === dayNum(a.take.dateStr)) ||
+      (name === partner && day === dayNum(a.give.date))
+    );
+    let cls = 'preview-cal-cell' + (changed ? ' changed' : '');
+    let inner;
+    if (!raw) {
+      inner = '<div class="pc-shift pc-empty"></div>';
+    } else {
+      const decoded = decodeCode(raw, role);
+      if (decoded && decoded.period) {
+        const colors = PERIOD_COLOR[decoded.period];
+        inner = '<div class="pc-shift" style="background:' + colors.bg + ';color:' + colors.ink + '">' + escapeHtml(PERIOD_NAME[decoded.period]) + '</div>';
+      } else {
+        cls += ' unavailable';
+        inner = '<div class="pc-shift" aria-label="Unavailable">x</div>';
+      }
+    }
+    return '<div class="' + cls + '">' + inner + '</div>';
+  }
+
+  function weekBlock(weekStart) {
+    const days = Array.from({length:7}, (_,i) => weekStart+i);
+    const header = '<div class="preview-cal-row"><div class="preview-cal-label"></div>' + days.map(d => '<div class="preview-cal-cell pc-header"><div class="pc-date">' + pcDateLabel(d) + '</div></div>').join('') + '</div>';
+    const row1 = '<div class="preview-cal-row"><div class="preview-cal-label">' + escapeHtml(firstName(doctor)) + '</div>' + days.map(d => cellHtml(doctor,d)).join('') + '</div>';
+    const row2 = '<div class="preview-cal-row"><div class="preview-cal-label">' + escapeHtml(firstName(partner)) + '</div>' + days.map(d => cellHtml(partner,d)).join('') + '</div>';
+    return header + row1 + row2;
+  }
+
+  container.innerHTML = '<div class="preview-card"><div class="day-group-label">Bundle preview: ' + escapeHtml(firstName(doctor)) + ' &harr; ' + escapeHtml(firstName(partner)) + '</div><div class="preview-cal-wrap">' + weekStarts.map(weekBlock).join('<div style="height:0.5rem"></div>') + '</div></div>';
 }
 
 function firstName(name) {
@@ -1347,34 +1567,160 @@ function renderSwapResults(results) {
     return;
   }
 
-  const flat = []; // { result, option }
-  let html = '<div class="shift-cols-wrap">';
+  const flat = [];
+  let html = '<div class="day-group-label">Single-shift swap options</div>';
+
+  // Put all single-person/single-shift swap options together at the top.
+  const showShiftHeaders = withOptions.length > 1;
+
   withOptions.forEach(result => {
-    const chronological = result.options.slice().sort((a, b) => a.date.localeCompare(b.date) || b.continuityScore - a.continuityScore || a.partner.localeCompare(b.partner));
-    html += '<div class="shift-col"><div class="shift-col-head">' + escapeHtml(fmtFull(result.giveDateStr)) + '<br>' + escapeHtml(result.giveText) + '</div><div class="shift-col-body">';
+    if (showShiftHeaders) {
+      html += '<div class="day-group-label">Swapping: ' +
+        escapeHtml(fmtFull(result.giveDateStr) + ' · ' + result.giveText) +
+        '</div>';
+    }
+
+    const chronological = result.options.slice().sort((a, b) =>
+      a.date.localeCompare(b.date) ||
+      b.continuityScore - a.continuityScore ||
+      a.partner.localeCompare(b.partner)
+    );
+
     chronological.forEach(o => {
       const idx = flat.length;
       flat.push({ result, option: o });
       const colors = PERIOD_COLOR[o.shiftType];
-      html += '<div class="option-card" data-idx="' + idx + '">' +
-        '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[o.shiftType] + '</span>' +
-        '<div class="option-info"><div class="option-partner">' + escapeHtml(o.partner) + '</div>' +
-        '<div class="option-meta">' + escapeHtml(fmtFull(o.date)) + ' &middot; ' + escapeHtml(o.shiftText) +
-        (o.sameDay ? '<span class="flag">same day</span>' : '') +
-        (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
-        (o.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
-        '</div></div></div>';
+      const showGoodFit = o.continuityScore > 0 && !o.breaksPartnerNightRun;
+
+      html += '<div class="option-card">' +
+        '<span class="type-badge" style="background:' + colors.bg + ';color:' + colors.ink + '">' +
+          PERIOD_NAME[o.shiftType] + '</span>' +
+        '<div class="option-info">' +
+          '<div class="option-action-btn primary person-btn">' +
+            escapeHtml(o.partner) +
+          '</div>' +
+          '<div class="option-action-btn shift-btn">' +
+            escapeHtml(fmtFull(o.date) + ' · ' + o.shiftText) +
+          '</div>' +
+          '<div class="option-meta">' +
+            (o.sameDay ? '<span class="flag">same day</span>' : '') +
+            (o.breaksPartnerNightRun ? '<span class="flag">mid night-run</span>' : '') +
+            (showGoodFit ? '<span class="flag good">good fit</span>' : '') +
+          '</div>' +
+          '<div class="option-actions">' +
+            '<button class="option-action-btn cal-btn" data-idx="' + idx + '">Calendar</button>' +
+            '<button class="option-action-btn email-btn" data-idx="' + idx + '">Email</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="option-preview" id="swapPreview-' + idx + '"></div>' +
+      '</div>';
     });
-    html += '</div></div>';
   });
-  html += '</div>';
-  html += '<div class="status-msg">Tap a swap to email a request.</div>';
+
+  html += '<div class="status-msg">Single-shift options are shown first. Tap Calendar to preview, or Email to send a request.</div>';
   out.innerHTML = html;
 
-  out.querySelectorAll('.option-card').forEach(card => {
-    const pair = flat[parseInt(card.dataset.idx, 10)];
-    card.addEventListener('click', () => { window.location.href = buildSwapMailto(pair.result, pair.option); });
+  out.querySelectorAll('.cal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pair = flat[parseInt(btn.dataset.idx, 10)];
+      const panel = document.getElementById('swapPreview-' + btn.dataset.idx);
+      renderSwapPreviewCalendar(panel, pair.result, pair.option);
+    });
   });
+
+  out.querySelectorAll('.email-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pair = flat[parseInt(btn.dataset.idx, 10)];
+      window.location.href = buildSwapMailto(pair.result, pair.option);
+    });
+  });
+
+  // Person/shift buttons are informational and keep the layout fully vertical.
+}
+
+// Renders a 2-row (doctor / partner) mini-calendar showing what each
+// person's schedule would look like AFTER the swap. Shows the full
+// Monday-Sunday week of the give-date; if the take-date falls in a
+// different week, a second 2-line week block is added below rather than
+// stretching one row wide enough to need horizontal scrolling. Raw codes
+// that exist but aren't a workable D/S/E/N shift (leave, "x", CST, etc.)
+// are always shown as "x" (unavailable) rather than left blank.
+function pcDateLabel(day) {
+  const d = new Date(dateFromDayNum(day) + 'T00:00:00Z');
+  return d.toLocaleDateString('en-AU', { weekday: 'short', timeZone: 'UTC' }) + ' ' + d.getUTCDate();
+}
+
+function renderSwapPreviewCalendar(container, result, o) {
+  const role = currentPerson.r;
+  const giveDay = dayNum(result.giveDateStr);
+  const takeDay = dayNum(o.date);
+
+  function mondayOfDay(day) {
+    const d = new Date(dateFromDayNum(day) + 'T00:00:00Z');
+    const offset = (d.getUTCDay() + 6) % 7; // Monday-first
+    return day - offset;
+  }
+
+  const giveWeekStart = mondayOfDay(giveDay);
+  const takeWeekStart = mondayOfDay(takeDay);
+  const weekStarts = giveWeekStart === takeWeekStart ? [giveWeekStart] : [giveWeekStart, takeWeekStart].sort((a, b) => a - b);
+
+  function postSwapRaw(name, day) {
+    if (name === result.doctor) {
+      if (day === takeDay) return rawCodeOn(o.partner, role, o.date);
+      if (day === giveDay) return null;
+    } else if (name === o.partner) {
+      if (day === giveDay) return rawCodeOn(result.doctor, role, result.giveDateStr);
+      if (day === takeDay) return null;
+    }
+    return rawCodeOn(name, role, dateFromDayNum(day));
+  }
+
+  function cellHtml(name, day) {
+    const raw = postSwapRaw(name, day);
+    const changed = (day === giveDay || day === takeDay);
+    let cls = 'preview-cal-cell' + (changed ? ' changed' : '');
+    let inner;
+    if (!raw) {
+      inner = '<div class="pc-shift pc-empty"></div>';
+    } else {
+      const decoded = decodeCode(raw, role);
+      if (decoded && decoded.period) {
+        const colors = PERIOD_COLOR[decoded.period];
+        inner = '<div class="pc-shift" style="background:' + colors.bg + ';color:' + colors.ink + '">' + escapeHtml(PERIOD_NAME[decoded.period]) + '</div>';
+      } else {
+        cls += ' unavailable';
+        inner = '<div class="pc-shift" aria-label="Unavailable">x</div>';
+      }
+    }
+    return '<div class="' + cls + '">' + inner + '</div>';
+  }
+
+  function weekBlockHtml(weekStart) {
+    const days = [];
+    for (let i = 0; i < 7; i++) days.push(weekStart + i);
+    const headerRow = '<div class="preview-cal-row">' +
+      '<div class="preview-cal-label"></div>' +
+      days.map((d,i) => '<div class="preview-cal-cell pc-header"><div class="pc-date">' + pcDateLabel(d) + '</div></div>').join('') +
+      '</div>';
+    const doctorRow = '<div class="preview-cal-row">' +
+      '<div class="preview-cal-label">' + escapeHtml(firstName(result.doctor)) + '</div>' +
+      days.map(d => cellHtml(result.doctor, d)).join('') +
+      '</div>';
+    const partnerRow = '<div class="preview-cal-row">' +
+      '<div class="preview-cal-label">' + escapeHtml(firstName(o.partner)) + '</div>' +
+      days.map(d => cellHtml(o.partner, d)).join('') +
+      '</div>';
+    return headerRow + doctorRow + partnerRow;
+  }
+
+  const weekBlocks = weekStarts.map(weekBlockHtml).join('<div style="height:0.5rem;"></div>');
+
+  container.innerHTML =
+    '<div class="preview-card">' +
+    '<div class="day-group-label">Preview: ' + escapeHtml(firstName(result.doctor)) + ' &harr; ' + escapeHtml(firstName(o.partner)) + '</div>' +
+    '<div class="preview-cal-wrap">' + weekBlocks + '</div>' +
+    '</div>';
 }
 
 function renderTakerTab() {
@@ -1414,7 +1760,7 @@ function renderTakerResults(results, bundleTakers) {
     html += '<div class="day-group-label">Bundle - take all ' + dates.length + ' shifts</div>';
     bundleTakers.forEach((name, idx) => {
       html += '<div class="taker-chip bundle-chip" data-bundle-idx="' + idx + '"><div class="name">' + escapeHtml(name) + '</div>' +
-        '<div class="meta">Free and legal for every selected shift<span class="flag bundle">bundle fit</span></div></div>';
+        '<div class="meta">Free and legal for every selected shift</div></div>';
     });
   }
 
@@ -1424,23 +1770,18 @@ function renderTakerResults(results, bundleTakers) {
   }
 
   const flat = []; // { result, taker }
-  if (withTakers.length) {
-    html += '<div class="shift-cols-wrap">';
-    withTakers.forEach(result => {
-      html += '<div class="shift-col"><div class="shift-col-head">' + escapeHtml(fmtFull(result.giveDateStr)) + '<br>' + escapeHtml(result.giveText) + '</div><div class="shift-col-body">';
-      result.takers.forEach(t => {
-        const idx = flat.length;
-        flat.push({ result, taker: t });
-        html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
-          '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
-          (t.continuityScore > 0 ? '<span class="flag good">good fit</span>' : '') +
-          (bundleTakers.includes(t.partner) ? '<span class="flag bundle">bundle fit</span>' : '') +
-          '</div></div>';
-      });
-      html += '</div></div>';
+  withTakers.forEach(result => {
+    html += '<div class="day-group-label">For ' + escapeHtml(fmtFull(result.giveDateStr)) + ' &middot; ' + escapeHtml(result.giveText) + '</div>';
+    result.takers.forEach(t => {
+      const idx = flat.length;
+      flat.push({ result, taker: t });
+      const showGoodFit = t.continuityScore > 0 && !t.breaksNightRun;
+      html += '<div class="taker-chip" data-idx="' + idx + '"><div class="name">' + escapeHtml(t.partner) + '</div>' +
+        '<div class="meta">Free that day' + (t.breaksNightRun ? ' &middot; would sit mid a night run' : '') +
+        (showGoodFit ? '<span class="flag good">good fit</span>' : '') +
+        '</div></div>';
     });
-    html += '</div>';
-  }
+  });
   html += '<div class="status-msg">Tap a name to email a request.</div>';
   out.innerHTML = html;
 
@@ -1466,7 +1807,7 @@ async function loadRoster() {
   try {
     const res = await fetch(DATA_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    PEOPLE = await res.json();
+    PEOPLE = (await res.json()).filter(p => !NON_PERSON_NAMES.has(p.n));
 
     const prevValue = currentPerson ? currentPerson.n + '|' + currentPerson.r : '';
 
