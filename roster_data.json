@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Friday 18 September",
     "oncall": "Nick Hooper",
-    "comment": "Kathleen Malcher (TS4 IC) - day purple reg",
+    "comment": "Kathleen Malcher (TS4 IC) - day purple reg, Lisa Du - HMO, Night Shift",
     "shifts": [
       {
         "name": "Day",
@@ -306,12 +306,6 @@
                 "role": "Registrars",
                 "names": [
                   "Mark Douglas (TS4 IC)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Lisa Du (PGY3)"
                 ]
               }
             ]
@@ -666,12 +660,6 @@
                 "role": "Registrars",
                 "names": [
                   "Lara Knowles (TS2)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Lisa Du (PGY3)"
                 ]
               }
             ]
