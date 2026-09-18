@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Friday 18 September",
     "oncall": "Nick Hooper",
-    "comment": "Kathleen Malcher (TS4 IC) - day purple reg, Lisa Du - HMO, Night Shift",
+    "comment": "Kathleen Malcher (TS4 IC) - day purple reg, Lisa Du - HMO, Night Shift Green",
     "shifts": [
       {
         "name": "Day",
@@ -352,7 +352,7 @@
   "panel2": {
     "date": "Saturday 19 September",
     "oncall": "Nick Hooper",
-    "comment": "",
+    "comment": "Lisa Du - HMO, Night Shift Fast Track",
     "shifts": [
       {
         "name": "Day",
