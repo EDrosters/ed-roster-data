@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Saturday 19 September",
     "oncall": "Nick Hooper",
-    "comment": "Lisa Du - HMO, Night Shift Fast Track",
+    "comment": "",
     "shifts": [
       {
         "name": "Day",
@@ -121,7 +121,7 @@
                 "role": "Registrars",
                 "names": [
                   "Stacey Lo (TS1)",
-                  "Amanda Chong-Halliday (TS3)"
+                  "Su Su Aung (TS3)"
                 ]
               }
             ]
@@ -133,7 +133,7 @@
                 "role": "Registrars",
                 "names": [
                   "Sophie Tighe (PEM)",
-                  "Fiona MacDonald (u)",
+                  "Fiona Macdonald (u)",
                   "Anamika Joijode (TS3)"
                 ]
               }
@@ -173,7 +173,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Su Su Aung (TS3)"
+                  "Amanda Chong-Halliday (TS3)"
                 ]
               },
               {
@@ -197,8 +197,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Giovanni Naselli (TS2)",
-                  "Kim Pham (TS4 IC)"
+                  "Giovanni Naselli (TS2)"
                 ]
               }
             ]
@@ -315,7 +314,7 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Melissa Shi"
+                  "Lisa Du (PGY3)"
                 ]
               }
             ]
@@ -345,7 +344,7 @@
   "panel2": {
     "date": "Sunday 20 September",
     "oncall": "Nick Hooper",
-    "comment": "Lisa Du - HMO, Night Shift SSU/HUB",
+    "comment": "",
     "shifts": [
       {
         "name": "Day",
@@ -410,7 +409,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Matt Bray (TS4 IC)"
+                  "Matthew Bray (TS4 IC)"
                 ]
               },
               {
@@ -483,7 +482,7 @@
                 "names": [
                   "Stacey Lo (TS1)",
                   "Sophie Tighe (PEM)",
-                  "Fiona MacDonald (u)"
+                  "Fiona Macdonald (u)"
                 ]
               }
             ]
@@ -682,7 +681,7 @@
                 "role": "JMO",
                 "names": [
                   "Samuel Robinson (PGY1)",
-                  "Melissa Shi"
+                  "Lisa Du (PGY3)"
                 ]
               }
             ]
