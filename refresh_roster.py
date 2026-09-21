@@ -415,6 +415,23 @@ def is_legend_row(name):
         return True
     return False
 
+HEADER_LABELS = {"role/name", "role/code", "week"}
+
+def find_name_start_row(ws, date_row, name_col=1, max_scan=20):
+    """Scans downward from just below the date row for the first real
+    staff name in name_col, instead of a hardcoded row number. This keeps
+    working if rows are inserted or removed above the list (previously,
+    a hardcoded row_start meant the first name in the list could fall
+    outside the scanned range entirely and be silently dropped)."""
+    for r in range(date_row + 1, date_row + 1 + max_scan):
+        v = fmt_code(ws.cell(row=r, column=name_col).value)
+        if not v:
+            continue
+        if v.strip().lower() in HEADER_LABELS or is_legend_row(v):
+            continue
+        return r
+    return date_row + 1  # fallback, shouldn't normally be hit
+  
 def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
     people = {}
     for r in range(row_start, row_end):
