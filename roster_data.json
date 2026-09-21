@@ -78,12 +78,6 @@
                 ]
               },
               {
-                "role": "Nurse Prac",
-                "names": [
-                  "Paul C"
-                ]
-              },
-              {
                 "role": "Adv Musc Physio",
                 "names": [
                   "Emily Allen"
@@ -231,12 +225,6 @@
                 "names": [
                   "Giovanni Naselli (TS2)",
                   "Ahmed Al'khshali (TS3)"
-                ]
-              },
-              {
-                "role": "Nurse Prac",
-                "names": [
-                  "Tim Byrne"
                 ]
               }
             ]
@@ -441,12 +429,6 @@
                 ]
               },
               {
-                "role": "Nurse Prac",
-                "names": [
-                  "Paul C"
-                ]
-              },
-              {
                 "role": "Adv Musc Physio",
                 "names": [
                   "Alice Wilcox"
@@ -600,12 +582,6 @@
                 "role": "Registrars",
                 "names": [
                   "Stacey Lo (TS1)"
-                ]
-              },
-              {
-                "role": "Nurse Prac",
-                "names": [
-                  "Shea H"
                 ]
               }
             ]
