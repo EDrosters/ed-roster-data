@@ -448,7 +448,7 @@ def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
         people[name] = codes
     return people
 
-def extract_jmo_np(wb):
+def extract_jmo_np(wb, amp_people):
     ws_jmo = wb["JMO"]
     jmo_dates = build_date_col_map(ws_jmo, 2, 2, 260)
     jmo_start = find_name_start_row(ws_jmo, date_row=2)
@@ -459,10 +459,7 @@ def extract_jmo_np(wb):
     np_start = find_name_start_row(ws_np, date_row=1)
     np_people = extract_name_rows(ws_np, np_dates, 1, np_start, 40)
 
-    amp_people = extract_amp2026(wb)
-
     return jmo_people, np_people, amp_people
-
 
 # ============================================================
 # STEP 4 - Shift/zone/role template (hard-coded; matches the
@@ -1035,8 +1032,12 @@ def main():
     registrar_periods = extract_all_registrars(wb)
     print(f"  {len(registrar_periods)} terms found")
 
-    print("Extracting JMO/NP/AMP...")
-    jmo_people, np_people, amp_people = extract_jmo_np(wb)
+    print("Extracting AMP 2026 tab...")
+    amp2026_people = extract_amp2026(wb)
+    print(f"  {len(amp2026_people)} AMPs")
+
+    print("Extracting JMO/NP...")
+    jmo_people, np_people, amp_people = extract_jmo_np(wb, amp2026_people)
     print(f"  {len(jmo_people)} JMOs, {len(np_people)} NPs, {len(amp_people)} AMPs")
 
     print("Extracting Comments tab...")
@@ -1054,10 +1055,7 @@ def main():
     weekly_data = build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
     print(f"  {len(weekly_data)} weeks")
 
-    print("Extracting AMP 2026 tab...")
-    amp2026_people = extract_amp2026(wb)
     amp_roster_data = build_amp_roster_data(amp2026_people)
-    print(f"  {len(amp2026_people)} AMPs")
 
     with open("roster_data.json", "w") as f:
         json.dump(data, f, indent=2)
