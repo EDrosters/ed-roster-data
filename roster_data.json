@@ -166,12 +166,6 @@
             "zone": "Purple",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "James Then"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Ahmed Al'khshali (TS3)",
