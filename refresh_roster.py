@@ -451,14 +451,14 @@ def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
 def extract_jmo_np(wb):
     ws_jmo = wb["JMO"]
     jmo_dates = build_date_col_map(ws_jmo, 2, 2, 260)
-    jmo_people = extract_name_rows(ws_jmo, jmo_dates, 1, 5, 545)
+    jmo_start = find_name_start_row(ws_jmo, date_row=2)
+    jmo_people = extract_name_rows(ws_jmo, jmo_dates, 1, jmo_start, 545)
 
     ws_np = wb["NP"]
     np_dates = build_date_col_map(ws_np, 1, 2, 70)
-    np_people = extract_name_rows(ws_np, np_dates, 1, 3, 40)
+    np_start = find_name_start_row(ws_np, date_row=1)
+    np_people = extract_name_rows(ws_np, np_dates, 1, np_start, 40)
 
-    # AMP2 tab was renamed/merged into "AMP 2026" - reuse the same
-    # self-correcting extraction used for the standalone AMP Roster page.
     amp_people = extract_amp2026(wb)
 
     return jmo_people, np_people, amp_people
