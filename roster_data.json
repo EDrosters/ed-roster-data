@@ -29,6 +29,12 @@
                   "Abhishek Kulkarni (u)",
                   "Aislinn Begley (TS3)"
                 ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Laura Harrison"
+                ]
               }
             ]
           },
@@ -103,7 +109,7 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Laura Harrison",
+                  "Jibran Haddad (PGY1)",
                   "Acacia Steel (PGY1)"
                 ]
               }
@@ -249,7 +255,6 @@
                 "role": "JMO",
                 "names": [
                   "Meg Wark (PGY1)",
-                  "Jibran Haddad (PGY1)",
                   "Arnav Sharma (PGY4)"
                 ]
               }
@@ -391,6 +396,12 @@
                 "role": "Registrars",
                 "names": [
                   "Jaimee Warren (TS3)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Jibran Haddad (PGY1)"
                 ]
               }
             ]
@@ -547,12 +558,6 @@
                 "names": [
                   "Ahmed Al'khshali (TS3)",
                   "Isurika Ranasinghe (TS3)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Jibran Haddad (PGY1)"
                 ]
               }
             ]
