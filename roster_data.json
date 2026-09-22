@@ -166,6 +166,12 @@
             "zone": "Purple",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "James Then"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Ahmed Al'khshali (TS3)",
@@ -180,8 +186,7 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Evan O\u2019Neill",
-                  "Scott Taylor"
+                  "Evan O\u2019Neill"
                 ]
               },
               {
