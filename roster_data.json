@@ -139,12 +139,7 @@
       },
       {
         "name": "Eve",
-        "top_notes": [
-          [
-            "EPIC",
-            "Yigal Reuben"
-          ]
-        ],
+        "top_notes": [],
         "zones": [
           {
             "zone": "Purple",
@@ -235,10 +230,6 @@
       {
         "name": "Night",
         "top_notes": [
-          [
-            "FACEM on Call, 0100-0430",
-            "Yigal Reuben"
-          ],
           [
             "FACEM on Call, 0430-0800",
             "Ben McKenzie"
