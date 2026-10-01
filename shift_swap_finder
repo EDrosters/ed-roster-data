@@ -13,17 +13,27 @@
     --canvas: #f0f2f6;
     --ink: #1b2130;
     --ink-soft: #4b5262;
-    --ink-faint: #838a99;
+    --ink-faint: #5b6272;
     --line: #e6e8ee;
+    --control-line: #8790a0;
     --accent: #4553C4;
+    --leave-bg: #E4E6EF;
+    --leave-ink: #3f4658;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; }
   body {
     background: var(--canvas);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
     color: var(--ink);
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  button, select, input { font-family: inherit; }
+  button:focus-visible, select:focus-visible, input:focus-visible, .taker-chip:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
   }
   header {
     background: #fff;
@@ -38,7 +48,7 @@
   }
   header h1 {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.45rem;
     font-weight: 700;
     margin: 0 0 0.6rem;
     text-align: center;
@@ -47,93 +57,96 @@
   .person-row { display: flex; flex-direction: column; gap: 0.5rem; }
   select.person-select {
     width: 100%;
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    padding: 0.7rem 0.8rem;
+    font-size: 1.05rem;
+    min-height: 48px;
+    padding: 0.7rem 0.85rem;
     border-radius: 10px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     background: var(--canvas);
     color: var(--ink);
   }
   select.person-select option { color: #1b2130; }
 
-  .content { padding: 1rem; max-width: 760px; margin: 0 auto; }
+  .content { padding: 1rem; max-width: 800px; margin: 0 auto; }
 
   .empty-state {
     text-align: center;
     color: var(--ink-faint);
     padding: 3rem 1rem;
-    font-size: 0.95rem;
+    font-size: 1.05rem;
   }
 
   .day-group-label {
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--ink-faint);
-    margin: 1.1rem 0 0.4rem 0.2rem;
+    margin: 1.2rem 0 0.5rem 0.2rem;
   }
   .day-group-label:first-child { margin-top: 0; }
 
-  .cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-  .cal-legend { display: flex; gap: 0.9rem; flex-wrap: wrap; margin: 0 0 0.8rem 0.1rem; }
-  .mode-row { margin: 0 0 0.8rem; }
+  .cal-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .cal-legend { display: flex; gap: 0.5rem 1rem; flex-wrap: wrap; margin: 0 0 0.9rem 0.1rem; }
+  .mode-row { margin: 0 0 0.9rem; }
   .mode-toggle-btn {
     background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 0.4rem 0.9rem;
-    font-family: inherit;
-    font-size: 0.8rem;
+    border: 1px solid var(--control-line);
+    border-radius: 24px;
+    min-height: 44px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--ink-soft);
     cursor: pointer;
   }
   .mode-toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--ink-soft); }
+  .cal-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.92rem; color: var(--ink-soft); }
 
   .cal-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 0.8rem; }
-  .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--line); }
   .cal-nav button {
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--control-line);
     background: #fff;
     color: var(--ink-soft);
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     line-height: 1;
     cursor: pointer;
   }
   .cal-nav button:active { background: var(--canvas); }
-  .cal-month-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--ink); }
+  .cal-month-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.2rem; color: var(--ink); }
   .cal-weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--line); }
-  .cal-weekday-row div { text-align: center; padding: 0.55rem 0; font-size: 0.62rem; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; }
+  .cal-weekday-row div { text-align: center; padding: 0.6rem 0; font-size: 0.74rem; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.02em; }
   .cal-body { display: grid; grid-template-columns: repeat(7, 1fr); }
   .cal-daycell {
-    min-height: 78px;
+    min-height: 96px;
+    min-width: 0;
     border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    padding: 0.4rem 0.35rem;
+    padding: 0.35rem 0.2rem;
   }
   .cal-daycell.off-month { background: #fafafb; }
-  .cal-daynum { display: inline-block; font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); }
+  .cal-daynum { display: inline-block; font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); padding-left: 0.1rem; }
   .cal-daynum.today {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px; border-radius: 50%;
+    width: 26px; height: 26px; border-radius: 50%; padding-left: 0;
     background: var(--ink); color: #fff; font-weight: 700;
   }
   .cal-shift-box {
-    margin-top: 0.35rem;
-    font-size: 0.68rem;
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
     font-weight: 700;
-    padding: 0.25rem 0.4rem;
+    padding: 0.28rem 0.25rem;
     border-radius: 7px;
-    line-height: 1.25;
+    line-height: 1.2;
     cursor: pointer;
+    overflow-wrap: anywhere;
   }
   .cal-shift-box.not-clickable { cursor: default; }
-  .cal-shift-box.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .cal-shift-box.cal-leave { background: var(--leave-bg); color: var(--leave-ink); text-align: center; font-size: 0.95rem; }
+  .cal-shift-box.selected { outline: 3px solid var(--accent); outline-offset: 1px; }
   .cal-check { margin-right: 0.2rem; }
 
   .select-bar {
@@ -144,12 +157,12 @@
     justify-content: space-between;
     gap: 0.6rem;
     background: #fff;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     border-radius: 12px;
     padding: 0.7rem 0.9rem;
     margin: 0.6rem 0 1rem;
-    box-shadow: 0 2px 8px rgba(20,20,40,0.08);
-    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(20,20,40,0.12);
+    font-size: 1rem;
     font-weight: 600;
     color: var(--ink);
   }
@@ -160,69 +173,72 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    color: var(--ink-faint);
-    font-size: 0.85rem;
+    color: var(--ink-soft);
+    font-size: 1rem;
     background: none;
     border: none;
-    padding: 0.3rem 0;
-    margin-bottom: 0.6rem;
+    min-height: 44px;
+    padding: 0.4rem 0;
+    margin-bottom: 0.4rem;
     cursor: pointer;
-    font-family: inherit;
   }
 
   .summary-card {
     background: #fff;
     border-radius: 12px;
-    padding: 0.9rem 1rem;
+    padding: 0.95rem 1.05rem;
     margin-bottom: 1rem;
     box-shadow: 0 1px 2px rgba(20,20,40,0.04);
     outline: 2px solid var(--accent);
   }
-  .summary-card .label { font-size: 0.72rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
-  .summary-card .main { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.05rem; margin-top: 0.2rem; }
+  .summary-card .label { font-size: 0.82rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
+  .summary-card .main { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.15rem; margin-top: 0.25rem; }
 
   .tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
   .tab-btn {
     flex: 1;
-    font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 1rem;
+    min-height: 48px;
     padding: 0.6rem 0;
     border-radius: 10px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     background: #fff;
     color: var(--ink-soft);
     cursor: pointer;
   }
   .tab-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 
-  .controls { background: #fff; border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1rem; }
-  .field { margin-bottom: 0.7rem; }
+  .controls { background: #fff; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+  .field { margin-bottom: 1rem; }
   .field:last-child { margin-bottom: 0; }
-  .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 0.3rem; }
+  .field label { display: block; font-size: 0.92rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 0.4rem; }
   .field select {
     width: 100%;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    padding: 0.55rem 0.6rem;
+    font-size: 1rem;
+    min-height: 46px;
+    padding: 0.6rem 0.7rem;
     border-radius: 8px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     background: #fff;
     color: var(--ink);
   }
-  .checkrow { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.5rem; }
+  .field select:disabled { background: var(--canvas); color: var(--ink-faint); }
+  .checkrow { display: flex; align-items: center; gap: 0.65rem; font-size: 1rem; color: var(--ink-soft); margin-top: 0.8rem; min-height: 32px; }
+  .checkrow input { width: 22px; height: 22px; flex: 0 0 22px; accent-color: var(--accent); }
 
   .type-toggles { display: flex; gap: 0.4rem; }
   .type-toggle {
     flex: 1;
     text-align: center;
-    padding: 0.45rem 0;
+    padding: 0.7rem 0;
+    min-height: 46px;
     border-radius: 8px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 1.05rem;
     cursor: pointer;
-    color: var(--ink-faint);
+    color: var(--ink-soft);
     background: #fff;
   }
   .type-toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -231,27 +247,52 @@
   .day-toggle {
     flex: 1;
     text-align: center;
-    padding: 0.4rem 0;
+    padding: 0.7rem 0;
+    min-height: 46px;
     border-radius: 8px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     font-weight: 600;
-    font-size: 0.66rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    color: var(--ink-faint);
+    color: var(--ink-soft);
     background: #fff;
   }
   .day-toggle.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .date-picker-toggle {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    width: 100%; min-height: 48px; padding: 0.6rem 0.8rem; border-radius: 9px;
+    border: 1px solid var(--control-line); background: #fff; color: var(--ink-soft);
+    font-size: 0.95rem; font-weight: 650; cursor: pointer;
+  }
+  .date-picker-toggle.active { border-color: var(--accent); background: #faf7ff; color: var(--ink); }
+  .date-picker-count { font-size: 0.85rem; color: var(--ink-soft); font-weight: 600; }
+  .date-picker { margin-top: 0.55rem; border: 1px solid var(--control-line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .date-picker-nav { display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.7rem; border-bottom:1px solid var(--line); }
+  .date-picker-nav button { width:44px; height:44px; border:1px solid var(--control-line); border-radius:10px; background:#fff; color:var(--ink-soft); font-size:1.3rem; line-height:1; cursor:pointer; }
+  .date-picker-title { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.02rem; color:var(--ink); }
+  .date-picker-weekdays, .date-picker-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+  .date-picker-weekdays div { text-align:center; padding:0.45rem 0; font-size:0.75rem; font-weight:700; color:var(--ink-faint); text-transform:uppercase; }
+  .date-picker-day { min-height:46px; border:0; border-top:1px solid #e3e0ea; border-right:1px solid #e3e0ea; background:#fff; color:var(--ink-soft); font-size:0.95rem; font-weight:650; cursor:pointer; }
+  .date-picker-day.off-month { background:#fafafb; color:#959ba9; cursor:default; }
+  .date-picker-day.unavailable-window { color:#959ba9; background:#fafafb; cursor:default; }
+  .date-picker-day.selected { background:var(--ink); color:#fff; }
+  .date-picker-day.today:not(.selected) { box-shadow:inset 0 0 0 2px var(--accent); }
+  .date-picker-actions { display:flex; justify-content:space-between; align-items:center; gap:0.5rem; padding:0.4rem 0.65rem; border-top:1px solid var(--line); }
+  .date-picker-clear { border:0; background:none; color:var(--accent); font-size:0.9rem; font-weight:700; cursor:pointer; padding:0.6rem 0.4rem; min-height:44px; }
+  .date-picker-help { font-size:0.82rem; color:var(--ink-soft); }
 
   .search-btn {
     width: 100%;
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 1.1rem;
+    min-height: 52px;
     background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 12px;
-    padding: 0.8rem;
+    padding: 0.9rem;
     margin-bottom: 1rem;
     cursor: pointer;
   }
@@ -259,39 +300,43 @@
 
   .option-card {
     background: #fff;
-    border: 1px solid #eeeaf4;
+    border: 1px solid #ddd8e8;
     border-radius: 12px;
-    padding: 0.55rem 0.65rem;
-    margin-bottom: 0.45rem;
-    box-shadow: 0 1px 3px rgba(80,70,110,0.05);
+    padding: 0.7rem 0.75rem;
+    margin-bottom: 0.55rem;
+    box-shadow: 0 1px 3px rgba(80,70,110,0.06);
     display: grid;
-    grid-template-columns: 52px minmax(190px, 0.9fr) minmax(300px, 1.45fr);
+    grid-template-columns: 64px minmax(200px, 0.9fr) minmax(300px, 1.45fr);
     align-items: start;
-    gap: 0.55rem;
+    gap: 0.65rem;
   }
-  .type-badge { font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.38rem; border-radius: 999px; display: inline-block; align-self: flex-start; }
-  .option-info { display: flex; flex-direction: column; gap: 0.22rem; min-width: 0; }
-  .option-partner { font-weight: 700; font-size: 0.92rem; }
-  .option-meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
-  .flag { font-size: 0.7rem; color: #A6942A; background: #FBF6D9; padding: 0.1rem 0.4rem; border-radius: 5px; margin-left: 0.4rem; }
-  .flag.good { color: #1E8F63; background: #EAF6F0; }
+  .type-badge { font-size: 0.78rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 999px; display: inline-block; align-self: flex-start; }
+  .option-info { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+  .option-partner { font-weight: 700; font-size: 1rem; }
+  .option-meta { font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.1rem; }
+  .option-meta:empty { display: none; }
+  .flag { font-size: 0.78rem; color: #6B5C06; background: #FBF6D9; padding: 0.15rem 0.5rem; border-radius: 5px; margin-left: 0.4rem; font-weight: 600; }
+  .option-meta .flag:first-child { margin-left: 0; }
+  .flag.good { color: #0F5F40; background: #EAF6F0; }
 
-  .option-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.22rem; width: 100%; }
+  .option-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem; width: 100%; }
   .option-action-btn {
     appearance: none;
     background: #fff;
-    border: 1px solid #e4dfee;
+    border: 1px solid var(--control-line);
     border-radius: 8px;
-    padding: 0.28rem 0.42rem;
-    font-family: inherit;
-    font-size: 0.68rem;
-    line-height: 1.2;
+    padding: 0.5rem 0.55rem;
+    font-size: 0.92rem;
+    line-height: 1.25;
     font-weight: 650;
     color: var(--ink-soft);
     cursor: pointer;
     white-space: normal;
     text-align: center;
-    min-height: 27px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-shadow: 0 1px 2px rgba(80,70,110,0.04);
     transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
   }
@@ -300,30 +345,32 @@
     box-shadow: 0 2px 5px rgba(20,20,40,0.07);
   }
   .option-action-btn:active { background: var(--canvas); }
-.option-action-btn.person-btn:hover, .option-action-btn.shift-btn:hover, .option-action-btn.bundle-person-btn:hover, .option-action-btn.bundle-shift-btn:hover { transform: none; box-shadow: 0 1px 2px rgba(80,70,110,0.04); }
-.option-action-btn.person-btn:active, .option-action-btn.shift-btn:active, .option-action-btn.bundle-person-btn:active, .option-action-btn.bundle-shift-btn:active { background: #fff; }
-  .option-action-btn.primary { font-weight: 700; background: #faf7ff; border-color: #d9cbed; }
+  .option-action-btn.person-btn:hover, .option-action-btn.shift-btn:hover, .option-action-btn.bundle-person-btn:hover, .option-action-btn.bundle-shift-btn:hover { transform: none; box-shadow: 0 1px 2px rgba(80,70,110,0.04); }
+  .option-action-btn.person-btn:active, .option-action-btn.shift-btn:active, .option-action-btn.bundle-person-btn:active, .option-action-btn.bundle-shift-btn:active { background: #fff; }
+  .option-action-btn.primary { font-weight: 700; color: var(--ink); background: #faf7ff; border-color: #a99cc4; }
   .person-btn, .shift-btn, .bundle-person-btn, .bundle-shift-btn, .cal-btn, .email-btn, .bundle-email-btn { width: 100%; }
-  .person-btn { text-align: left; padding-left: 0.38rem; cursor: default; }
-  .shift-btn { text-align: left; padding-left: 0.38rem; cursor: default; }
+  .person-btn { justify-content: flex-start; text-align: left; padding-left: 0.6rem; cursor: default; }
+  .shift-btn { justify-content: flex-start; text-align: left; padding-left: 0.6rem; cursor: default; }
 
-  .option-card > .type-badge { align-self: start; justify-self: start; margin-top: 0.18rem; }
+  .option-card > .type-badge { align-self: start; justify-self: start; margin-top: 0.2rem; }
   .option-preview { grid-column: 3; min-width: 0; }
   .option-preview:empty { display: none; }
   .preview-card {
     background: #fff;
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 0.45rem;
+    padding: 0.5rem;
     margin-top: 0;
   }
+  .pc-legend { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; font-size: 0.8rem; color: var(--ink-soft); margin: 0 0 0.5rem 0.2rem; }
+  .pc-legend b { font-weight: 800; }
   .preview-cal-wrap { overflow-x: auto; padding-bottom: 0.3rem; }
   .preview-cal-row { display: flex; gap: 3px; margin-bottom: 3px; }
-  .preview-cal-label { flex: 0 0 46px; font-size: 0.62rem; font-weight: 700; color: var(--ink-soft); display: flex; align-items: center; }
+  .preview-cal-label { flex: 0 0 60px; min-width: 0; font-size: 0.78rem; font-weight: 700; line-height: 1.15; color: var(--ink-soft); display: flex; align-items: center; overflow-wrap: anywhere; }
   .preview-cal-cell {
     flex: 1 1 0;
     min-width: 0;
-    min-height: 42px;
+    min-height: 48px;
     border-radius: 6px;
     background: #fff;
     border: 1px solid var(--line);
@@ -331,34 +378,34 @@
     text-align: center;
   }
   .preview-cal-cell.pc-header { background: transparent; border: none; min-height: auto; }
-  .preview-cal-cell.changed { outline: 2px solid var(--accent); }
-  .preview-cal-cell.unavailable .pc-shift { background: #ECEDF6; color: var(--ink-faint); }
-  .pc-date { font-size: 0.58rem; font-weight: 700; color: var(--ink-soft); }
-  .pc-shift { margin-top: 2px; font-size: 0.56rem; font-weight: 700; border-radius: 4px; padding: 1px 1px; }
+  .preview-cal-cell.changed { outline: 3px solid var(--accent); }
+  .preview-cal-cell.unavailable .pc-shift { background: var(--leave-bg); color: var(--leave-ink); }
+  .pc-date { font-size: 0.75rem; line-height: 1.15; font-weight: 700; color: var(--ink-soft); }
+  .pc-shift { margin-top: 3px; font-size: 0.95rem; font-weight: 800; border-radius: 5px; padding: 3px 0; }
   .pc-shift.pc-empty { color: var(--ink-faint); background: none; }
 
-  .taker-chip { background: #fff; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); cursor: pointer; }
+  .taker-chip { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.5rem; box-shadow: 0 1px 2px rgba(20,20,40,0.04); cursor: pointer; }
   .taker-chip:active { background: #f3f4f8; }
-  .taker-chip .name { font-weight: 700; font-size: 0.92rem; }
-  .taker-chip .meta { font-size: 0.76rem; color: var(--ink-faint); margin-top: 0.1rem; }
+  .taker-chip .name { font-weight: 700; font-size: 1.02rem; }
+  .taker-chip .meta { font-size: 0.88rem; color: var(--ink-soft); margin-top: 0.15rem; }
 
   .actions-row { margin-top: 0.6rem; margin-bottom: 1.5rem; }
   .ghost-btn {
     background: #fff;
-    border: 1px solid var(--line);
+    border: 1px solid var(--control-line);
     border-radius: 10px;
-    padding: 0.55rem 0.9rem;
-    font-family: inherit;
-    font-size: 0.82rem;
+    min-height: 44px;
+    padding: 0.55rem 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--ink);
     cursor: pointer;
   }
 
   .site-link { text-align: center; padding: 0.5rem 1rem 1.5rem; }
-  .site-link a { color: var(--ink-faint); font-size: 0.8rem; text-decoration: none; }
+  .site-link a { color: var(--ink-soft); font-size: 0.92rem; text-decoration: none; }
 
-  .status-msg { font-size: 0.85rem; color: var(--ink-faint); text-align: center; padding: 0.6rem 0; }
+  .status-msg { font-size: 0.95rem; color: var(--ink-soft); text-align: center; padding: 0.7rem 0; }
   .bundle-chip { outline: 2px solid var(--accent); }
   .search-btn.bundle-btn {
     background: #fff;
@@ -367,13 +414,17 @@
   }
   .option-card.bundle-match { cursor: pointer; }
   @media (max-width: 900px) {
-    .option-card { grid-template-columns: 46px minmax(0, 1fr); }
+    .option-card { grid-template-columns: 58px minmax(0, 1fr); }
     .option-preview { grid-column: 1 / -1; }
   }
   @media (max-width: 560px) {
+    .content { padding: 0.9rem 0.5rem; }
     .option-card { grid-template-columns: 1fr; }
     .option-card > .type-badge { margin-top: 0; }
     .option-preview { grid-column: 1; }
+    .cal-shift-box { font-size: 0.72rem; padding: 0.25rem 0.15rem; }
+    .cal-daycell { padding: 0.3rem 0.12rem; }
+    .cal-card, .controls, .summary-card { margin-left: 0; margin-right: 0; }
   }
 </style>
 </head>
@@ -405,7 +456,14 @@ let multiSelectMode = false;
 let activeTab = 'swap';
 let acceptTypeSet = new Set(); // "accept swaps of these shifts only" — empty = accept any type
 let acceptDaySet = new Set(); // "accept swaps on these days only" (0=Mon..6=Sun) — empty = accept any day
-const todayStr = new Date().toISOString().slice(0, 10);
+let acceptDateSet = new Set(); // exact dates available to swap into — empty = accept any date
+let acceptDateMonth = null;
+let rosterFingerprint = null;
+let rosterLoadedOnce = false;
+function getTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
 
 // ---------------------------------------------------------------------
 // Roster decoding — ported directly from myshifts.html so this page
@@ -422,23 +480,24 @@ const REG_ROLE = {
   n: {'1':'ERIC','2':'Purple','3':'Green','4':'SSU','5':'Fast Track','6':'Purple'},
 };
 const PERIOD_COLOR = {
-  d: {bg:'#FBF6D9', ink:'#A6942A'},
-  s: {bg:'#EAF6F0', ink:'#1E8F63'},
-  e: {bg:'#E3F2FB', ink:'#3B7EA8'},
-  n: {bg:'#F7E3DC', ink:'#A4462E'},
+  d: {bg:'#FBF6D9', ink:'#726308'},
+  s: {bg:'#EAF6F0', ink:'#116545'},
+  e: {bg:'#E3F2FB', ink:'#24607F'},
+  n: {bg:'#F7E3DC', ink:'#9A4029'},
 };
+const LEAVE_COLOR = {bg:'#E4E6EF', ink:'#3f4658'};
 
 // ---------------------------------------------------------------------
-// ERIC-capable registrars — mirrors column C of the roster spreadsheet.
-// This isn't in the live JSON feed, so it's maintained here by hand.
-// Update this list whenever it changes during the term (names must
-// match the roster exactly, including the "(TS3)"/"(u)" etc. suffix).
+// ERIC-capable registrars — read directly from the roster's ERIC column.
+// The roster data may expose the column as ERIC/eric/Eric/e depending on
+// the export format; a value of "y" (or true) means ERIC-capable.
 // ---------------------------------------------------------------------
-const ERIC_CAPABLE_REGS = [
-  // "Joyce Chan (TS1)",
-  // "Alfred Liu (PEM)",
-];
-function isEricCapable(name) { return ERIC_CAPABLE_REGS.includes(name); }
+function isEricCapable(name) {
+  const rec = PEOPLE.find(p => p.n === name && p.r === 'R');
+  if (!rec) return false;
+  const value = rec.ERIC ?? rec.eric ?? rec.Eric ?? rec.e;
+  return value === true || String(value ?? '').trim().toLowerCase() === 'y';
+}
 
 // ---------------------------------------------------------------------
 // Non-person rows the roster feed lists under the "C" (consultant) role
@@ -453,6 +512,20 @@ const NON_PERSON_NAMES = new Set([
   'Registrars',
   'funded',
 ]);
+
+function isLeaveCode(raw) {
+  if (!raw) return false;
+  let lower = String(raw).toLowerCase().trim();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  return lower === 'l' || lower === 'cl' || lower === 'sl' || lower === 'bl' || lower === 'el' || lower.startsWith('pl');
+}
+
+function isExplicitXCode(raw) {
+  if (!raw) return false;
+  let lower = String(raw).toLowerCase().trim();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  return lower === 'x';
+}
 
 function decodeCode(raw, role) {
   if (!raw) return null;
@@ -512,7 +585,7 @@ function fmtWeekRange(mondayDate) {
   return startStr + ' - ' + endStr;
 }
 function fmtGroupLabel(dateStr) {
-  const thisMonday = mondayOf(todayStr);
+  const thisMonday = mondayOf(getTodayStr());
   const cardMonday = mondayOf(dateStr);
   const weekDiff = Math.round((cardMonday - thisMonday) / (7 * 86400000));
   if (weekDiff === 0) return 'This Week';
@@ -532,6 +605,26 @@ function escapeHtml(s) {
 const SHIFT_TIMES = { d:{start:8.0,end:17.5}, s:{start:11.0,end:20.5}, e:{start:14.5,end:24.0}, n:{start:23.0,end:32.5} };
 const REST_DAY_SWING_EVE = 10.0, REST_SINGLE_NIGHT = 23.0, REST_MULTI_NIGHT = 48.0, REST_WITHIN_NIGHT_RUN = 10.0;
 const RADIUS = 5, EPS = 1e-9;
+
+// "Accept swaps on these days" and "specific dates" are alternatives (OR):
+// - a ticked weekday is accepted only when it falls inside the search window;
+// - a picked exact date is accepted independently, up to 4 weeks either side;
+// - the shift-type filter remains an AND filter for both paths.
+// With neither set, every date inside the search window is OK.
+// The bundle search uses this same eligibility test for every take-date.
+const SPECIFIC_DATE_SPAN = 28;
+function searchRadius(windowDays, acceptDates) {
+  return acceptDates.size > 0 ? Math.max(windowDays, SPECIFIC_DATE_SPAN) : windowDays;
+}
+function passesDayOrDateFilter(takeDateStr, offset, windowDays, acceptDays, acceptDates) {
+  const hasDays = acceptDays.size > 0, hasDates = acceptDates.size > 0;
+  const inWindow = Math.abs(offset) <= windowDays;
+  if (!hasDays && !hasDates) return inWindow;
+  const weekdayIdx = (new Date(takeDateStr + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0=Mon..6=Sun
+  const byDay = hasDays && inWindow && acceptDays.has(weekdayIdx);
+  const byDate = hasDates && Math.abs(offset) <= SPECIFIC_DATE_SPAN && acceptDates.has(takeDateStr);
+  return byDay || byDate;
+}
 
 function dayNum(dateStr) { return Math.round(Date.parse(dateStr + 'T00:00:00Z') / 86400000); }
 function dateFromDayNum(n) { return new Date(n * 86400000).toISOString().slice(0, 10); }
@@ -661,7 +754,9 @@ function continuityScore(name, role, day, type) {
 // Consecutive-worked-day run check (7+ in a row is declined). A day
 // counts as "worked" for this check if it's a D/S/E/N shift OR a
 // Wednesday teaching day ("rt"), even though teaching isn't itself a
-// swappable shift.
+// swappable shift. CST (code 8, with or without "-t") is deliberately
+// NOT counted: it decodes with no period and isn't "rt", so it falls
+// through to false below. Leave codes are not counted either.
 // ---------------------------------------------------------------------
 function isWorkedDay(name, role, dateStr) {
   const raw = rawCodeOn(name, role, dateStr);
@@ -694,37 +789,50 @@ function periodOnFromMap(map, role, dateStr) {
   return decoded ? decoded.period : null;
 }
 
-function nightGapViolationAfterChanges(name, role, removeDays, addDaysCodes) {
-  const map = personShiftMap(name, role);
-  removeDays.forEach(d => { delete map[dateFromDayNum(d)]; });
-  addDaysCodes.forEach(({ day, code }) => { map[dateFromDayNum(day)] = code; });
-
+function nightGapViolationsForMap(map, role) {
   const nDays = Object.keys(map)
     .filter(dateStr => periodOnFromMap(map, role, dateStr) === 'n')
     .map(dayNum)
     .sort((a, b) => a - b);
 
+  const violations = new Set();
   for (const d of nDays) {
-    // N -> N still requires at least 2 genuinely empty cells between nights.
-    if (nDays.includes(d + 2) && !map[dateFromDayNum(d + 1)]) return true;
+    // N, blank, N: exactly one genuinely empty roster cell between nights.
+    if (nDays.includes(d + 2) && !map[dateFromDayNum(d + 1)]) {
+      violations.add('nn-gap:' + d);
+    }
 
     // After an N, the next occupied roster cell must leave enough genuinely
     // empty cells before a following shift: 3 before D, 2 before S or E.
-    // Any occupied cell (including teaching/RT or another shift) stops this
-    // particular gap check because it is not an empty cell.
     for (let gap = 1; gap <= 3; gap++) {
       const raw = map[dateFromDayNum(d + gap)];
       if (!raw) continue;
 
       const period = periodOnFromMap(map, role, dateFromDayNum(d + gap));
-      if (period === 'd' && gap < 4) return true;
-      if ((period === 's' || period === 'e') && gap < 3) return true;
+      if (period === 'd' && gap < 4) violations.add('after-n-d:' + d + ':' + (d + gap));
+      if ((period === 's' || period === 'e') && gap < 3) violations.add('after-n-se:' + d + ':' + (d + gap));
       break;
     }
   }
-  return false;
+  return violations;
 }
 
+function nightGapViolationAfterChanges(name, role, removeDays, addDaysCodes) {
+  // Only reject violations newly created by this proposed change. Existing
+  // violations elsewhere in the roster must not make an otherwise legal swap fail.
+  const beforeMap = personShiftMap(name, role);
+  const beforeViolations = nightGapViolationsForMap(beforeMap, role);
+
+  const afterMap = { ...beforeMap };
+  removeDays.forEach(d => { delete afterMap[dateFromDayNum(d)]; });
+  addDaysCodes.forEach(({ day, code }) => { afterMap[dateFromDayNum(day)] = code; });
+
+  const afterViolations = nightGapViolationsForMap(afterMap, role);
+  for (const violation of afterViolations) {
+    if (!beforeViolations.has(violation)) return true;
+  }
+  return false;
+}
 
 function longestRunTouching(workedSet, day) {
   if (!workedSet.has(day)) return 0;
@@ -808,17 +916,18 @@ function ericCountForDate(dateStr, overrides) {
   return count;
 }
 function ericMinimumHolds(dateStr, overrides) {
-  const before = ericCountForDate(dateStr, null);
-  if (before < 2) return true; // already a pre-existing gap — not this swap's fault
-  return ericCountForDate(dateStr, overrides) >= 2;
+  const after = ericCountForDate(dateStr, overrides);
+  // Every night must finish with at least 2 ERIC-capable registrars.
+  // 3 -> 2 is therefore valid; 2 -> 1 (or lower) is not.
+  return after >= 2;
 }
 
-function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay) {
+function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay, acceptDates = new Set()) {
   const giveDay = dayNum(giveDateStr);
   const giveType = periodOn(doctor, role, giveDateStr);
   if (!giveType) throw new Error('That no longer looks like a workable shift.');
   const giveCode = rawCodeOn(doctor, role, giveDateStr);
-  const tomorrowStr = dateFromDayNum(dayNum(todayStr) + 1);
+  const tomorrowStr = dateFromDayNum(dayNum(getTodayStr()) + 1);
 
   const options = [];
   for (const partner of peopleOfRole(role)) {
@@ -826,7 +935,8 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
     if (!isFreeOn(partner, role, giveDateStr)) {
       if (periodOn(partner, role, giveDateStr) === null) continue; // on leave / non-workable — hard stop
     }
-    for (let offset = -windowDays; offset <= windowDays; offset++) {
+    const radius = searchRadius(windowDays, acceptDates);
+    for (let offset = -radius; offset <= radius; offset++) {
       const takeDay = giveDay + offset;
       const takeDateStr = dateFromDayNum(takeDay);
       if (takeDateStr < tomorrowStr) continue; // only show results from tomorrow onward
@@ -844,8 +954,7 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
 
       if (sameTypeOnly && takeType !== giveType) continue;
       if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
-      const weekdayIdx = (new Date(takeDateStr + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0=Mon..6=Sun
-      if (acceptDays.size > 0 && !acceptDays.has(weekdayIdx)) continue;
+      if (!passesDayOrDateFilter(takeDateStr, offset, windowDays, acceptDays, acceptDates)) continue;
 
       if (!swapIsLegal(doctor, role, giveDay, takeDay, takeCode)) continue;
       if (!swapIsLegal(partner, role, takeDay, giveDay, giveCode)) continue;
@@ -988,13 +1097,14 @@ function bundleSwapKeepsRunsOk(name, role, removeDays, addDays) {
 // Search one partner for a complete, distinct pairing of give-shifts to
 // take-shifts that passes the combined legality check for both people.
 function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
-  const { windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay } = opts;
+  const { windowDays, sameTypeOnly, acceptTypes, acceptDays, acceptDates = new Set(), allowSameDay } = opts;
   const giveDateSet = new Set(giveShifts.map(g => g.date));
-  const tomorrowStr = dateFromDayNum(dayNum(todayStr) + 1);
+  const tomorrowStr = dateFromDayNum(dayNum(getTodayStr()) + 1);
 
-  const candidatesPerShift = giveShifts.map(g => {
+  const candidatesPerShift = giveShifts.map((g, shiftIdx) => {
     const list = [];
-    for (let offset = -windowDays; offset <= windowDays; offset++) {
+    const radius = searchRadius(windowDays, acceptDates);
+    for (let offset = -radius; offset <= radius; offset++) {
       const takeDay = g.dayNum + offset;
       const takeDateStr = dateFromDayNum(takeDay);
       if (takeDateStr < tomorrowStr) continue;
@@ -1011,15 +1121,23 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
       }
       if (sameTypeOnly && takeType !== g.type) continue;
       if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
-      const weekdayIdx = (new Date(takeDateStr + 'T00:00:00Z').getUTCDay() + 6) % 7;
-      if (acceptDays.size > 0 && !acceptDays.has(weekdayIdx)) continue;
+      if (!passesDayOrDateFilter(takeDateStr, offset, windowDays, acceptDays, acceptDates)) continue;
       list.push({ day: takeDay, dateStr: takeDateStr, type: takeType, code: takeCode });
     }
+    list.sort((a, b) => {
+      const aSame = a.day === g.dayNum;
+      const bSame = b.day === g.dayNum;
+      if (aSame !== bSame) return aSame ? -1 : 1;
+      const da = Math.abs(a.day - g.dayNum);
+      const db = Math.abs(b.day - g.dayNum);
+      return da - db || a.day - b.day;
+    });
     return list;
   });
-  if (candidatesPerShift.some(list => list.length === 0)) return null;
+  if (candidatesPerShift.some(list => list.length === 0)) return { assignment: null, capHit: false };
 
   let attempts = 0;
+  let capHit = false;
   const MAX_ATTEMPTS = 300;
 
   function verify(assignment) {
@@ -1052,7 +1170,7 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
   }
 
   function backtrack(idx, usedDays, assignment) {
-    if (attempts > MAX_ATTEMPTS) return null;
+    if (attempts >= MAX_ATTEMPTS) { capHit = true; return null; }
     if (idx === giveShifts.length) {
       attempts++;
       return verify(assignment) ? assignment.slice() : null;
@@ -1070,7 +1188,7 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
     return null;
   }
 
-  return backtrack(0, new Set(), []);
+  return { assignment: backtrack(0, new Set(), []), capHit };
 }
 
 function findBundleSwapPartners(doctor, role, giveDates, opts) {
@@ -1083,12 +1201,14 @@ function findBundleSwapPartners(doctor, role, giveDates, opts) {
   if (giveShifts.some(g => !g.type)) throw new Error('One of the selected shifts is no longer workable.');
 
   const matches = [];
+  let capHit = false;
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    const assignment = findBundleSwapForPartner(doctor, role, giveShifts, partner, opts);
-    if (assignment) matches.push({ partner, assignment });
+    const result = findBundleSwapForPartner(doctor, role, giveShifts, partner, opts);
+    if (result.capHit) capHit = true;
+    if (result.assignment) matches.push({ partner, assignment: result.assignment });
   }
-  return matches;
+  return { matches, capHit };
 }
 
 // ---------------------------------------------------------------------
@@ -1128,18 +1248,16 @@ function renderShiftList() {
     return;
   }
   if (viewYear === null) {
-    const t = new Date(todayStr + 'T00:00:00Z');
+    const t = new Date(getTodayStr() + 'T00:00:00Z');
     viewYear = t.getUTCFullYear();
     viewMonthIdx = t.getUTCMonth();
   }
 
   const map = personShiftMap(currentPerson.n, currentPerson.r);
+  let html = '';
   const firstOfMonth = new Date(Date.UTC(viewYear, viewMonthIdx, 1));
   const daysInMo = new Date(Date.UTC(viewYear, viewMonthIdx + 1, 0)).getUTCDate();
   const leadOffset = (firstOfMonth.getUTCDay() + 6) % 7; // Monday-first
-
-  let html = '<div class="cal-legend">' + Object.keys(PERIOD_NAME).map(t =>
-    '<span class="cal-legend-item"><span class="cal-dot" style="background:' + PERIOD_COLOR[t].ink + '"></span>' + PERIOD_NAME[t] + '</span>').join('') + '</div>';
 
   html += '<div class="mode-row"><button id="multiModeBtn" class="mode-toggle-btn' + (multiSelectMode ? ' active' : '') + '">Multi-shift swap</button></div>';
 
@@ -1158,8 +1276,8 @@ function renderShiftList() {
     const dStr = viewYear + '-' + pad2(viewMonthIdx + 1) + '-' + pad2(day);
     const raw = map[dStr];
     const decoded = raw ? decodeCode(raw, currentPerson.r) : null;
-    const isToday = dStr === todayStr;
-    const clickable = !!(decoded && decoded.period) && dStr >= todayStr;
+    const isToday = dStr === getTodayStr();
+    const clickable = !!(decoded && decoded.period) && dStr >= getTodayStr();
     const isSelected = selectedShifts.has(dStr);
 
     html += '<div class="cal-daycell" data-date="' + dStr + '">' +
@@ -1171,6 +1289,12 @@ function renderShiftList() {
         (isSelected ? '<span class="cal-check">&#10003;</span>' : '') + escapeHtml(decoded.text) + '</div>';
     } else if (decoded) {
       html += '<div class="cal-shift-box not-clickable" style="background:#ECEDF6;color:var(--ink)">' + escapeHtml(decoded.text) + '</div>';
+    } else if (raw) {
+      if (isLeaveCode(raw)) {
+        html += '<div class="cal-shift-box cal-leave not-clickable" aria-label="Leave">L</div>';
+      } else {
+        html += '<div class="cal-shift-box not-clickable" style="background:#ECEDF6;color:var(--ink)" aria-label="Unavailable">x</div>';
+      }
     }
     html += '</div>';
   }
@@ -1187,7 +1311,7 @@ function renderShiftList() {
     html += '<div class="select-bar">' +
       '<span>' + n + ' shift' + (n > 1 ? 's' : '') + ' selected</span>' +
       '<div class="select-bar-actions"><button class="ghost-btn" id="clearSelBtn">Clear</button>' +
-      '<button class="search-btn" id="continueBtn" style="margin:0;width:auto;padding:0.6rem 1rem;">Continue</button></div></div>';
+      '<button class="search-btn" id="continueBtn" style="margin:0;width:auto;min-height:46px;padding:0.6rem 1.3rem;font-size:1rem;">Continue</button></div></div>';
   }
   content.innerHTML = html;
 
@@ -1210,6 +1334,8 @@ function renderShiftList() {
         activeTab = 'swap';
         acceptTypeSet = new Set();
         acceptDaySet = new Set();
+        acceptDateSet = new Set();
+        acceptDateMonth = null;
         renderDetail();
       }
     });
@@ -1221,6 +1347,8 @@ function renderShiftList() {
       activeTab = 'swap';
       acceptTypeSet = new Set();
       acceptDaySet = new Set();
+      acceptDateSet = new Set();
+      acceptDateMonth = null;
       renderDetail();
     });
   }
@@ -1249,13 +1377,23 @@ function selectedShiftDates() {
 }
 
 function renderDetail() {
-  const dates = selectedShiftDates();
+  let dates = selectedShiftDates();
   if (!dates.length) { renderShiftList(); return; }
 
   let html = '<button class="detail-back" id="backBtn">&larr; Your shifts</button>';
   html += '<div class="summary-card"><div class="label">Looking to move (' + dates.length + ')</div>';
-  dates.forEach(d => {
-    const decoded = decodeCode(personShiftMap(currentPerson.n, currentPerson.r)[d], currentPerson.r);
+  const currentMap = personShiftMap(currentPerson.n, currentPerson.r);
+  const validDates = dates.filter(d => {
+    const decoded = decodeCode(currentMap[d], currentPerson.r);
+    return !!(decoded && decoded.period);
+  });
+  if (validDates.length !== dates.length) {
+    selectedShifts = new Set(validDates);
+    dates = validDates;
+    if (!validDates.length) { renderShiftList(); return; }
+  }
+  validDates.forEach(d => {
+    const decoded = decodeCode(currentMap[d], currentPerson.r);
     const colors = PERIOD_COLOR[decoded.period];
     html += '<div class="main" style="color:' + colors.ink + '">' + escapeHtml(fmtFull(d)) + ' &middot; ' + escapeHtml(decoded.text) + '</div>';
   });
@@ -1288,6 +1426,7 @@ function renderSwapTab() {
     '<div class="controls">' +
       '<div class="field"><label>Search window</label>' +
         '<select id="windowSelect"><option value="7">1 week either side</option><option value="14" selected>2 weeks either side</option><option value="28">4 weeks either side</option></select>' +
+        '<div class="date-picker-help" id="windowHelp">Weekday choices are limited to this window. Picked dates are always checked separately, up to 4 weeks either side.</div>' +
       '</div>' +
       '<div class="field"><label>Accept swaps of these shifts only</label>' +
         '<div class="type-toggles">' +
@@ -1298,8 +1437,14 @@ function renderSwapTab() {
       '<div class="field"><label>Accept swaps on these days only</label>' +
         '<div class="day-toggles">' + dayLabels.map((d, i) => '<div class="day-toggle" data-day="' + i + '">' + d + '</div>').join('') + '</div>' +
       '</div>' +
+      '<div class="field"><label>Or choose specific dates you are available to swap into</label>' +
+        '<button type="button" class="date-picker-toggle' + (acceptDateSet.size ? ' active' : '') + '" id="datePickerToggle">' +
+          '<span>Choose dates</span><span class="date-picker-count" id="datePickerCount">' + (acceptDateSet.size ? acceptDateSet.size + ' selected' : 'Any date') + '</span>' +
+        '</button>' +
+        '<div id="datePickerWrap" style="display:none"></div>' +
+      '</div>' +
       '<label class="checkrow"><input type="checkbox" id="sameTypeOnly"> Only offer the same shift type back</label>' +
-      '<label class="checkrow"><input type="checkbox" id="allowSameDay" checked> Allow a same-day, different-type swap</label>' +
+      '<label class="checkrow"><input type="checkbox" id="allowSameDay"> Allow a same-day, different-type swap</label>' +
     '</div>' +
     '<button class="search-btn" id="searchBtn">Search</button>' +
     (dates.length > 1 ? '<button class="search-btn bundle-btn" id="bundleBtn">Bundle swap options</button>' : '') +
@@ -1311,6 +1456,100 @@ function renderSwapTab() {
     body.querySelectorAll('.day-toggle').forEach(el => el.classList.toggle('on', acceptDaySet.has(parseInt(el.dataset.day, 10))));
   }
   refreshToggleStyles();
+
+  // The search-window dropdown only matters for ticked weekdays (and for
+  // "any date"). If specific dates are picked and no weekdays are ticked,
+  // it has no effect, so grey it out rather than leave a dead control.
+  function refreshWindowState() {
+    const sel = document.getElementById('windowSelect');
+    const help = document.getElementById('windowHelp');
+    const datesOnly = acceptDateSet.size > 0 && acceptDaySet.size === 0;
+    if (sel) {
+      sel.disabled = datesOnly;
+      sel.title = datesOnly
+        ? 'No weekdays are selected, so the search window does not affect the picked dates.'
+        : '';
+    }
+    if (help) {
+      help.textContent = datesOnly
+        ? 'Specific dates are selected and no weekdays are ticked, so this window does nothing. Your picked dates are still checked up to 4 weeks either side.'
+        : acceptDateSet.size > 0
+          ? 'Ticked weekdays are limited to this search window. Picked dates are also accepted separately, up to 4 weeks either side.'
+          : 'Ticked weekdays are limited to this search window.';
+    }
+  }
+
+  function getDatePickerBounds() {
+    // Specific-date choices are always limited to 4 weeks either side
+    // of each shift being offered, regardless of the general search-window setting.
+    const days = [];
+    const span = 28;
+    dates.forEach(giveDate => {
+      const center = dayNum(giveDate);
+      for (let d = Math.max(dayNum(getTodayStr()) + 1, center - span); d <= center + span; d++) days.push(d);
+    });
+    return { min: Math.min(...days), max: Math.max(...days) };
+  }
+
+  function renderDatePicker() {
+    const wrap = document.getElementById('datePickerWrap');
+    if (!wrap) return;
+    if (!acceptDateMonth) {
+      const first = getDatePickerBounds().min;
+      const d = new Date(dateFromDayNum(first) + 'T00:00:00Z');
+      acceptDateMonth = { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+    }
+    const y = acceptDateMonth.year, m = acceptDateMonth.month;
+    const first = new Date(Date.UTC(y, m, 1));
+    const last = new Date(Date.UTC(y, m + 1, 0));
+    const startOffset = (first.getUTCDay() + 6) % 7;
+    const bounds = getDatePickerBounds();
+    const monthName = first.toLocaleDateString('en-AU', { month:'long', year:'numeric', timeZone:'UTC' });
+    let html = '<div class="date-picker">' +
+      '<div class="date-picker-nav"><button type="button" id="datePickerPrev" aria-label="Previous month">&lsaquo;</button>' +
+      '<div class="date-picker-title">' + monthName + '</div>' +
+      '<button type="button" id="datePickerNext" aria-label="Next month">&rsaquo;</button></div>' +
+      '<div class="date-picker-weekdays">' + dayLabels.map(d => '<div>' + d + '</div>').join('') + '</div>' +
+      '<div class="date-picker-grid">';
+    for (let i=0; i<startOffset; i++) html += '<div class="date-picker-day off-month"></div>';
+    for (let day=1; day<=last.getUTCDate(); day++) {
+      const ds = dateFromDayNum(dayNum(String(y).padStart(4,'0')+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0')));
+      const dn = dayNum(ds);
+      const selected = acceptDateSet.has(ds);
+      const inWindow = dn >= bounds.min && dn <= bounds.max && ds >= dateFromDayNum(dayNum(getTodayStr())+1);
+      const today = ds === getTodayStr();
+      html += '<button type="button" class="date-picker-day' + (selected ? ' selected' : '') + (!inWindow ? ' unavailable-window' : '') + (today ? ' today' : '') + '" data-date="' + ds + '"' + (!inWindow ? ' disabled' : '') + '>' + day + '</button>';
+    }
+    const cells = startOffset + last.getUTCDate();
+    for (let i=cells; i<42; i++) html += '<div class="date-picker-day off-month"></div>';
+    html += '</div><div class="date-picker-actions"><span class="date-picker-help">Tap exact dates you can swap into</span><button type="button" class="date-picker-clear" id="datePickerClear">Clear dates</button></div></div>';
+    wrap.innerHTML = html;
+    const toggle = document.getElementById('datePickerToggle');
+    if (toggle) toggle.classList.toggle('active', acceptDateSet.size > 0);
+    const count = document.getElementById('datePickerCount');
+    if (count) count.textContent = acceptDateSet.size ? acceptDateSet.size + ' selected' : 'Any date';
+    body.querySelectorAll('.date-picker-day[data-date]:not([disabled])').forEach(btn => btn.addEventListener('click', () => {
+      const ds = btn.dataset.date;
+      if (acceptDateSet.has(ds)) {
+        acceptDateSet.delete(ds);
+      } else {
+        acceptDateSet.add(ds);
+      }
+      renderDatePicker();
+      refreshWindowState();
+    }));
+    document.getElementById('datePickerPrev').addEventListener('click', () => { acceptDateMonth.month--; if (acceptDateMonth.month < 0) { acceptDateMonth.month=11; acceptDateMonth.year--; } renderDatePicker(); });
+    document.getElementById('datePickerNext').addEventListener('click', () => { acceptDateMonth.month++; if (acceptDateMonth.month > 11) { acceptDateMonth.month=0; acceptDateMonth.year++; } renderDatePicker(); });
+    document.getElementById('datePickerClear').addEventListener('click', () => { acceptDateSet.clear(); renderDatePicker(); refreshWindowState(); });
+  }
+  renderDatePicker();
+  refreshWindowState();
+  document.getElementById('datePickerToggle').addEventListener('click', () => {
+    const wrap = document.getElementById('datePickerWrap');
+    const hidden = wrap.style.display === 'none';
+    wrap.style.display = hidden ? '' : 'none';
+    if (hidden) renderDatePicker();
+  });
 
   body.querySelectorAll('.type-toggle').forEach(el => {
     el.addEventListener('click', () => {
@@ -1327,6 +1566,7 @@ function renderSwapTab() {
       if (acceptDaySet.has(d)) acceptDaySet.delete(d);
       else acceptDaySet.add(d);
       refreshToggleStyles();
+      refreshWindowState();
     });
   });
 
@@ -1336,18 +1576,42 @@ function renderSwapTab() {
     refreshToggleStyles();
   });
 
-  document.getElementById('searchBtn').addEventListener('click', () => {
-    const windowDays = parseInt(document.getElementById('windowSelect').value, 10);
-    const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
-    const allowSameDay = document.getElementById('allowSameDay').checked;
+  function runCurrentSwapSearch() {
+    // Re-read every search control at the moment Search is pressed.
+    // Do not rely on a previous search's captured values.
+    const windowEl = document.getElementById('windowSelect');
+    const sameTypeEl = document.getElementById('sameTypeOnly');
+    const allowSameDayEl = document.getElementById('allowSameDay');
     const resultsBody = document.getElementById('resultsBody');
+    const bundleResultsEl = document.getElementById('bundleResults');
+    if (!windowEl || !sameTypeEl || !allowSameDayEl || !resultsBody) return;
+
+    const windowDays = parseInt(windowEl.value, 10);
+    const sameTypeOnly = !!sameTypeEl.checked;
+    const allowSameDay = !!allowSameDayEl.checked;
+    // Snapshot the Sets so the search uses exactly the parameters present
+    // when the button was pressed, even if another UI action occurs while
+    // the results are being rendered.
+    const acceptTypes = new Set(acceptTypeSet);
+    const acceptDays = new Set(acceptDaySet);
+    const acceptDates = new Set(acceptDateSet);
+    const searchDates = selectedShiftDates();
+
+    // A new normal search supersedes the previous normal and bundle results.
+    resultsBody.innerHTML = '<div class="status-msg">Searching…</div>';
+    if (bundleResultsEl) bundleResultsEl.innerHTML = '';
+
     try {
-      const results = dates.map(d => findSwaps(currentPerson.n, currentPerson.r, d, windowDays, sameTypeOnly, acceptTypeSet, acceptDaySet, allowSameDay));
+      const results = searchDates.map(d =>
+        findSwaps(currentPerson.n, currentPerson.r, d, windowDays, sameTypeOnly, acceptTypes, acceptDays, allowSameDay, acceptDates)
+      );
       renderSwapResults(results);
     } catch (err) {
       resultsBody.innerHTML = '<div class="status-msg">' + escapeHtml(err.message) + '</div>';
     }
-  });
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', runCurrentSwapSearch);
 
   const bundleBtn = document.getElementById('bundleBtn');
   if (bundleBtn) {
@@ -1359,10 +1623,10 @@ function renderSwapTab() {
       bundleResultsEl.innerHTML = '<div class="status-msg">Searching for full bundle swaps…</div>';
       setTimeout(() => {
         try {
-          const matches = findBundleSwapPartners(currentPerson.n, currentPerson.r, dates, {
-            windowDays, sameTypeOnly, acceptTypes: acceptTypeSet, acceptDays: acceptDaySet, allowSameDay,
+          const bundleSearch = findBundleSwapPartners(currentPerson.n, currentPerson.r, dates, {
+            windowDays, sameTypeOnly, acceptTypes: acceptTypeSet, acceptDays: acceptDaySet, acceptDates: acceptDateSet, allowSameDay,
           });
-          renderBundleSwapResults(bundleResultsEl, matches);
+          renderBundleSwapResults(bundleResultsEl, bundleSearch.matches, bundleSearch.capHit);
           // Jump straight to the beginning of the bundle results.
           const start = document.getElementById('bundleResultsStart');
           if (start) start.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1376,9 +1640,13 @@ function renderSwapTab() {
   }
 }
 
-function renderBundleSwapResults(container, matches) {
+function renderBundleSwapResults(container, matches, capHit = false) {
   if (!matches.length) {
-    container.innerHTML = '<div class="status-msg">No one can do the whole bundle as one verified swap. Try the individual results above, or widen the search window.</div>';
+    container.innerHTML = '<div class="status-msg">' +
+      (capHit
+        ? 'No one can do the whole bundle as one verified swap. The 300-combination search cap was reached. Try shift swaps in shorter multi-shifts instead.'
+        : 'No one can do the whole bundle as one verified swap.') +
+      '</div>';
     return;
   }
   let html = '<div id="bundleResultsStart"></div><div class="day-group-label">Bundle swap options</div>';
@@ -1399,7 +1667,7 @@ function renderBundleSwapResults(container, matches) {
       '<div class="option-preview" id="bundlePreview-' + idx + '"></div>' +
     '</div>';
   });
-  html += '<div class="status-msg">Each bundle option is shown vertically. Use Calendar to preview the result, or Email to send the request.</div>';
+  html += '<div class="status-msg">Each bundle option is shown vertically. Use Calendar to preview the result, or Email to send the request.' + (capHit ? ' Some combinations could not be fully searched because the 300-combination search cap was reached.' : '') + '</div>';
   container.innerHTML = html;
 
   container.querySelectorAll('.bundle-email-btn').forEach(btn => {
@@ -1464,36 +1732,55 @@ function renderBundlePreviewCalendar(container, doctor, role, partner, assignmen
       (name === partner && day === dayNum(a.take.dateStr)) ||
       (name === partner && day === dayNum(a.give.date))
     );
-    let cls = 'preview-cal-cell' + (changed ? ' changed' : '');
-    let inner;
-    if (!raw) {
-      inner = '<div class="pc-shift pc-empty"></div>';
-    } else {
-      const decoded = decodeCode(raw, role);
-      if (decoded && decoded.period) {
-        const colors = PERIOD_COLOR[decoded.period];
-        inner = '<div class="pc-shift" style="background:' + colors.bg + ';color:' + colors.ink + '">' + escapeHtml(PERIOD_NAME[decoded.period]) + '</div>';
-      } else {
-        cls += ' unavailable';
-        inner = '<div class="pc-shift" aria-label="Unavailable">x</div>';
-      }
-    }
-    return '<div class="' + cls + '">' + inner + '</div>';
+    const cell = pcCellInner(raw, role);
+    const cls = 'preview-cal-cell' + (changed ? ' changed' : '') + cell.extraCls;
+    return '<div class="' + cls + '">' + cell.inner + '</div>';
   }
 
   function weekBlock(weekStart) {
     const days = Array.from({length:7}, (_,i) => weekStart+i);
     const header = '<div class="preview-cal-row"><div class="preview-cal-label"></div>' + days.map(d => '<div class="preview-cal-cell pc-header"><div class="pc-date">' + pcDateLabel(d) + '</div></div>').join('') + '</div>';
-    const row1 = '<div class="preview-cal-row"><div class="preview-cal-label">' + escapeHtml(firstName(doctor)) + '</div>' + days.map(d => cellHtml(doctor,d)).join('') + '</div>';
-    const row2 = '<div class="preview-cal-row"><div class="preview-cal-label">' + escapeHtml(firstName(partner)) + '</div>' + days.map(d => cellHtml(partner,d)).join('') + '</div>';
+    const row1 = '<div class="preview-cal-row"><div class="preview-cal-label">' + escapeHtml(displayFirstName(doctor, role)) + '</div>' + days.map(d => cellHtml(doctor,d)).join('') + '</div>';
+    const row2 = '<div class="preview-cal-row"><div class="preview-cal-label">' + escapeHtml(displayFirstName(partner, role)) + '</div>' + days.map(d => cellHtml(partner,d)).join('') + '</div>';
     return header + row1 + row2;
   }
 
-  container.innerHTML = '<div class="preview-card"><div class="day-group-label">Bundle preview: ' + escapeHtml(firstName(doctor)) + ' &harr; ' + escapeHtml(firstName(partner)) + '</div><div class="preview-cal-wrap">' + weekStarts.map(weekBlock).join('<div style="height:0.5rem"></div>') + '</div></div>';
+  container.innerHTML = '<div class="preview-card"><div class="day-group-label">Bundle preview: ' + escapeHtml(displayFirstName(doctor, role)) + ' &harr; ' + escapeHtml(displayFirstName(partner, role)) + '</div>' + '<div class="preview-cal-wrap">' + weekStarts.map(weekBlock).join('<div style="height:0.5rem"></div>') + '</div></div>';
 }
 
 function firstName(name) {
   return (name || '').trim().split(/\s+/)[0] || name;
+}
+
+// Roster names look like "Joyce Chan (TS1)": drop the bracketed suffix, first
+// word = first name, last word = surname.
+function nameParts(name) {
+  const base = String(name || '').replace(/\([^)]*\)/g, ' ').trim();
+  const tokens = base.split(/\s+/).filter(Boolean);
+  return {
+    first: tokens[0] || String(name || ''),
+    last: tokens.length > 1 ? tokens[tokens.length - 1] : '',
+    suffix: ((String(name || '').match(/\(([^)]*)\)/) || [])[1] || '').trim(),
+  };
+}
+
+// First name for on-screen labels. If someone else in the same role shares the
+// first name, add a last-name initial ("Sam L."); if that initial is shared too,
+// use more letters ("Sam Le." / "Sam Li."). Emails keep the plain firstName().
+function displayFirstName(name, role) {
+  const me = nameParts(name);
+  const twins = PEOPLE.filter(p => p.r === role && p.n !== name &&
+    nameParts(p.n).first.toLowerCase() === me.first.toLowerCase());
+  if (!twins.length || !me.last) return me.first;
+  const myLast = me.last.toLowerCase();
+  const theirLasts = twins.map(p => nameParts(p.n).last.toLowerCase());
+  if (theirLasts.some(l => l === myLast)) {
+    // identical first + last name: only the bracketed suffix can tell them apart
+    return me.first + ' ' + me.last + (me.suffix ? ' (' + me.suffix + ')' : '');
+  }
+  let len = 1;
+  while (len < me.last.length && theirLasts.some(l => l.slice(0, len) === myLast.slice(0, len))) len++;
+  return me.first + ' ' + me.last.slice(0, len) + (len < me.last.length ? '.' : '');
 }
 
 const SWAP_BODY_VARIANTS = [
@@ -1644,10 +1931,34 @@ function renderSwapResults(results) {
 // different week, a second 2-line week block is added below rather than
 // stretching one row wide enough to need horizontal scrolling. Raw codes
 // that exist but aren't a workable D/S/E/N shift (leave, "x", CST, etc.)
-// are always shown as "x" (unavailable) rather than left blank.
+// are never left blank: leave shows "L", anything else "x" (see pcCellInner).
 function pcDateLabel(day) {
   const d = new Date(dateFromDayNum(day) + 'T00:00:00Z');
-  return d.toLocaleDateString('en-AU', { weekday: 'short', timeZone: 'UTC' }) + ' ' + d.getUTCDate();
+  // two lines ("Mon" over "12") so the labels stay readable at a larger size
+  return d.toLocaleDateString('en-AU', { weekday: 'short', timeZone: 'UTC' }) + '<br>' + d.getUTCDate();
+}
+
+// Shared by both preview calendars. Workable shifts show a single letter
+// (D/S/E/N, coloured as elsewhere); leave-type codes show "L"; any other
+// non-shift duty (CST, teaching, unrecognised codes) shows "x".
+function pcCellInner(raw, role) {
+  if (!raw) return { extraCls: '', inner: '<div class="pc-shift pc-empty"></div>' };
+  const decoded = decodeCode(raw, role);
+  if (decoded && decoded.period) {
+    const colors = PERIOD_COLOR[decoded.period];
+    return { extraCls: '', inner: '<div class="pc-shift" aria-label="' + PERIOD_NAME[decoded.period] + '" style="background:' + colors.bg + ';color:' + colors.ink + '">' + PERIOD_NAME[decoded.period].charAt(0) + '</div>' };
+  }
+  if (!decoded) {
+    if (isLeaveCode(raw)) return { extraCls: ' unavailable', inner: '<div class="pc-shift" aria-label="Leave">L</div>' };
+    return { extraCls: ' unavailable', inner: '<div class="pc-shift" aria-label="Unavailable">x</div>' };
+  }
+  return { extraCls: ' unavailable', inner: '<div class="pc-shift" aria-label="Unavailable">x</div>' };
+}
+
+function pcLegendHtml() {
+  return '<div class="pc-legend">' + Object.keys(PERIOD_NAME).map(t =>
+    '<span><b style="color:' + PERIOD_COLOR[t].ink + '">' + PERIOD_NAME[t].charAt(0) + '</b> ' + PERIOD_NAME[t] + '</span>').join('') +
+    '<span><b>L</b> Leave</span><span><b>x</b> Other duty</span></div>';
 }
 
 function renderSwapPreviewCalendar(container, result, o) {
@@ -1679,21 +1990,9 @@ function renderSwapPreviewCalendar(container, result, o) {
   function cellHtml(name, day) {
     const raw = postSwapRaw(name, day);
     const changed = (day === giveDay || day === takeDay);
-    let cls = 'preview-cal-cell' + (changed ? ' changed' : '');
-    let inner;
-    if (!raw) {
-      inner = '<div class="pc-shift pc-empty"></div>';
-    } else {
-      const decoded = decodeCode(raw, role);
-      if (decoded && decoded.period) {
-        const colors = PERIOD_COLOR[decoded.period];
-        inner = '<div class="pc-shift" style="background:' + colors.bg + ';color:' + colors.ink + '">' + escapeHtml(PERIOD_NAME[decoded.period]) + '</div>';
-      } else {
-        cls += ' unavailable';
-        inner = '<div class="pc-shift" aria-label="Unavailable">x</div>';
-      }
-    }
-    return '<div class="' + cls + '">' + inner + '</div>';
+    const cell = pcCellInner(raw, role);
+    const cls = 'preview-cal-cell' + (changed ? ' changed' : '') + cell.extraCls;
+    return '<div class="' + cls + '">' + cell.inner + '</div>';
   }
 
   function weekBlockHtml(weekStart) {
@@ -1704,11 +2003,11 @@ function renderSwapPreviewCalendar(container, result, o) {
       days.map((d,i) => '<div class="preview-cal-cell pc-header"><div class="pc-date">' + pcDateLabel(d) + '</div></div>').join('') +
       '</div>';
     const doctorRow = '<div class="preview-cal-row">' +
-      '<div class="preview-cal-label">' + escapeHtml(firstName(result.doctor)) + '</div>' +
+      '<div class="preview-cal-label">' + escapeHtml(displayFirstName(result.doctor, role)) + '</div>' +
       days.map(d => cellHtml(result.doctor, d)).join('') +
       '</div>';
     const partnerRow = '<div class="preview-cal-row">' +
-      '<div class="preview-cal-label">' + escapeHtml(firstName(o.partner)) + '</div>' +
+      '<div class="preview-cal-label">' + escapeHtml(displayFirstName(o.partner, role)) + '</div>' +
       days.map(d => cellHtml(o.partner, d)).join('') +
       '</div>';
     return headerRow + doctorRow + partnerRow;
@@ -1718,8 +2017,7 @@ function renderSwapPreviewCalendar(container, result, o) {
 
   container.innerHTML =
     '<div class="preview-card">' +
-    '<div class="day-group-label">Preview: ' + escapeHtml(firstName(result.doctor)) + ' &harr; ' + escapeHtml(firstName(o.partner)) + '</div>' +
-    '<div class="preview-cal-wrap">' + weekBlocks + '</div>' +
+    '<div class="day-group-label">Preview: ' + escapeHtml(displayFirstName(result.doctor, role)) + ' &harr; ' + escapeHtml(displayFirstName(o.partner, role)) + '</div>' + '<div class="preview-cal-wrap">' + weekBlocks + '</div>' +
     '</div>';
 }
 
@@ -1803,11 +2101,35 @@ function renderTakerResults(results, bundleTakers) {
 // ---------------------------------------------------------------------
 // Load roster
 // ---------------------------------------------------------------------
+function fingerprintRoster(list) {
+  return JSON.stringify(list
+    .map(p => ({ n: p.n, r: p.r, d: p.d, v: p.v, ERIC: p.ERIC ?? p.eric ?? p.Eric ?? p.e ?? null }))
+    .sort((a, b) => (a.r + '|' + a.n).localeCompare(b.r + '|' + b.n)));
+}
+
+function pruneSelectedShifts() {
+  if (!selectedShifts.size || !currentPerson) return;
+  const map = personShiftMap(currentPerson.n, currentPerson.r);
+  selectedShifts = new Set(Array.from(selectedShifts).filter(d => {
+    const decoded = decodeCode(map[d], currentPerson.r);
+    return !!(decoded && decoded.period && d >= getTodayStr());
+  }));
+}
+
 async function loadRoster() {
   try {
     const res = await fetch(DATA_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    PEOPLE = (await res.json()).filter(p => !NON_PERSON_NAMES.has(p.n));
+    const nextPeople = (await res.json()).filter(p => !NON_PERSON_NAMES.has(p.n));
+    const nextFingerprint = fingerprintRoster(nextPeople);
+
+    // A periodic refresh should be invisible when the roster data is unchanged.
+    // This preserves search results, checked filters, open previews and the date picker.
+    if (rosterLoadedOnce && nextFingerprint === rosterFingerprint) return;
+
+    PEOPLE = nextPeople;
+    rosterFingerprint = nextFingerprint;
+    rosterLoadedOnce = true;
 
     const prevValue = currentPerson ? currentPerson.n + '|' + currentPerson.r : '';
 
@@ -1823,12 +2145,23 @@ async function loadRoster() {
       const [name, role] = prevValue.split('|');
       if (role === 'C' && consultants.some(p => p.n === name)) { consultantSelect.value = name; currentPerson = { n: name, r: 'C' }; }
       else if (role === 'R' && registrarsList.some(p => p.n === name)) { registrarSelect.value = name; currentPerson = { n: name, r: 'R' }; }
+      else { currentPerson = null; }
     }
 
-    if (selectedShifts.size) renderDetail(); else renderShiftList();
+    pruneSelectedShifts();
+    if (selectedShifts.size) {
+      // A selected shift can have disappeared from the refreshed roster.
+      // renderDetail now only runs when every selected date remains workable.
+      renderDetail();
+    } else {
+      renderShiftList();
+    }
   } catch (err) {
     console.error('Roster load error:', err);
-    content.innerHTML = '<div class="empty-state">Couldn\'t load the roster right now. Try again shortly.</div>';
+    // Do not destroy a working page because a periodic refresh failed.
+    if (!rosterLoadedOnce) {
+      content.innerHTML = '<div class="empty-state">Couldn\'t load the roster right now. Try again shortly.</div>';
+    }
   }
 }
 
