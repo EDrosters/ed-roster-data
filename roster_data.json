@@ -138,7 +138,12 @@
       },
       {
         "name": "Eve",
-        "top_notes": [],
+        "top_notes": [
+          [
+            "EPIC",
+            "Thomas Razga"
+          ]
+        ],
         "zones": [
           {
             "zone": "Purple",
@@ -164,8 +169,7 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Luke De La Rue",
-                  "Wei Lum"
+                  "Luke De La Rue"
                 ]
               },
               {
@@ -200,7 +204,7 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Thomas Razga"
+                  "Wei Lum"
                 ]
               },
               {
@@ -218,6 +222,10 @@
       {
         "name": "Night",
         "top_notes": [
+          [
+            "FACEM on Call, 0100-0430",
+            "Thomas Razga"
+          ],
           [
             "FACEM on Call, 0430-0800",
             "Ben McKenzie"
