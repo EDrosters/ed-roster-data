@@ -405,6 +405,7 @@
   .site-link { text-align: center; padding: 0.5rem 1rem 1.5rem; }
   .site-link a { color: var(--ink-soft); font-size: 0.92rem; text-decoration: none; }
 
+  .eric-notice { background:#FBF6D9; color:#6B5C06; border:1px solid #D9CC7A; border-radius:10px; padding:0.7rem 0.85rem; font-size:0.92rem; font-weight:600; line-height:1.35; margin:0 0 0.8rem; }
   .status-msg { font-size: 0.95rem; color: var(--ink-soft); text-align: center; padding: 0.7rem 0; }
   .bundle-chip { outline: 2px solid var(--accent); }
   .search-btn.bundle-btn {
@@ -488,15 +489,40 @@ const PERIOD_COLOR = {
 const LEAVE_COLOR = {bg:'#E4E6EF', ink:'#3f4658'};
 
 // ---------------------------------------------------------------------
-// ERIC-capable registrars — read directly from the roster's ERIC column.
-// The roster data may expose the column as ERIC/eric/Eric/e depending on
-// the export format; a value of "y" (or true) means ERIC-capable.
+// ERIC-capable registrars — Excel column C is the authoritative source.
+// The Excel -> JSON export should carry column C through as `c` (or `C`).
+// We also accept explicit ERIC field names for backwards compatibility,
+// but do NOT treat an unrelated `e` field as the ERIC flag.
+// A value of Y/YES/TRUE/1 means ERIC-capable; N/blank means not capable.
 // ---------------------------------------------------------------------
+function ericFlagValue(rec) {
+  if (!rec) return undefined;
+  if (Object.prototype.hasOwnProperty.call(rec, 'c')) return rec.c;
+  if (Object.prototype.hasOwnProperty.call(rec, 'C')) return rec.C;
+  if (Object.prototype.hasOwnProperty.call(rec, 'ERIC')) return rec.ERIC;
+  if (Object.prototype.hasOwnProperty.call(rec, 'eric')) return rec.eric;
+  if (Object.prototype.hasOwnProperty.call(rec, 'Eric')) return rec.Eric;
+  if (Object.prototype.hasOwnProperty.call(rec, 'eric_capable')) return rec.eric_capable;
+  if (Object.prototype.hasOwnProperty.call(rec, 'ERIC capable')) return rec['ERIC capable'];
+  return undefined;
+}
+function ericFlagIsYes(value) {
+  return value === true || ['y', 'yes', 'true', '1'].includes(String(value ?? '').trim().toLowerCase());
+}
 function isEricCapable(name) {
   const rec = PEOPLE.find(p => p.n === name && p.r === 'R');
-  if (!rec) return false;
-  const value = rec.ERIC ?? rec.eric ?? rec.Eric ?? rec.e;
-  return value === true || String(value ?? '').trim().toLowerCase() === 'y';
+  return !!rec && ericFlagIsYes(ericFlagValue(rec));
+}
+
+// ERIC data is present when the roster feed actually supplies a column-C
+// value for at least one registrar, even if every value happens to be N.
+// This prevents a valid all-N snapshot from being mistaken for a missing field.
+let ERIC_DATA_PRESENT = false;
+function refreshEricDataFlag() {
+  const registrarRecords = PEOPLE.filter(p => p.r === 'R');
+  ERIC_DATA_PRESENT = registrarRecords.some(p => ericFlagValue(p) !== undefined);
+  const capable = registrarRecords.filter(p => ericFlagIsYes(ericFlagValue(p)));
+  console.info('ERIC data present:', ERIC_DATA_PRESENT, '| ERIC-capable registrars:', capable.length);
 }
 
 // ---------------------------------------------------------------------
@@ -567,6 +593,15 @@ function personShiftMap(name, role) {
   const codes = rec.v.split('|');
   dates.forEach((d, i) => { map[d] = codes[i]; });
   return map;
+}
+
+// Warns (registrars only) when a night is involved but ERIC cover could not be checked.
+function ericNoticeHtml(role, involvesNight) {
+  return '';
+}
+function selectedIncludesNight() {
+  return !!currentPerson && currentPerson.r === 'R' &&
+    selectedShiftDates().some(d => periodOn(currentPerson.n, 'R', d) === 'n');
 }
 
 function fmtFull(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }); }
@@ -654,6 +689,23 @@ function periodOn(name, role, dateStr) {
 }
 function isFreeOn(name, role, dateStr) {
   return !rawCodeOn(name, role, dateStr);
+}
+
+function isRTCode(raw) {
+  if (!raw) return false;
+  let lower = String(raw).trim().toLowerCase();
+  if (lower.endsWith('-t')) lower = lower.slice(0, -2);
+  return lower === 'rt';
+}
+
+// RT (Wednesday teaching) is compatible with RECEIVING an Evening or Night
+// shift on the same date. It remains an occupied/worked day for the separate
+// consecutive-worked-day (7-day) rule.
+function canReceiveShift(name, role, dateStr, incomingType) {
+  const raw = rawCodeOn(name, role, dateStr);
+  if (!raw) return true;
+  if (isRTCode(raw) && (incomingType === 'e' || incomingType === 'n')) return true;
+  return false;
 }
 function textOn(name, role, dateStr) {
   const raw = rawCodeOn(name, role, dateStr);
@@ -916,6 +968,7 @@ function ericCountForDate(dateStr, overrides) {
   return count;
 }
 function ericMinimumHolds(dateStr, overrides) {
+  if (!ERIC_DATA_PRESENT) return true; // no ERIC data in the feed: can't be checked
   const after = ericCountForDate(dateStr, overrides);
   // Every night must finish with at least 2 ERIC-capable registrars.
   // 3 -> 2 is therefore valid; 2 -> 1 (or lower) is not.
@@ -932,9 +985,7 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
   const options = [];
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    if (!isFreeOn(partner, role, giveDateStr)) {
-      if (periodOn(partner, role, giveDateStr) === null) continue; // on leave / non-workable — hard stop
-    }
+    if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
     const radius = searchRadius(windowDays, acceptDates);
     for (let offset = -radius; offset <= radius; offset++) {
       const takeDay = giveDay + offset;
@@ -948,8 +999,8 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
       if (sameDay) {
         if (!allowSameDay || takeType === giveType) continue;
       } else {
-        if (!isFreeOn(partner, role, giveDateStr)) continue;
-        if (!isFreeOn(doctor, role, takeDateStr)) continue;
+        if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
+        if (!canReceiveShift(doctor, role, takeDateStr, takeType)) continue;
       }
 
       if (sameTypeOnly && takeType !== giveType) continue;
@@ -1003,7 +1054,7 @@ function findTakers(doctor, role, giveDateStr) {
   const takers = [];
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    if (!isFreeOn(partner, role, giveDateStr)) continue;
+    if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
     if (!canPickUpExtraShift(partner, role, giveDay, giveCode)) continue;
     if (!extraShiftKeepsRunsOk(partner, role, giveDay)) continue;
     if (nightGapViolationAfterChanges(partner, role, [], [{ day: giveDay, code: giveCode }])) continue;
@@ -1036,7 +1087,7 @@ function findBundleTakers(doctor, role, giveDates) {
   const candidates = [];
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    if (!giveDates.every(d => isFreeOn(partner, role, d))) continue;
+    if (!giveDates.every((d, i) => canReceiveShift(partner, role, d, giveTypes[i]))) continue;
     if (!canPickUpBundle(partner, role, giveDays, giveCodes)) continue;
     if (!bundleKeepsRunsOk(partner, role, giveDays)) continue;
     if (nightGapViolationAfterChanges(partner, role, [], giveDays.map((day, i) => ({ day, code: giveCodes[i] })))) continue;
@@ -1094,8 +1145,8 @@ function bundleSwapKeepsRunsOk(name, role, removeDays, addDays) {
   return true;
 }
 
-// Search one partner for a complete, distinct pairing of give-shifts to
-// take-shifts that passes the combined legality check for both people.
+// Search one partner for distinct pairings of give-shifts to take-shifts.
+// Keep several verified arrangements so a valid but less-near pairing is not hidden.
 function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
   const { windowDays, sameTypeOnly, acceptTypes, acceptDays, acceptDates = new Set(), allowSameDay } = opts;
   const giveDateSet = new Set(giveShifts.map(g => g.date));
@@ -1116,8 +1167,8 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
       if (sameDay) {
         if (!allowSameDay || takeType === g.type) continue;
       } else {
-        if (!isFreeOn(partner, role, g.date)) continue;
-        if (!isFreeOn(doctor, role, takeDateStr)) continue;
+        if (!canReceiveShift(partner, role, g.date, g.type)) continue;
+        if (!canReceiveShift(doctor, role, takeDateStr, takeType)) continue;
       }
       if (sameTypeOnly && takeType !== g.type) continue;
       if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
@@ -1139,6 +1190,21 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
   let attempts = 0;
   let capHit = false;
   const MAX_ATTEMPTS = 300;
+  const MAX_RESULTS_PER_PARTNER = 6;
+  const verifiedAssignments = [];
+  const seenBundleResultKeys = new Set();
+
+  // A bundle swap is defined by the dates exchanged, not by which of the
+  // giver's selected dates is paired with which of the partner's dates.
+  // For example, A19<->B13 + A20<->B14 is the same final roster change as
+  // A19<->B14 + A20<->B13. Keep only one listing for that date set.
+  function bundleResultKey(assignment) {
+    return assignment
+      .map(a => a.take.day)
+      .slice()
+      .sort((a, b) => a - b)
+      .join(',');
+  }
 
   function verify(assignment) {
     const doctorRemove = giveShifts.map(g => g.dayNum);
@@ -1170,25 +1236,35 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
   }
 
   function backtrack(idx, usedDays, assignment) {
-    if (attempts >= MAX_ATTEMPTS) { capHit = true; return null; }
+    if (verifiedAssignments.length >= MAX_RESULTS_PER_PARTNER) return;
+    if (attempts >= MAX_ATTEMPTS) { capHit = true; return; }
     if (idx === giveShifts.length) {
       attempts++;
-      return verify(assignment) ? assignment.slice() : null;
+      if (verify(assignment)) {
+        const key = bundleResultKey(assignment);
+        if (!seenBundleResultKeys.has(key)) {
+          seenBundleResultKeys.add(key);
+          verifiedAssignments.push(assignment.slice());
+        }
+      }
+      return;
     }
     for (const cand of candidatesPerShift[idx]) {
       if (usedDays.has(cand.day)) continue;
       usedDays.add(cand.day);
       assignment.push({ give: giveShifts[idx], take: cand });
-      const result = backtrack(idx + 1, usedDays, assignment);
-      if (result) return result;
+      backtrack(idx + 1, usedDays, assignment);
       assignment.pop();
       usedDays.delete(cand.day);
-      if (attempts > MAX_ATTEMPTS) return null;
+      if (verifiedAssignments.length >= MAX_RESULTS_PER_PARTNER || attempts >= MAX_ATTEMPTS) {
+        if (attempts >= MAX_ATTEMPTS) capHit = true;
+        return;
+      }
     }
-    return null;
   }
 
-  return { assignment: backtrack(0, new Set(), []), capHit };
+  backtrack(0, new Set(), []);
+  return { assignments: verifiedAssignments, capHit };
 }
 
 function findBundleSwapPartners(doctor, role, giveDates, opts) {
@@ -1206,7 +1282,9 @@ function findBundleSwapPartners(doctor, role, giveDates, opts) {
     if (partner === doctor) continue;
     const result = findBundleSwapForPartner(doctor, role, giveShifts, partner, opts);
     if (result.capHit) capHit = true;
-    if (result.assignment) matches.push({ partner, assignment: result.assignment });
+    if (result.assignments && result.assignments.length) {
+      result.assignments.forEach(assignment => matches.push({ partner, assignment }));
+    }
   }
   return { matches, capHit };
 }
@@ -1641,15 +1719,17 @@ function renderSwapTab() {
 }
 
 function renderBundleSwapResults(container, matches, capHit = false) {
+  const ericNotice = ericNoticeHtml(currentPerson && currentPerson.r,
+    selectedIncludesNight() || matches.some(m => m.assignment.some(a => a.take.type === 'n')));
   if (!matches.length) {
-    container.innerHTML = '<div class="status-msg">' +
+    container.innerHTML = ericNotice + '<div class="status-msg">' +
       (capHit
         ? 'No one can do the whole bundle as one verified swap. The 300-combination search cap was reached. Try shift swaps in shorter multi-shifts instead.'
         : 'No one can do the whole bundle as one verified swap.') +
       '</div>';
     return;
   }
-  let html = '<div id="bundleResultsStart"></div><div class="day-group-label">Bundle swap options</div>';
+  let html = '<div id="bundleResultsStart"></div>' + ericNotice + '<div class="day-group-label">Bundle swap options</div>';
   matches.forEach((m, idx) => {
     html += '<div class="option-card bundle-match" data-idx="' + idx + '">' +
       '<span class="type-badge" style="background:#EDEEFA;color:var(--accent)">Bundle</span>' +
@@ -1667,7 +1747,7 @@ function renderBundleSwapResults(container, matches, capHit = false) {
       '<div class="option-preview" id="bundlePreview-' + idx + '"></div>' +
     '</div>';
   });
-  html += '<div class="status-msg">Each bundle option is shown vertically. Use Calendar to preview the result, or Email to send the request.' + (capHit ? ' Some combinations could not be fully searched because the 300-combination search cap was reached.' : '') + '</div>';
+  html += '<div class="status-msg">Each verified bundle arrangement is shown separately. Use Calendar to preview the result, or Email to send the request.' + (capHit ? ' Some combinations could not be fully searched because the 300-combination search cap was reached.' : '') + '</div>';
   container.innerHTML = html;
 
   container.querySelectorAll('.bundle-email-btn').forEach(btn => {
@@ -1849,13 +1929,15 @@ function buildBundleSwapMailto(doctor, role, partnerName, assignment) {
 function renderSwapResults(results) {
   const out = document.getElementById('resultsBody');
   const withOptions = results.filter(r => r.options.length > 0);
+  const ericNotice = ericNoticeHtml(currentPerson && currentPerson.r,
+    selectedIncludesNight() || results.some(r => r.options.some(o => o.shiftType === 'n')));
   if (!withOptions.length) {
-    out.innerHTML = '<div class="status-msg">No legal swaps found for any selected shift in this window. Try a wider search window or relax the shift-type restriction.</div>';
+    out.innerHTML = ericNotice + '<div class="status-msg">No legal swaps found for any selected shift in this window. Try a wider search window or relax the shift-type restriction.</div>';
     return;
   }
 
   const flat = [];
-  let html = '<div class="day-group-label">Single-shift swap options</div>';
+  let html = ericNotice + '<div class="day-group-label">Single-shift swap options</div>';
 
   // Put all single-person/single-shift swap options together at the top.
   const showShiftHeaders = withOptions.length > 1;
@@ -2052,7 +2134,7 @@ function renderTakerResults(results, bundleTakers) {
   const withTakers = results.filter(r => r.takers.length > 0);
   bundleTakers = bundleTakers || [];
 
-  let html = '';
+  let html = ericNoticeHtml(currentPerson && currentPerson.r, selectedIncludesNight());
   if (bundleTakers.length) {
     const dates = selectedShiftDates();
     html += '<div class="day-group-label">Bundle - take all ' + dates.length + ' shifts</div>';
@@ -2063,7 +2145,7 @@ function renderTakerResults(results, bundleTakers) {
   }
 
   if (!withTakers.length && !bundleTakers.length) {
-    out.innerHTML = '<div class="status-msg">No one is free and legally able to take any of these shifts outright.</div>';
+    out.innerHTML = html + '<div class="status-msg">No one is free and legally able to take any of these shifts outright.</div>';
     return;
   }
 
@@ -2103,7 +2185,7 @@ function renderTakerResults(results, bundleTakers) {
 // ---------------------------------------------------------------------
 function fingerprintRoster(list) {
   return JSON.stringify(list
-    .map(p => ({ n: p.n, r: p.r, d: p.d, v: p.v, ERIC: p.ERIC ?? p.eric ?? p.Eric ?? p.e ?? null }))
+    .map(p => ({ n: p.n, r: p.r, d: p.d, v: p.v, ERIC: ericFlagValue(p) ?? null }))
     .sort((a, b) => (a.r + '|' + a.n).localeCompare(b.r + '|' + b.n)));
 }
 
@@ -2128,6 +2210,7 @@ async function loadRoster() {
     if (rosterLoadedOnce && nextFingerprint === rosterFingerprint) return;
 
     PEOPLE = nextPeople;
+    refreshEricDataFlag();
     rosterFingerprint = nextFingerprint;
     rosterLoadedOnce = true;
 
