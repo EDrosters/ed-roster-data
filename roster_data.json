@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Thursday 01 October",
     "oncall": "Nicki Walsham",
-    "comment": "",
+    "comment": "Ben Pang - evening SSU/HUB",
     "shifts": [
       {
         "name": "Day",
@@ -209,17 +209,6 @@
                   "Lawrence Lin (PGY1)",
                   "Safwan Aziz (PGY1)",
                   "Stephenie Pillainayagam (ED PGY3)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Rapid Stay",
-            "roles": [
-              {
-                "role": "JMO",
-                "names": [
-                  "Ben Pang (PGY6)"
                 ]
               }
             ]
