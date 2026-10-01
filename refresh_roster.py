@@ -363,8 +363,11 @@ def extract_registrar_term(ws, tab_name):
             continue
         name = str(a).strip()
         eft = ws.cell(row=r, column=2).value
+        # Excel column C is the authoritative ERIC-capable flag for registrars.
+        # Keep it with the registrar record so downstream JSON exports can use it.
+        eric = fmt_code(ws.cell(row=r, column=3).value)
         codes = [fmt_code(ws.cell(row=r, column=c).value) for c in range(start_col, last_col + 1)]
-        registrars.append({"n": name, "eft": eft, "v": "|".join(codes)})
+        registrars.append({"n": name, "eft": eft, "eric": eric, "v": "|".join(codes)})
         r += 1
 
     registrars.sort(key=lambda x: (-(x["eft"] or 0), x["n"]))
@@ -811,6 +814,7 @@ def build_my_roster_data(consultant_periods, registrar_periods):
                     bucket[d] = code
 
     registrars = {}
+    registrar_eric = {}
     for p in registrar_periods:
         dates = p["d"].split("|")
         for c in p["c"]:
@@ -819,6 +823,11 @@ def build_my_roster_data(consultant_periods, registrar_periods):
             for d, code in zip(dates, codes):
                 if code and d:
                     bucket[d] = code
+            # registrar_periods are chronological, so the latest non-blank
+            # ERIC flag wins when the same registrar appears in multiple terms.
+            eric = fmt_code(c.get("eric", ""))
+            if eric:
+                registrar_eric[c["n"]] = eric
 
     window_start = (local_today() - timedelta(days=30)).isoformat()
 
@@ -831,11 +840,15 @@ def build_my_roster_data(consultant_periods, registrar_periods):
             has_real_shift = any(c.strip().lower() != "x" for _, c in items)
             if not has_real_shift:
                 continue
-            out.append({
+            record = {
                 "n": name, "r": role,
                 "d": "|".join(d for d, _ in items),
                 "v": "|".join(c for _, c in items),
-            })
+            }
+            if role == "R":
+                # `c` in my_roster.json mirrors Excel column C (ERIC capability).
+                record["c"] = registrar_eric.get(name, "")
+            out.append(record)
         return out
 
     return pack(consultants, "C") + pack(registrars, "R")
