@@ -451,12 +451,6 @@
             "zone": "Purple",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "Andrew Wallace"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Lara Knowles (TS2)",
@@ -519,6 +513,7 @@
               {
                 "role": "Consultants",
                 "names": [
+                  "Andrew Wallace",
                   "Chung"
                 ]
               },
