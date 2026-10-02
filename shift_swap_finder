@@ -518,10 +518,12 @@ function isEricCapable(name) {
 // value for at least one registrar, even if every value happens to be N.
 // This prevents a valid all-N snapshot from being mistaken for a missing field.
 let ERIC_DATA_PRESENT = false;
+let ERIC_CAPABLE_COUNT = 0;
 function refreshEricDataFlag() {
   const registrarRecords = PEOPLE.filter(p => p.r === 'R');
   ERIC_DATA_PRESENT = registrarRecords.some(p => ericFlagValue(p) !== undefined);
   const capable = registrarRecords.filter(p => ericFlagIsYes(ericFlagValue(p)));
+  ERIC_CAPABLE_COUNT = capable.length;
   console.info('ERIC data present:', ERIC_DATA_PRESENT, '| ERIC-capable registrars:', capable.length);
 }
 
@@ -596,7 +598,21 @@ function personShiftMap(name, role) {
 }
 
 // Warns (registrars only) when a night is involved but ERIC cover could not be checked.
+// Shown on registrar results whenever ERIC cover can't be checked, so a blocked
+// night swap is never mistaken for "no one is available". (Any swap that gives or
+// takes a night is affected, so this isn't limited to nights the user selected.)
 function ericNoticeHtml(role, involvesNight) {
+  if (role !== 'R') return '';
+  if (!ERIC_DATA_PRESENT) {
+    return '<div class="eric-notice"><b>Registrar night swaps are switched off.</b> The roster data has no ERIC column, ' +
+      'so ERIC cover can\u2019t be checked. Day, swing and eve swaps are unaffected. ' +
+      'Ask the roster owner to check the ERIC column in the master roster.</div>';
+  }
+  if (ERIC_CAPABLE_COUNT === 0) {
+    return '<div class="eric-notice"><b>Registrar night swaps are switched off.</b> No registrar is marked ERIC-capable (Y) in the roster data, ' +
+      'so no night can keep 2 ERIC-capable registrars. Day, swing and eve swaps are unaffected. ' +
+      'Ask the roster owner to check the ERIC column in the master roster.</div>';
+  }
   return '';
 }
 function selectedIncludesNight() {
@@ -968,7 +984,9 @@ function ericCountForDate(dateStr, overrides) {
   return count;
 }
 function ericMinimumHolds(dateStr, overrides) {
-  if (!ERIC_DATA_PRESENT) return true; // no ERIC data in the feed: can't be checked
+  // No ERIC data in the feed (the roster script could not find the ERIC column):
+  // ERIC cover can't be verified, so fail closed - every night swap is rejected.
+  if (!ERIC_DATA_PRESENT) return false;
   const after = ericCountForDate(dateStr, overrides);
   // Every night must finish with at least 2 ERIC-capable registrars.
   // 3 -> 2 is therefore valid; 2 -> 1 (or lower) is not.
@@ -985,7 +1003,11 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
   const options = [];
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
+    // Early prune only. A partner who already works that date can still be a
+    // same-day, different-type match (handled in the loop below), so don't
+    // drop them here when same-day swaps are allowed.
+    if (!canReceiveShift(partner, role, giveDateStr, giveType) &&
+        !(allowSameDay && periodOn(partner, role, giveDateStr))) continue;
     const radius = searchRadius(windowDays, acceptDates);
     for (let offset = -radius; offset <= radius; offset++) {
       const takeDay = giveDay + offset;
