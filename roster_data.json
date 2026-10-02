@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Friday 02 October",
     "oncall": "Nicki Walsham",
-    "comment": "",
+    "comment": "Rika An (PL) - evening intern SSU/HUB.  Backfill per MWU by Jason Wong (Jason has to finish at 2200)",
     "shifts": [
       {
         "name": "Day",
@@ -240,7 +240,6 @@
                 "role": "JMO",
                 "names": [
                   "Safwan Aziz (PGY1)",
-                  "Rika An (PGY1)",
                   "Ben Pang (PGY6)"
                 ]
               }
