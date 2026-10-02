@@ -19,6 +19,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 import openpyxl
+from openpyxl.utils import get_column_letter
 
 # ============================================================
 # CONFIG - filled in from GitHub Secrets / environment
@@ -341,6 +342,38 @@ def extract_all_consultants(wb):
     return periods
 
 
+def eric_flag(value):
+    """Excel ERIC cell -> "y" if ERIC-capable, "" otherwise.
+    y (any case, or "yes") = ERIC-capable; blank or anything else = not."""
+    return "y" if fmt_code(value).lower() in ("y", "yes") else ""
+
+
+ERIC_HEADER_RE = re.compile(r"^\s*eric\b", re.IGNORECASE)
+
+
+def find_eric_column(ws, date_row, start_col):
+    """Returns (column_number, how_found); column_number is None if not found."""
+    header_cols = []
+    for c in range(1, ws.max_column + 1):
+        for r in range(1, date_row + 1):
+            v = ws.cell(row=r, column=c).value
+            if isinstance(v, str) and ERIC_HEADER_RE.match(v):
+                header_cols.append(c)
+                break
+    if 3 in header_cols:
+        return 3, "column C"
+    if header_cols:
+        return header_cols[0], f"header search, column {get_column_letter(header_cols[0])}"
+    # No header anywhere: only trust column C if it visibly holds y values.
+    for r in range(date_row + 1, ws.max_row + 1):
+        a = ws.cell(row=r, column=1).value
+        if a is not None and str(a).strip().upper() == "TOTAL":
+            break
+        if eric_flag(ws.cell(row=r, column=3).value):
+            return 3, "column C, no ERIC header"
+    return None, "not found"
+
+
 def extract_registrar_term(ws, tab_name):
     date_row, start_col = find_date_anchor(ws, 6, 8)
     if date_row is None:
@@ -351,6 +384,12 @@ def extract_registrar_term(ws, tab_name):
         dv = ws.cell(row=date_row, column=c).value
         dates.append(dv.strftime("%Y-%m-%d") if isinstance(dv, datetime) else None)
         weekdays.append(dv.strftime("%a") if isinstance(dv, datetime) else "")
+
+    eric_col, eric_how = find_eric_column(ws, date_row, start_col)
+    if eric_col is None:
+        print(f"::warning::{tab_name}: no ERIC column found (looked for a column headed ERIC, then column C).")
+    elif eric_how != "column C":
+        print(f"  {tab_name}: ERIC column located via {eric_how}")
 
     r = date_row + 1
     registrars = []
@@ -363,9 +402,7 @@ def extract_registrar_term(ws, tab_name):
             continue
         name = str(a).strip()
         eft = ws.cell(row=r, column=2).value
-        # Excel column C is the authoritative ERIC-capable flag for registrars.
-        # Keep it with the registrar record so downstream JSON exports can use it.
-        eric = fmt_code(ws.cell(row=r, column=3).value)
+        eric = fmt_code(ws.cell(row=r, column=eric_col).value) if eric_col else ""
         codes = [fmt_code(ws.cell(row=r, column=c).value) for c in range(start_col, last_col + 1)]
         registrars.append({"n": name, "eft": eft, "eric": eric, "v": "|".join(codes)})
         r += 1
@@ -375,7 +412,8 @@ def extract_registrar_term(ws, tab_name):
     start_date = next((d for d in dates if d), None)
     end_date = next((d for d in reversed(dates) if d), None)
     return {"t": tab_name, "s": start_date, "e": end_date,
-            "d": "|".join(d or "" for d in dates), "w": "|".join(weekdays), "c": registrars}
+            "d": "|".join(d or "" for d in dates), "w": "|".join(weekdays), "c": registrars,
+            "eric_col": get_column_letter(eric_col) if eric_col else None}
 
 
 def extract_all_registrars(wb):
@@ -816,6 +854,11 @@ def build_my_roster_data(consultant_periods, registrar_periods):
     registrars = {}
     registrar_eric = {}
     for p in registrar_periods:
+        # Only terms where the ERIC column was found, and where at least one
+        # registrar has a "y", count: a term with nobody marked means the
+        # column hasn't been filled in yet (e.g. a future term), so it must not
+        # turn everyone's blank into "not ERIC-capable".
+        eric_filled_in = bool(p.get("eric_col")) and any(eric_flag(c.get("eric", "")) for c in p["c"])
         dates = p["d"].split("|")
         for c in p["c"]:
             codes = c["v"].split("|")
@@ -823,13 +866,25 @@ def build_my_roster_data(consultant_periods, registrar_periods):
             for d, code in zip(dates, codes):
                 if code and d:
                     bucket[d] = code
-            # registrar_periods are chronological, so the latest non-blank
-            # ERIC flag wins when the same registrar appears in multiple terms.
-            eric = fmt_code(c.get("eric", ""))
-            if eric:
-                registrar_eric[c["n"]] = eric
+            if eric_filled_in:
+                # registrar_periods are chronological: the latest filled-in term
+                # wins, and a blank there means not ERIC-capable.
+                registrar_eric[c["n"]] = eric_flag(c.get("eric", ""))
 
     window_start = (local_today() - timedelta(days=30)).isoformat()
+
+    # Only the term containing today decides whether ERIC data counts as missing.
+    # If today is between terms, use the next term to start, else the latest one.
+    # If the ERIC column can't be found on it, ERIC cover is unknown, so no ERIC
+    # keys are written at all (the swap page then switches night swaps off).
+    today_str = local_today().isoformat()
+    dated = [p for p in registrar_periods if p.get("s") and p.get("e")]
+    deciding = [p for p in dated if p["s"] <= today_str <= p["e"]]
+    if not deciding and dated:
+        upcoming = sorted((p for p in dated if p["s"] > today_str), key=lambda p: p["s"])
+        deciding = [upcoming[0]] if upcoming else [max(dated, key=lambda p: p["e"])]
+    missing_tabs = [p["t"] for p in deciding if not p.get("eric_col")]
+    eric_known = not missing_tabs
 
     def pack(name_dict, role):
         out = []
@@ -845,13 +900,27 @@ def build_my_roster_data(consultant_periods, registrar_periods):
                 "d": "|".join(d for d, _ in items),
                 "v": "|".join(c for _, c in items),
             }
-            if role == "R":
-                # `c` in my_roster.json mirrors Excel column C (ERIC capability).
-                record["c"] = registrar_eric.get(name, "")
+            if role == "R" and eric_known:
+                flag = registrar_eric.get(name, "")
+                record["ERIC"] = flag   # read by the Find a Swap page
+                record["c"] = flag      # kept for anything already reading "c"
             out.append(record)
         return out
 
-    return pack(consultants, "C") + pack(registrars, "R")
+    result = pack(consultants, "C") + pack(registrars, "R")
+
+    if missing_tabs:
+        print("::error::ERIC column NOT FOUND on the current term (" + ", ".join(missing_tabs) +
+              "). Registrar records are written without ERIC data, so registrar "
+              "night swaps will be switched off on the swap page until a column "
+              "headed ERIC (normally column C) is back on that sheet.")
+    else:
+        n_eric = sum(1 for rec in result if rec.get("ERIC") == "y")
+        print(f"  {n_eric} ERIC-capable registrars flagged (ERIC column = 'y')")
+        if n_eric == 0:
+            print("::warning::The ERIC column was found but no registrar is marked 'y', "
+                  "so every registrar night swap will fail the 2-ERIC-capable rule.")
+    return result
 
 
 def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people, n_weeks=8):
