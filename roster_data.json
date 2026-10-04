@@ -196,13 +196,13 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Scott Taylor"
+                  "Scott Taylor",
+                  "Ali Al Joboory"
                 ]
               },
               {
                 "role": "Registrars",
                 "names": [
-                  "Aislinn Begley (TS3)",
                   "Sam Samour (TS2)"
                 ]
               }
@@ -251,17 +251,6 @@
                 "role": "JMO",
                 "names": [
                   "Tom Hunt"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Unallocated",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Ali Al Joboory"
                 ]
               }
             ]
