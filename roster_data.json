@@ -221,6 +221,17 @@
                 ]
               }
             ]
+          },
+          {
+            "zone": "Unallocated",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Isaac Lee (TS4 IC)"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -377,12 +388,6 @@
                 "role": "Consultants",
                 "names": [
                   "Yigal Reuben"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Isaac Lee (TS4 IC)"
                 ]
               },
               {
