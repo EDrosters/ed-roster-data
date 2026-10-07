@@ -142,7 +142,6 @@
                 "role": "Registrars",
                 "names": [
                   "Abhishek Kulkarni (u)",
-                  "Harriet Evans (TS3)",
                   "Mark Douglas (TS4 IC)",
                   "Emma Watkinson (u)"
                 ]
@@ -580,6 +579,10 @@
           [
             "FACEM on Call, 0430-0800",
             "Marina Guertin"
+          ],
+          [
+            "EPIC",
+            "Sophie Tighe (PEM)"
           ]
         ],
         "zones": [
@@ -606,7 +609,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Lara Knowles (TS2)"
+                  "Harriet Evans (TS3)"
                 ]
               },
               {
@@ -623,7 +626,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Sophie Tighe (PEM)"
+                  "Lara Knowles (TS2)"
                 ]
               },
               {
