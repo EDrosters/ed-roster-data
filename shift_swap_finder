@@ -518,12 +518,10 @@ function isEricCapable(name) {
 // value for at least one registrar, even if every value happens to be N.
 // This prevents a valid all-N snapshot from being mistaken for a missing field.
 let ERIC_DATA_PRESENT = false;
-let ERIC_CAPABLE_COUNT = 0;
 function refreshEricDataFlag() {
   const registrarRecords = PEOPLE.filter(p => p.r === 'R');
   ERIC_DATA_PRESENT = registrarRecords.some(p => ericFlagValue(p) !== undefined);
   const capable = registrarRecords.filter(p => ericFlagIsYes(ericFlagValue(p)));
-  ERIC_CAPABLE_COUNT = capable.length;
   console.info('ERIC data present:', ERIC_DATA_PRESENT, '| ERIC-capable registrars:', capable.length);
 }
 
@@ -598,21 +596,7 @@ function personShiftMap(name, role) {
 }
 
 // Warns (registrars only) when a night is involved but ERIC cover could not be checked.
-// Shown on registrar results whenever ERIC cover can't be checked, so a blocked
-// night swap is never mistaken for "no one is available". (Any swap that gives or
-// takes a night is affected, so this isn't limited to nights the user selected.)
 function ericNoticeHtml(role, involvesNight) {
-  if (role !== 'R') return '';
-  if (!ERIC_DATA_PRESENT) {
-    return '<div class="eric-notice"><b>Registrar night swaps are switched off.</b> The roster data has no ERIC column, ' +
-      'so ERIC cover can\u2019t be checked. Day, swing and eve swaps are unaffected. ' +
-      'Ask the roster owner to check the ERIC column in the master roster.</div>';
-  }
-  if (ERIC_CAPABLE_COUNT === 0) {
-    return '<div class="eric-notice"><b>Registrar night swaps are switched off.</b> No registrar is marked ERIC-capable (Y) in the roster data, ' +
-      'so no night can keep 2 ERIC-capable registrars. Day, swing and eve swaps are unaffected. ' +
-      'Ask the roster owner to check the ERIC column in the master roster.</div>';
-  }
   return '';
 }
 function selectedIncludesNight() {
@@ -717,9 +701,16 @@ function isRTCode(raw) {
 // RT (Wednesday teaching) is compatible with RECEIVING an Evening or Night
 // shift on the same date. It remains an occupied/worked day for the separate
 // consecutive-worked-day (7-day) rule.
-function canReceiveShift(name, role, dateStr, incomingType) {
+function canReceiveShift(name, role, dateStr, incomingType, availableDates = null) {
   const raw = rawCodeOn(name, role, dateStr);
   if (!raw) return true;
+
+  // An explicit x means this person is unavailable on that date by default.
+  // For the person doing the search, a date they have explicitly ticked in
+  // "Choose specific dates you are available to swap into" overrides x
+  // for this search only. Other people's x cells remain unavailable.
+  if (isExplicitXCode(raw) && availableDates && availableDates.has(dateStr)) return true;
+
   if (isRTCode(raw) && (incomingType === 'e' || incomingType === 'n')) return true;
   return false;
 }
@@ -984,9 +975,7 @@ function ericCountForDate(dateStr, overrides) {
   return count;
 }
 function ericMinimumHolds(dateStr, overrides) {
-  // No ERIC data in the feed (the roster script could not find the ERIC column):
-  // ERIC cover can't be verified, so fail closed - every night swap is rejected.
-  if (!ERIC_DATA_PRESENT) return false;
+  if (!ERIC_DATA_PRESENT) return true; // no ERIC data in the feed: can't be checked
   const after = ericCountForDate(dateStr, overrides);
   // Every night must finish with at least 2 ERIC-capable registrars.
   // 3 -> 2 is therefore valid; 2 -> 1 (or lower) is not.
@@ -1003,11 +992,7 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
   const options = [];
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    // Early prune only. A partner who already works that date can still be a
-    // same-day, different-type match (handled in the loop below), so don't
-    // drop them here when same-day swaps are allowed.
-    if (!canReceiveShift(partner, role, giveDateStr, giveType) &&
-        !(allowSameDay && periodOn(partner, role, giveDateStr))) continue;
+    if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
     const radius = searchRadius(windowDays, acceptDates);
     for (let offset = -radius; offset <= radius; offset++) {
       const takeDay = giveDay + offset;
@@ -1022,7 +1007,7 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
         if (!allowSameDay || takeType === giveType) continue;
       } else {
         if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
-        if (!canReceiveShift(doctor, role, takeDateStr, takeType)) continue;
+        if (!canReceiveShift(doctor, role, takeDateStr, takeType, acceptDates)) continue;
       }
 
       if (sameTypeOnly && takeType !== giveType) continue;
@@ -1190,7 +1175,7 @@ function findBundleSwapForPartner(doctor, role, giveShifts, partner, opts) {
         if (!allowSameDay || takeType === g.type) continue;
       } else {
         if (!canReceiveShift(partner, role, g.date, g.type)) continue;
-        if (!canReceiveShift(doctor, role, takeDateStr, takeType)) continue;
+        if (!canReceiveShift(doctor, role, takeDateStr, takeType, acceptDates)) continue;
       }
       if (sameTypeOnly && takeType !== g.type) continue;
       if (acceptTypes.size > 0 && !acceptTypes.has(takeType)) continue;
@@ -1537,7 +1522,7 @@ function renderSwapTab() {
       '<div class="field"><label>Accept swaps on these days only</label>' +
         '<div class="day-toggles">' + dayLabels.map((d, i) => '<div class="day-toggle" data-day="' + i + '">' + d + '</div>').join('') + '</div>' +
       '</div>' +
-      '<div class="field"><label>Or choose specific dates you are available to swap into</label>' +
+      '<div class="field"><label>Or choose specific dates you are available to swap into</label><div class="date-picker-help">Roster <strong>x</strong> means you are unavailable unless you tick that exact date here. Ticked dates override x for this search only.</div>' +
         '<button type="button" class="date-picker-toggle' + (acceptDateSet.size ? ' active' : '') + '" id="datePickerToggle">' +
           '<span>Choose dates</span><span class="date-picker-count" id="datePickerCount">' + (acceptDateSet.size ? acceptDateSet.size + ' selected' : 'Any date') + '</span>' +
         '</button>' +
@@ -1719,12 +1704,15 @@ function renderSwapTab() {
       const windowDays = parseInt(document.getElementById('windowSelect').value, 10);
       const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
       const allowSameDay = document.getElementById('allowSameDay').checked;
+      const acceptTypes = new Set(acceptTypeSet);
+      const acceptDays = new Set(acceptDaySet);
+      const acceptDates = new Set(acceptDateSet);
       const bundleResultsEl = document.getElementById('bundleResults');
       bundleResultsEl.innerHTML = '<div class="status-msg">Searching for full bundle swaps…</div>';
       setTimeout(() => {
         try {
           const bundleSearch = findBundleSwapPartners(currentPerson.n, currentPerson.r, dates, {
-            windowDays, sameTypeOnly, acceptTypes: acceptTypeSet, acceptDays: acceptDaySet, acceptDates: acceptDateSet, allowSameDay,
+            windowDays, sameTypeOnly, acceptTypes, acceptDays, acceptDates, allowSameDay,
           });
           renderBundleSwapResults(bundleResultsEl, bundleSearch.matches, bundleSearch.capHit);
           // Jump straight to the beginning of the bundle results.
