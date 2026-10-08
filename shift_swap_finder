@@ -489,8 +489,16 @@ const PERIOD_COLOR = {
 const LEAVE_COLOR = {bg:'#E4E6EF', ink:'#3f4658'};
 
 // ---------------------------------------------------------------------
-// ERIC-capable registrars — Excel column C is the authoritative source.
-// The Excel -> JSON export should carry column C through as `c` (or `C`).
+// ERIC-capable registrars — Excel column C (header "ERIC") on the REGISTRAR
+// term sheets is the authoritative source. It applies to REGISTRARS ONLY:
+// consultants have no ERIC flag, and every ERIC check below is gated to
+// role 'R'. The Excel -> JSON export carries column C through as `ERIC`
+// (and also as `c`, for older exports).
+//
+// Do NOT confuse this with "on call". ERIC / column C is not on call. The
+// trailing "c" on CONSULTANT allocation codes (d1c, d2c, e1c ...) means ON
+// CALL - that is a different thing, handled in decodeCode() below.
+//
 // We also accept explicit ERIC field names for backwards compatibility,
 // but do NOT treat an unrelated `e` field as the ERIC flag.
 // A value of Y/YES/TRUE/1 means ERIC-capable; N/blank means not capable.
@@ -510,6 +518,7 @@ function ericFlagIsYes(value) {
   return value === true || ['y', 'yes', 'true', '1'].includes(String(value ?? '').trim().toLowerCase());
 }
 function isEricCapable(name) {
+  // Registrars only (p.r === 'R'). Consultants are never ERIC-capable / ERIC-checked.
   const rec = PEOPLE.find(p => p.n === name && p.r === 'R');
   return !!rec && ericFlagIsYes(ericFlagValue(rec));
 }
@@ -518,10 +527,12 @@ function isEricCapable(name) {
 // value for at least one registrar, even if every value happens to be N.
 // This prevents a valid all-N snapshot from being mistaken for a missing field.
 let ERIC_DATA_PRESENT = false;
+let ERIC_CAPABLE_COUNT = 0;
 function refreshEricDataFlag() {
   const registrarRecords = PEOPLE.filter(p => p.r === 'R');
   ERIC_DATA_PRESENT = registrarRecords.some(p => ericFlagValue(p) !== undefined);
   const capable = registrarRecords.filter(p => ericFlagIsYes(ericFlagValue(p)));
+  ERIC_CAPABLE_COUNT = capable.length;
   console.info('ERIC data present:', ERIC_DATA_PRESENT, '| ERIC-capable registrars:', capable.length);
 }
 
@@ -573,7 +584,7 @@ function decodeCode(raw, role) {
   m = lower.match(/^([dsen])(0?[0-9]{1,2}|z)([ac])?$/);
   if (m) {
     const period = m[1], num = m[2], suffix = m[3];
-    const onCall = suffix === 'c';
+    const onCall = suffix === 'c';   // trailing "c" = ON CALL (consultant codes like d1c, e1c). Unrelated to the ERIC column.
     let text;
     if (role === 'C' && period === 'd' && DAY_ROLE[num]) text = 'Day - ' + DAY_ROLE[num];
     else if (role === 'C' && period === 'e' && EVENING_ROLE[num]) text = 'Eve - ' + EVENING_ROLE[num];
@@ -596,7 +607,21 @@ function personShiftMap(name, role) {
 }
 
 // Warns (registrars only) when a night is involved but ERIC cover could not be checked.
+// Shown on registrar results whenever ERIC cover can't be checked, so a blocked
+// night swap is never mistaken for "no one is available". (Any swap that gives or
+// takes a night is affected, so this isn't limited to nights the user selected.)
 function ericNoticeHtml(role, involvesNight) {
+  if (role !== 'R') return '';
+  if (!ERIC_DATA_PRESENT) {
+    return '<div class="eric-notice"><b>Registrar night swaps are switched off.</b> The roster data has no ERIC column, ' +
+      'so ERIC cover can\u2019t be checked. Day, swing and eve swaps are unaffected. ' +
+      'Ask the roster owner to check the ERIC column in the master roster.</div>';
+  }
+  if (ERIC_CAPABLE_COUNT === 0) {
+    return '<div class="eric-notice"><b>Registrar night swaps are switched off.</b> No registrar is marked ERIC-capable (Y) in the roster data, ' +
+      'so no night can keep 2 ERIC-capable registrars. Day, swing and eve swaps are unaffected. ' +
+      'Ask the roster owner to check the ERIC column in the master roster.</div>';
+  }
   return '';
 }
 function selectedIncludesNight() {
@@ -975,7 +1000,9 @@ function ericCountForDate(dateStr, overrides) {
   return count;
 }
 function ericMinimumHolds(dateStr, overrides) {
-  if (!ERIC_DATA_PRESENT) return true; // no ERIC data in the feed: can't be checked
+  // No ERIC data in the feed (the roster script could not find the ERIC column):
+  // ERIC cover can't be verified, so fail closed - every night swap is rejected.
+  if (!ERIC_DATA_PRESENT) return false;
   const after = ericCountForDate(dateStr, overrides);
   // Every night must finish with at least 2 ERIC-capable registrars.
   // 3 -> 2 is therefore valid; 2 -> 1 (or lower) is not.
@@ -992,7 +1019,11 @@ function findSwaps(doctor, role, giveDateStr, windowDays, sameTypeOnly, acceptTy
   const options = [];
   for (const partner of peopleOfRole(role)) {
     if (partner === doctor) continue;
-    if (!canReceiveShift(partner, role, giveDateStr, giveType)) continue;
+    // Early prune only. A partner who already works that date can still be a
+    // same-day, different-type match (handled in the loop below), so don't
+    // drop them here when same-day swaps are allowed.
+    if (!canReceiveShift(partner, role, giveDateStr, giveType) &&
+        !(allowSameDay && periodOn(partner, role, giveDateStr))) continue;
     const radius = searchRadius(windowDays, acceptDates);
     for (let offset = -radius; offset <= radius; offset++) {
       const takeDay = giveDay + offset;
@@ -1504,8 +1535,6 @@ function renderDetail() {
 function renderSwapTab() {
   const body = document.getElementById('tabBody');
   const dates = selectedShiftDates();
-  const giveTypes = new Set(dates.map(d => periodOn(currentPerson.n, currentPerson.r, d)));
-  const giveType = giveTypes.size === 1 ? Array.from(giveTypes)[0] : null; // only auto-fill "same type" when every selected shift shares one type
   const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   body.innerHTML =
     '<div class="controls">' +
@@ -1522,13 +1551,12 @@ function renderSwapTab() {
       '<div class="field"><label>Accept swaps on these days only</label>' +
         '<div class="day-toggles">' + dayLabels.map((d, i) => '<div class="day-toggle" data-day="' + i + '">' + d + '</div>').join('') + '</div>' +
       '</div>' +
-      '<div class="field"><label>Or choose specific dates you are available to swap into</label><div class="date-picker-help">Roster <strong>x</strong> means you are unavailable unless you tick that exact date here. Ticked dates override x for this search only.</div>' +
+      '<div class="field"><label>Or choose specific dates you are available to swap into</label>' +
         '<button type="button" class="date-picker-toggle' + (acceptDateSet.size ? ' active' : '') + '" id="datePickerToggle">' +
           '<span>Choose dates</span><span class="date-picker-count" id="datePickerCount">' + (acceptDateSet.size ? acceptDateSet.size + ' selected' : 'Any date') + '</span>' +
         '</button>' +
         '<div id="datePickerWrap" style="display:none"></div>' +
       '</div>' +
-      '<label class="checkrow"><input type="checkbox" id="sameTypeOnly"> Only offer the same shift type back</label>' +
       '<label class="checkrow"><input type="checkbox" id="allowSameDay"> Allow a same-day, different-type swap</label>' +
     '</div>' +
     '<button class="search-btn" id="searchBtn">Search</button>' +
@@ -1655,24 +1683,17 @@ function renderSwapTab() {
     });
   });
 
-  document.getElementById('sameTypeOnly').addEventListener('change', (e) => {
-    acceptTypeSet.clear();
-    if (e.target.checked && giveType) acceptTypeSet.add(giveType);
-    refreshToggleStyles();
-  });
-
   function runCurrentSwapSearch() {
     // Re-read every search control at the moment Search is pressed.
     // Do not rely on a previous search's captured values.
     const windowEl = document.getElementById('windowSelect');
-    const sameTypeEl = document.getElementById('sameTypeOnly');
     const allowSameDayEl = document.getElementById('allowSameDay');
     const resultsBody = document.getElementById('resultsBody');
     const bundleResultsEl = document.getElementById('bundleResults');
-    if (!windowEl || !sameTypeEl || !allowSameDayEl || !resultsBody) return;
+    if (!windowEl || !allowSameDayEl || !resultsBody) return;
 
     const windowDays = parseInt(windowEl.value, 10);
-    const sameTypeOnly = !!sameTypeEl.checked;
+    const sameTypeOnly = false; // the "same shift type back" option was removed; the D/S/E/N toggles do this job
     const allowSameDay = !!allowSameDayEl.checked;
     // Snapshot the Sets so the search uses exactly the parameters present
     // when the button was pressed, even if another UI action occurs while
@@ -1702,7 +1723,7 @@ function renderSwapTab() {
   if (bundleBtn) {
     bundleBtn.addEventListener('click', () => {
       const windowDays = parseInt(document.getElementById('windowSelect').value, 10);
-      const sameTypeOnly = document.getElementById('sameTypeOnly').checked;
+      const sameTypeOnly = false; // option removed
       const allowSameDay = document.getElementById('allowSameDay').checked;
       const acceptTypes = new Set(acceptTypeSet);
       const acceptDays = new Set(acceptDaySet);
