@@ -630,6 +630,12 @@
             "zone": "Purple",
             "roles": [
               {
+                "role": "Registrars",
+                "names": [
+                  "Adelaide Pratt (TS4 IC)"
+                ]
+              },
+              {
                 "role": "JMO",
                 "names": [
                   "Arnav Sharma (PGY4)"
