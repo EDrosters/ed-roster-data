@@ -73,6 +73,12 @@
                 ]
               },
               {
+                "role": "Adv Musc Physio",
+                "names": [
+                  "Catherine Knight"
+                ]
+              },
+              {
                 "role": "JMO",
                 "names": [
                   "Calum Haggett (PGY4)"
@@ -486,6 +492,17 @@
                   "David Sparkhall (TS4 IC)",
                   "Thanh Truong (TS3)",
                   "Sam Samour (TS2)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Adv Musc Physio",
+                "names": [
+                  "Rosalie Gan"
                 ]
               }
             ]
