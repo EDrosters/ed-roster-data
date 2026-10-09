@@ -10,6 +10,14 @@ Runs in GitHub Actions on a schedule. Steps:
   3. Runs the same parsing logic we built and tested locally to produce
      roster_data.json (the Today + Tomorrow view).
   4. Commits roster_data.json back into this repo, where GitHub Pages serves it.
+
+Two different things both look like "c" - keep them apart:
+  * ERIC column = Excel column C (header "ERIC") on the REGISTRAR term sheets
+    ("Reg T..." tabs) ONLY. y = ERIC-capable, blank = not. It is NOT "on call",
+    and it is never read from the consultant tabs (find_eric_column() is only
+    ever called from extract_registrar_term()).
+  * The trailing "c" on CONSULTANT allocation codes (d1c, d2c, e1c ...) means
+    ON CALL. It has nothing to do with ERIC or with column C.
 """
 
 import os, re, sys, json, base64
@@ -342,6 +350,7 @@ def extract_all_consultants(wb):
     return periods
 
 
+# ERIC (registrar term sheets only; not consultants, and not "on call").
 def eric_flag(value):
     """Excel ERIC cell -> "y" if ERIC-capable, "" otherwise.
     y (any case, or "yes") = ERIC-capable; blank or anything else = not."""
@@ -352,7 +361,8 @@ ERIC_HEADER_RE = re.compile(r"^\s*eric\b", re.IGNORECASE)
 
 
 def find_eric_column(ws, date_row, start_col):
-    """Returns (column_number, how_found); column_number is None if not found."""
+    """Returns (column_number, how_found); column_number is None if not found.
+    Only ever called for REGISTRAR term sheets - consultant tabs have no ERIC column."""
     header_cols = []
     for c in range(1, ws.max_column + 1):
         for r in range(1, date_row + 1):
@@ -408,6 +418,24 @@ def extract_registrar_term(ws, tab_name):
         r += 1
 
     registrars.sort(key=lambda x: (-(x["eft"] or 0), x["n"]))
+
+    if eric_col:
+        # Log exactly what was read from the ERIC column, so a low count can be explained from the log.
+        yes_names = [x["n"] for x in registrars if eric_flag(x["eric"])]
+        blank_n = sum(1 for x in registrars if not x["eric"])
+        other = [(x["n"], x["eric"]) for x in registrars if x["eric"] and not eric_flag(x["eric"])]
+        print(f"  {tab_name}: ERIC column {get_column_letter(eric_col)}: {len(yes_names)} marked y, "
+              f"{blank_n} blank, {len(other)} other, of {len(registrars)} registrars")
+        if yes_names:
+            print("    marked y: " + ", ".join(yes_names))
+        if other:
+            print(f"::warning::{tab_name}: ERIC cells that are neither y nor blank (counted as NOT capable): "
+                  + ", ".join(f"{n}='{v}'" for n, v in other))
+        merged = [str(rng) for rng in ws.merged_cells.ranges
+                  if rng.min_col <= eric_col <= rng.max_col and rng.max_row > date_row]
+        if merged:
+            print(f"::warning::{tab_name}: merged cells in the ERIC column ({', '.join(merged[:5])}). "
+                  "Only the top cell of a merged block holds a value, so the other rows read as blank.")
 
     start_date = next((d for d in dates if d), None)
     end_date = next((d for d in reversed(dates) if d), None)
@@ -539,6 +567,8 @@ def code_period(stripped_lower):
     return {"d": "Day", "s": "Swing", "e": "Eve", "n": "Night"}.get(m.group(1)) if m else None
 
 def strip_suffix(code):
+    # A trailing "c" is the ON-CALL marker on consultant codes (d1c, e1c): it is
+    # removed here to get the base allocation. Unrelated to the ERIC column.
     c = code.strip()
     if c.lower().endswith("-t"):
         c = c[:-2]
@@ -645,6 +675,7 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         return ", ".join(matches)
 
     def facem_oncall_lookup(dt, which):
+        # On call = a consultant code that starts with d/e and ends in "c" (d1c, e1c ...).
         p, idx = consultant_period_for(dt)
         if p is None:
             return ""
@@ -869,7 +900,10 @@ def build_my_roster_data(consultant_periods, registrar_periods):
             if eric_filled_in:
                 # registrar_periods are chronological: the latest filled-in term
                 # wins, and a blank there means not ERIC-capable.
-                registrar_eric[c["n"]] = eric_flag(c.get("eric", ""))
+                new_flag = eric_flag(c.get("eric", ""))
+                if registrar_eric.get(c["n"]) == "y" and new_flag == "":
+                    print(f"  ERIC: {c['n']} was y in an earlier term but is blank in {p['t']}, so counted as NOT capable")
+                registrar_eric[c["n"]] = new_flag
 
     window_start = (local_today() - timedelta(days=30)).isoformat()
 
@@ -900,10 +934,13 @@ def build_my_roster_data(consultant_periods, registrar_periods):
                 "d": "|".join(d for d, _ in items),
                 "v": "|".join(c for _, c in items),
             }
+            # ERIC applies to registrars only: consultant records never get an ERIC key.
             if role == "R" and eric_known:
                 flag = registrar_eric.get(name, "")
                 record["ERIC"] = flag   # read by the Find a Swap page
-                record["c"] = flag      # kept for anything already reading "c"
+                # `c` below is the registrar-sheet ERIC column C copied across for older
+                # readers. It is NOT the on-call "c" suffix used on consultant codes.
+                record["c"] = flag
             out.append(record)
         return out
 
@@ -920,6 +957,26 @@ def build_my_roster_data(consultant_periods, registrar_periods):
         if n_eric == 0:
             print("::warning::The ERIC column was found but no registrar is marked 'y', "
                   "so every registrar night swap will fail the 2-ERIC-capable rule.")
+
+        # Check the data against the "at least 2 ERIC-capable registrars per night" rule.
+        horizon = (local_today() + timedelta(days=14)).isoformat()
+        nights = {}
+        for rec in result:
+            if rec["r"] != "R":
+                continue
+            for d, code in zip(rec["d"].split("|"), rec["v"].split("|")):
+                if today_str <= d <= horizon and code_period(strip_suffix(code).lower()) == "Night":
+                    nights.setdefault(d, []).append((rec["n"], rec.get("ERIC") == "y"))
+        low = [(d, [n for n, ok in lst if ok], len(lst)) for d, lst in sorted(nights.items())
+               if sum(1 for _, ok in lst if ok) < 2]
+        print(f"  Night cover, next 14 days: {len(nights)} nights rostered, "
+              f"{len(low)} with fewer than 2 ERIC-capable registrars")
+        for d, capable, total in low[:7]:
+            print(f"    {d}: {total} registrar(s) on nights, ERIC-capable: {', '.join(capable) or 'none'}")
+        unflagged = sorted({n for lst in nights.values() for n, ok in lst if not ok})
+        if unflagged:
+            print("  Registrars on nights who are NOT marked ERIC (check column C if any should be): "
+                  + ", ".join(unflagged))
     return result
 
 
@@ -1008,21 +1065,46 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
     return weeks
 
 
+AMP_YEAR_RE = re.compile(r"(20\d\d)")
+
+def find_amp_date_rows(ws, min_dates=7):
+    """Finds every row of the AMP sheet that holds a run of dates (one per
+    half-year block), wherever it sits - instead of hard-coding row numbers.
+    Returns [(row, [(column, datetime), ...]), ...] in sheet order."""
+    found = []
+    for r in range(1, ws.max_row + 1):
+        cells = []
+        for c in range(2, ws.max_column + 1):
+            v = ws.cell(row=r, column=c).value
+            if isinstance(v, datetime):
+                cells.append((c, v))
+        if len(cells) >= min_dates:
+            found.append((r, cells))
+    return found
+
+
 def extract_amp2026(wb):
     ws = wb["AMP 2026"]
+    date_rows = find_amp_date_rows(ws)
+    date_row_numbers = {r for r, _ in date_rows}
 
-    def extract_block(title_row, date_row, name_row_start, name_row_end, col_start, col_end):
-        title = fmt_code(ws.cell(row=title_row, column=1).value)
-        m = re.search(r"(20\d\d)", title)
-        target_year = int(m.group(1)) if m else None
+    def year_label_for(date_row):
+        """The sheet's dates can carry a stale year, so the year comes from the
+        block's label (e.g. "AMP 2026"): the nearest cell in column A in the
+        3 rows above the dates, or in the date row's own column A."""
+        for r in range(date_row, max(date_row - 4, 0), -1):
+            m = AMP_YEAR_RE.search(fmt_code(ws.cell(row=r, column=1).value))
+            if m:
+                return int(m.group(1)), r
+        return None, None
 
-        raw_dates = []
-        for c in range(col_start, col_end + 1):
-            v = ws.cell(row=date_row, column=c).value
-            if isinstance(v, datetime):
-                raw_dates.append((c, v))
-        if not raw_dates or target_year is None:
-            return {}
+    def extract_block(date_row, raw_dates):
+        target_year, label_row = year_label_for(date_row)
+        if target_year is None:
+            # No label found: use the dates as written rather than dropping the block.
+            target_year = raw_dates[0][1].year
+            print(f"::warning::AMP 2026: no year label (e.g. 'AMP 2026') found near the dates on row {date_row}; "
+                  f"using the dates exactly as written ({target_year}).")
 
         # self-correcting: figure out the offset from whatever year is actually
         # in the sheet right now, rather than hard-coding a fixed correction -
@@ -1031,27 +1113,43 @@ def extract_amp2026(wb):
         offset = target_year - raw_year
 
         people = {}
-        for r in range(name_row_start, name_row_end + 1):
+        blank_streak = 0
+        r = date_row + 1
+        while r <= ws.max_row:
+            if r in date_row_numbers:
+                break                       # the next block starts here
             name = fmt_code(ws.cell(row=r, column=1).value)
             if not name:
+                blank_streak += 1
+                if blank_streak >= 3:
+                    break                   # end of this block's name list
+                r += 1
                 continue
+            if AMP_YEAR_RE.search(name) or is_legend_row(name):
+                break                       # a title / legend row, not a person
+            blank_streak = 0
             codes = {}
             for c, dv in raw_dates:
-                corrected = dv.replace(year=dv.year + offset)
+                try:
+                    corrected = dv.replace(year=dv.year + offset)
+                except ValueError:
+                    continue                # e.g. 29 Feb in a year that has no 29 Feb
                 code = fmt_code(ws.cell(row=r, column=c).value)
                 if code and code != "0":
                     codes[corrected.strftime("%Y-%m-%d")] = code
             people.setdefault(name, {}).update(codes)
+            r += 1
+        first, last = raw_dates[0][1], raw_dates[-1][1]
+        print(f"  AMP block: dates on row {date_row} ({len(raw_dates)} days, "
+              f"{first.strftime('%d %b')} to {last.strftime('%d %b')}, year {target_year}), {len(people)} AMPs")
         return people
 
-    block1 = extract_block(1, 2, 3, 13, 2, 182)
-    block2 = extract_block(15, 16, 17, 27, 2, 185)
-
     amp2026 = {}
-    for name, codes in block1.items():
-        amp2026.setdefault(name, {}).update(codes)
-    for name, codes in block2.items():
-        amp2026.setdefault(name, {}).update(codes)
+    for date_row, raw_dates in date_rows:
+        for name, codes in extract_block(date_row, raw_dates).items():
+            amp2026.setdefault(name, {}).update(codes)
+    if not date_rows:
+        print("::warning::AMP 2026: no row of dates found on the sheet, so no AMP data was read.")
     return amp2026
 
 
