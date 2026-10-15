@@ -188,6 +188,12 @@
             "zone": "Green",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Bruce Garbutt"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Mark Douglas (TS4 IC)"
