@@ -188,12 +188,6 @@
             "zone": "Green",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "Emma Paterson"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Mark Douglas (TS4 IC)"
