@@ -331,7 +331,7 @@
   },
   "panel2": {
     "date": "Monday 19 October",
-    "oncall": "Mark Putland",
+    "oncall": "Nick Hooper",
     "comment": "",
     "shifts": [
       {
@@ -448,17 +448,6 @@
                 "role": "JMO",
                 "names": [
                   "~Calum Haggett (PGY4)"
-                ]
-              }
-            ]
-          },
-          {
-            "zone": "Unallocated",
-            "roles": [
-              {
-                "role": "Consultants",
-                "names": [
-                  "Brendon McCarthy"
                 ]
               }
             ]
