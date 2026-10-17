@@ -10,14 +10,6 @@ Runs in GitHub Actions on a schedule. Steps:
   3. Runs the same parsing logic we built and tested locally to produce
      roster_data.json (the Today + Tomorrow view).
   4. Commits roster_data.json back into this repo, where GitHub Pages serves it.
-
-Two different things both look like "c" - keep them apart:
-  * ERIC column = Excel column C (header "ERIC") on the REGISTRAR term sheets
-    ("Reg T..." tabs) ONLY. y = ERIC-capable, blank = not. It is NOT "on call",
-    and it is never read from the consultant tabs (find_eric_column() is only
-    ever called from extract_registrar_term()).
-  * The trailing "c" on CONSULTANT allocation codes (d1c, d2c, e1c ...) means
-    ON CALL. It has nothing to do with ERIC or with column C.
 """
 
 import os, re, sys, json, base64
@@ -27,7 +19,6 @@ from zoneinfo import ZoneInfo
 
 import requests
 import openpyxl
-from openpyxl.utils import get_column_letter
 
 # ============================================================
 # CONFIG - filled in from GitHub Secrets / environment
@@ -187,14 +178,35 @@ METRIC_KEY_MAP = {
     "facem total": "facem", "registrars": "reg",
     "jmos rostered": "jmo", "director on call": "oncall",
 }
-REG_TAB_RE = re.compile(r"^Reg\s*T(\d+)\s*(\d{4})$", re.IGNORECASE)
+REG_TABS = ["Reg T1 2025", "Reg T2 2025", "Reg T3 2025", "Reg T4 2025",
+            "Reg T1 2026", "Reg T2 2026", "Reg T3 2026"]
+TERM_LABELS = {
+    "Reg T1 2025": "Term 1, 2025", "Reg T2 2025": "Term 2, 2025",
+    "Reg T3 2025": "Term 3, 2025", "Reg T4 2025": "Term 4, 2025",
+    "Reg T1 2026": "Term 1, 2026", "Reg T2 2026": "Term 2, 2026",
+    "Reg T3 2026": "Term 3, 2026",
+}
 
-def term_label_from_tab(tab_name):
-    m = REG_TAB_RE.match(tab_name.strip())
-    if not m:
-        return None
-    term_num, year = m.group(1), m.group(2)
-    return f"Term {term_num}, {year}"
+
+def find_sheet(wb, wanted, required=False):
+    """Find a tab tolerant of case/spacing/suffix changes (e.g. 'JMO' -> 'JMO 2026')."""
+    key = re.sub(r"\s+", "", wanted).lower()
+    names = wb.sheetnames
+    for n in names:
+        if re.sub(r"\s+", "", n).lower() == key:
+            return wb[n]
+    for n in names:
+        if re.sub(r"\s+", "", n).lower().startswith(key):
+            print(f"  NOTE: tab '{wanted}' not found exactly; using '{n}'")
+            return wb[n]
+    for n in names:
+        if key in re.sub(r"\s+", "", n).lower():
+            print(f"  NOTE: tab '{wanted}' not found exactly; using '{n}'")
+            return wb[n]
+    print(f"  WARNING: no tab matching '{wanted}'. Tabs in workbook: {names}")
+    if required:
+        raise KeyError(f"Worksheet {wanted} does not exist. Tabs: {names}")
+    return None
 
 def norm(s):
     return re.sub(r"\s+", " ", str(s)).strip().lower()
@@ -225,7 +237,9 @@ def find_last_date_col(ws, date_row, start_col, limit=270):
 
 def build_weekday_base(wb):
     weekday_base = {}
-    data_ws = wb["Data"]
+    data_ws = find_sheet(wb, "Data")
+    if data_ws is None:
+        return weekday_base
     for r in range(2, 9):
         wd = data_ws.cell(row=r, column=1).value
         day_base = data_ws.cell(row=r, column=2).value
@@ -350,40 +364,6 @@ def extract_all_consultants(wb):
     return periods
 
 
-# ERIC (registrar term sheets only; not consultants, and not "on call").
-def eric_flag(value):
-    """Excel ERIC cell -> "y" if ERIC-capable, "" otherwise.
-    y (any case, or "yes") = ERIC-capable; blank or anything else = not."""
-    return "y" if fmt_code(value).lower() in ("y", "yes") else ""
-
-
-ERIC_HEADER_RE = re.compile(r"^\s*eric\b", re.IGNORECASE)
-
-
-def find_eric_column(ws, date_row, start_col):
-    """Returns (column_number, how_found); column_number is None if not found.
-    Only ever called for REGISTRAR term sheets - consultant tabs have no ERIC column."""
-    header_cols = []
-    for c in range(1, ws.max_column + 1):
-        for r in range(1, date_row + 1):
-            v = ws.cell(row=r, column=c).value
-            if isinstance(v, str) and ERIC_HEADER_RE.match(v):
-                header_cols.append(c)
-                break
-    if 3 in header_cols:
-        return 3, "column C"
-    if header_cols:
-        return header_cols[0], f"header search, column {get_column_letter(header_cols[0])}"
-    # No header anywhere: only trust column C if it visibly holds y values.
-    for r in range(date_row + 1, ws.max_row + 1):
-        a = ws.cell(row=r, column=1).value
-        if a is not None and str(a).strip().upper() == "TOTAL":
-            break
-        if eric_flag(ws.cell(row=r, column=3).value):
-            return 3, "column C, no ERIC header"
-    return None, "not found"
-
-
 def extract_registrar_term(ws, tab_name):
     date_row, start_col = find_date_anchor(ws, 6, 8)
     if date_row is None:
@@ -394,12 +374,6 @@ def extract_registrar_term(ws, tab_name):
         dv = ws.cell(row=date_row, column=c).value
         dates.append(dv.strftime("%Y-%m-%d") if isinstance(dv, datetime) else None)
         weekdays.append(dv.strftime("%a") if isinstance(dv, datetime) else "")
-
-    eric_col, eric_how = find_eric_column(ws, date_row, start_col)
-    if eric_col is None:
-        print(f"::warning::{tab_name}: no ERIC column found (looked for a column headed ERIC, then column C).")
-    elif eric_how != "column C":
-        print(f"  {tab_name}: ERIC column located via {eric_how}")
 
     r = date_row + 1
     registrars = []
@@ -412,49 +386,28 @@ def extract_registrar_term(ws, tab_name):
             continue
         name = str(a).strip()
         eft = ws.cell(row=r, column=2).value
-        eric = fmt_code(ws.cell(row=r, column=eric_col).value) if eric_col else ""
         codes = [fmt_code(ws.cell(row=r, column=c).value) for c in range(start_col, last_col + 1)]
-        registrars.append({"n": name, "eft": eft, "eric": eric, "v": "|".join(codes)})
+        registrars.append({"n": name, "eft": eft, "v": "|".join(codes)})
         r += 1
 
     registrars.sort(key=lambda x: (-(x["eft"] or 0), x["n"]))
 
-    if eric_col:
-        # Log exactly what was read from the ERIC column, so a low count can be explained from the log.
-        yes_names = [x["n"] for x in registrars if eric_flag(x["eric"])]
-        blank_n = sum(1 for x in registrars if not x["eric"])
-        other = [(x["n"], x["eric"]) for x in registrars if x["eric"] and not eric_flag(x["eric"])]
-        print(f"  {tab_name}: ERIC column {get_column_letter(eric_col)}: {len(yes_names)} marked y, "
-              f"{blank_n} blank, {len(other)} other, of {len(registrars)} registrars")
-        if yes_names:
-            print("    marked y: " + ", ".join(yes_names))
-        if other:
-            print(f"::warning::{tab_name}: ERIC cells that are neither y nor blank (counted as NOT capable): "
-                  + ", ".join(f"{n}='{v}'" for n, v in other))
-        merged = [str(rng) for rng in ws.merged_cells.ranges
-                  if rng.min_col <= eric_col <= rng.max_col and rng.max_row > date_row]
-        if merged:
-            print(f"::warning::{tab_name}: merged cells in the ERIC column ({', '.join(merged[:5])}). "
-                  "Only the top cell of a merged block holds a value, so the other rows read as blank.")
-
     start_date = next((d for d in dates if d), None)
     end_date = next((d for d in reversed(dates) if d), None)
-    return {"t": tab_name, "s": start_date, "e": end_date,
-            "d": "|".join(d or "" for d in dates), "w": "|".join(weekdays), "c": registrars,
-            "eric_col": get_column_letter(eric_col) if eric_col else None}
+    _m = re.match(r"^\s*Reg\s+T(\d)\s+(20\d\d)\s*$", tab_name, re.I)
+    _label = TERM_LABELS.get(tab_name) or (f"Term {_m.group(1)}, {_m.group(2)}" if _m else tab_name)
+    return {"t": _label, "s": start_date, "e": end_date,
+            "d": "|".join(d or "" for d in dates), "w": "|".join(weekdays), "c": registrars}
 
 
 def extract_all_registrars(wb):
     periods = []
-    matching_tabs = [(name, term_label_from_tab(name)) for name in wb.sheetnames]
-    matching_tabs = [(name, label) for name, label in matching_tabs if label]
-    matching_tabs.sort(key=lambda x: tuple(map(int, REG_TAB_RE.match(x[0]).groups())))
-
-    for tab, label in matching_tabs:
-        result = extract_registrar_term(wb[tab], tab)
-        if result:
-            result["t"] = label
-            periods.append(result)
+    reg_tabs = [n for n in wb.sheetnames if re.match(r"^\s*Reg\s+T\d\s+20\d\d\s*$", n, re.I)]
+    for tab in reg_tabs:
+        if True:
+            result = extract_registrar_term(wb[tab], tab)
+            if result:
+                periods.append(result)
     periods.sort(key=lambda p: p["s"] or "")
     return periods
 
@@ -484,23 +437,6 @@ def is_legend_row(name):
         return True
     return False
 
-HEADER_LABELS = {"role/name", "role/code", "week"}
-
-def find_name_start_row(ws, date_row, name_col=1, max_scan=20):
-    """Scans downward from just below the date row for the first real
-    staff name in name_col, instead of a hardcoded row number. This keeps
-    working if rows are inserted or removed above the list (previously,
-    a hardcoded row_start meant the first name in the list could fall
-    outside the scanned range entirely and be silently dropped)."""
-    for r in range(date_row + 1, date_row + 1 + max_scan):
-        v = fmt_code(ws.cell(row=r, column=name_col).value)
-        if not v:
-            continue
-        if v.strip().lower() in HEADER_LABELS or is_legend_row(v):
-            continue
-        return r
-    return date_row + 1  # fallback, shouldn't normally be hit
-  
 def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
     people = {}
     for r in range(row_start, row_end):
@@ -517,18 +453,27 @@ def extract_name_rows(ws, date_col_map, name_col, row_start, row_end):
         people[name] = codes
     return people
 
-def extract_jmo_np(wb, amp_people):
-    ws_jmo = wb["JMO"]
-    jmo_dates = build_date_col_map(ws_jmo, 2, 2, 260)
-    jmo_start = find_name_start_row(ws_jmo, date_row=2)
-    jmo_people = extract_name_rows(ws_jmo, jmo_dates, 1, jmo_start, 545)
+def extract_jmo_np(wb):
+    ws_jmo = find_sheet(wb, "JMO")
+    if ws_jmo is not None:
+        jmo_dates = build_date_col_map(ws_jmo, 2, 2, 260)
+        jmo_people = extract_name_rows(ws_jmo, jmo_dates, 1, 5, 545)
+    else:
+        jmo_people = {}
 
-    ws_np = wb["NP"]
-    np_dates = build_date_col_map(ws_np, 1, 2, 70)
-    np_start = find_name_start_row(ws_np, date_row=1)
-    np_people = extract_name_rows(ws_np, np_dates, 1, np_start, 40)
+    ws_np = find_sheet(wb, "NP")
+    if ws_np is not None:
+        np_dates = build_date_col_map(ws_np, 1, 2, 70)
+        np_people = extract_name_rows(ws_np, np_dates, 1, 3, 40)
+    else:
+        np_people = {}
+
+    # AMP2 tab was renamed/merged into "AMP 2026" - reuse the same
+    # self-correcting extraction used for the standalone AMP Roster page.
+    amp_people = extract_amp2026(wb)
 
     return jmo_people, np_people, amp_people
+
 
 # ============================================================
 # STEP 4 - Shift/zone/role template (hard-coded; matches the
@@ -536,7 +481,7 @@ def extract_jmo_np(wb, amp_people):
 # it existed - update here if position slots ever change)
 # ============================================================
 
-TEMPLATE = [{'shift': 'Day', 'zone': None, 'role': 'FACEM on call', 'time': '0430-0800'}, {'shift': 'Day', 'zone': 'EPIC', 'role': 'Consultant (D1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Consultant (D2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Consultant (D6)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Consultant (Dx)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Registrar (D1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Registrar (D5)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'JMO (DA1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'JMO (DA4)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Consultant (D3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Consultant (D7)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Consultant (D9)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Registrar (D2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'JMO (DA2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'JMO (DA5)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'JMO (DA6)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Consultant (D4)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Consultant (Dy)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Registrar (D3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Nurse Prac', 'time': '0800-1630'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Adv Musc Physio', 'time': '0930-1800'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'JMO (DA3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'Consultant (D5)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'Consultant (DZ)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'OM Registrar (D4)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'SSU JMO (DO1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'SSU JMO (DO2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'HUB JMO (DO3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Rapid Stay', 'role': 'JMO (DO4)', 'time': '0800-1730'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Consultant (S6)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Registrar (S2)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Registrar (S5)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Registrar (S6)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Consultant (S7)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Registrar (S3)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Registrar (S4)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Registrar (S1)', 'time': '1100-2031'}, {'shift': 'Swing', 'zone': 'Fast Track', 'role': 'Adv Musc Physio', 'time': '1030-1730'}, {'shift': 'Swing', 'zone': 'Fast Track', 'role': 'Nurse Prac', 'time': '1000-1830'}, {'shift': 'Eve', 'zone': 'EPIC', 'role': 'Consultant (E1)', 'time': '1530-0100'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Consultant (E2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Consultant (E7)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E1)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E5)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E7)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E9)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E01)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'JMO (EA1)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'JMO (EA4)', 'time': '1430-2200'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Consultant (E3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Consultant (E6)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Consultant (E9)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E4)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E8)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (Ez)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E02)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'JMO (EA2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'JMO (EA5)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'JMO (EA6)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Consultant (E4)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Registrar (E6)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Registrar (E3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Nurse Prac', 'time': '1400-2230'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Adv Musc Physio', 'time': '1400-2200'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'JMO (EA3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'Consultant (E5)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'SSU JMO (EO1)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'SSU JMO (EO2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'HUB JMO (EO3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Rapid Stay', 'role': 'JMO (EO4)', 'time': '1430-2400'}, {'shift': 'Night', 'zone': None, 'role': 'FACEM on call', 'time': '0100-0430'}, {'shift': 'Night', 'zone': 'ERIC', 'role': 'Registrar (N1)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Purple', 'role': 'Registrar (N2)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Purple', 'role': 'Registrar (N6)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Purple', 'role': 'JMO (NA3)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Green', 'role': 'Registrar (N3)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Green', 'role': 'JMO (NA1)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Fast Track', 'role': 'Registrar (N5)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Fast Track', 'role': 'JMO (NA2)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'SSU/HUB', 'role': 'Registrar (N4)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'SSU/HUB', 'role': 'JMO (NO1)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'SSU/HUB', 'role': 'JMO (NO2)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Rapid Stay', 'role': 'JMO (NO3)', 'time': '2300-0830'}]
+TEMPLATE = [{'shift': 'Day', 'zone': None, 'role': 'FACEM on call', 'time': '0430-0800'}, {'shift': 'Day', 'zone': 'EPIC', 'role': 'Consultant (D1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Consultant (D2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Consultant (D6)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Consultant (Dx)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Registrar (D1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'Registrar (D5)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'JMO (DA1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Purple', 'role': 'JMO (DA4)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Consultant (D3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Consultant (D7)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Consultant (D9)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'Registrar (D2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'JMO (DA2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'JMO (DA5)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Green', 'role': 'JMO (DA6)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Consultant (D4)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Consultant (Dy)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Registrar (D3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Nurse Prac', 'time': '0800-1630'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'Adv Musc Physio', 'time': '0930-1800'}, {'shift': 'Day', 'zone': 'Fast Track', 'role': 'JMO (DA3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'Consultant (D5)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'Consultant (DZ)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'OM Registrar (D4)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'SSU JMO (DO1)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'SSU JMO (DO2)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'SSU/HUB', 'role': 'HUB JMO (DO3)', 'time': '0800-1730'}, {'shift': 'Day', 'zone': 'Rapid Stay', 'role': 'JMO (DO4)', 'time': '0800-1730'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Consultant (S6)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Registrar (S2)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Registrar (S5)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Purple', 'role': 'Registrar (S6)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Consultant (S7)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Registrar (S3)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Registrar (S4)', 'time': '1100-2030'}, {'shift': 'Swing', 'zone': 'Green', 'role': 'Registrar (S1)', 'time': '1100-2031'}, {'shift': 'Swing', 'zone': 'Fast Track', 'role': 'Adv Musc Physio', 'time': '1030-1730'}, {'shift': 'Swing', 'zone': 'Fast Track', 'role': 'Nurse Prac', 'time': '1000-1830'}, {'shift': 'Eve', 'zone': 'EPIC', 'role': 'Consultant (E1)', 'time': '1530-0100'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Consultant (E2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Consultant (E7)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E1)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E5)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E7)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E9)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'Registrar (E01)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'JMO (EA1)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Purple', 'role': 'JMO (EA4)', 'time': '1430-2200'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Consultant (E3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Consultant (E6)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Consultant (E9)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E4)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E8)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (Ez)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'Registrar (E02)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'JMO (EA2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'JMO (EA5)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Green', 'role': 'JMO (EA6)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Consultant (E4)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Registrar (E6)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Registrar (E3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Nurse Prac', 'time': '1400-2230'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'Adv Musc Physio', 'time': '1400-2200'}, {'shift': 'Eve', 'zone': 'Fast Track', 'role': 'JMO (EA3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'Consultant (E5)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'SSU JMO (EO1)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'SSU JMO (EO2)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'SSU/HUB', 'role': 'HUB JMO (EO3)', 'time': '1430-2400'}, {'shift': 'Eve', 'zone': 'Rapid Stay', 'role': 'JMO (EO4)', 'time': '1430-2400'}, {'shift': 'Night', 'zone': None, 'role': 'FACEM on call', 'time': '0100-0430'}, {'shift': 'Night', 'zone': 'ERIC', 'role': 'Registrar (N1)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Purple', 'role': 'Registrar (N2)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Purple', 'role': 'Registrar (N6)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Purple', 'role': 'JMO (NA1)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Green', 'role': 'Registrar (N3)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Green', 'role': 'JMO (NA3)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Fast Track', 'role': 'Registrar (N5)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Fast Track', 'role': 'JMO (NA2)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'SSU/HUB', 'role': 'Registrar (N4)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'SSU/HUB', 'role': 'JMO (NO1)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'SSU/HUB', 'role': 'JMO (NO2)', 'time': '2300-0830'}, {'shift': 'Night', 'zone': 'Rapid Stay', 'role': 'JMO (NO3)', 'time': '2300-0830'}]
 
 
 # ============================================================
@@ -567,8 +512,6 @@ def code_period(stripped_lower):
     return {"d": "Day", "s": "Swing", "e": "Eve", "n": "Night"}.get(m.group(1)) if m else None
 
 def strip_suffix(code):
-    # A trailing "c" is the ON-CALL marker on consultant codes (d1c, e1c): it is
-    # removed here to get the base allocation. Unrelated to the ERIC column.
     c = code.strip()
     if c.lower().endswith("-t"):
         c = c[:-2]
@@ -675,7 +618,6 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         return ", ".join(matches)
 
     def facem_oncall_lookup(dt, which):
-        # On call = a consultant code that starts with d/e and ends in "c" (d1c, e1c ...).
         p, idx = consultant_period_for(dt)
         if p is None:
             return ""
@@ -883,13 +825,7 @@ def build_my_roster_data(consultant_periods, registrar_periods):
                     bucket[d] = code
 
     registrars = {}
-    registrar_eric = {}
     for p in registrar_periods:
-        # Only terms where the ERIC column was found, and where at least one
-        # registrar has a "y", count: a term with nobody marked means the
-        # column hasn't been filled in yet (e.g. a future term), so it must not
-        # turn everyone's blank into "not ERIC-capable".
-        eric_filled_in = bool(p.get("eric_col")) and any(eric_flag(c.get("eric", "")) for c in p["c"])
         dates = p["d"].split("|")
         for c in p["c"]:
             codes = c["v"].split("|")
@@ -897,28 +833,8 @@ def build_my_roster_data(consultant_periods, registrar_periods):
             for d, code in zip(dates, codes):
                 if code and d:
                     bucket[d] = code
-            if eric_filled_in:
-                # registrar_periods are chronological: the latest filled-in term
-                # wins, and a blank there means not ERIC-capable.
-                new_flag = eric_flag(c.get("eric", ""))
-                if registrar_eric.get(c["n"]) == "y" and new_flag == "":
-                    print(f"  ERIC: {c['n']} was y in an earlier term but is blank in {p['t']}, so counted as NOT capable")
-                registrar_eric[c["n"]] = new_flag
 
     window_start = (local_today() - timedelta(days=30)).isoformat()
-
-    # Only the term containing today decides whether ERIC data counts as missing.
-    # If today is between terms, use the next term to start, else the latest one.
-    # If the ERIC column can't be found on it, ERIC cover is unknown, so no ERIC
-    # keys are written at all (the swap page then switches night swaps off).
-    today_str = local_today().isoformat()
-    dated = [p for p in registrar_periods if p.get("s") and p.get("e")]
-    deciding = [p for p in dated if p["s"] <= today_str <= p["e"]]
-    if not deciding and dated:
-        upcoming = sorted((p for p in dated if p["s"] > today_str), key=lambda p: p["s"])
-        deciding = [upcoming[0]] if upcoming else [max(dated, key=lambda p: p["e"])]
-    missing_tabs = [p["t"] for p in deciding if not p.get("eric_col")]
-    eric_known = not missing_tabs
 
     def pack(name_dict, role):
         out = []
@@ -929,55 +845,14 @@ def build_my_roster_data(consultant_periods, registrar_periods):
             has_real_shift = any(c.strip().lower() != "x" for _, c in items)
             if not has_real_shift:
                 continue
-            record = {
+            out.append({
                 "n": name, "r": role,
                 "d": "|".join(d for d, _ in items),
                 "v": "|".join(c for _, c in items),
-            }
-            # ERIC applies to registrars only: consultant records never get an ERIC key.
-            if role == "R" and eric_known:
-                flag = registrar_eric.get(name, "")
-                record["ERIC"] = flag   # read by the Find a Swap page
-                # `c` below is the registrar-sheet ERIC column C copied across for older
-                # readers. It is NOT the on-call "c" suffix used on consultant codes.
-                record["c"] = flag
-            out.append(record)
+            })
         return out
 
-    result = pack(consultants, "C") + pack(registrars, "R")
-
-    if missing_tabs:
-        print("::error::ERIC column NOT FOUND on the current term (" + ", ".join(missing_tabs) +
-              "). Registrar records are written without ERIC data, so registrar "
-              "night swaps will be switched off on the swap page until a column "
-              "headed ERIC (normally column C) is back on that sheet.")
-    else:
-        n_eric = sum(1 for rec in result if rec.get("ERIC") == "y")
-        print(f"  {n_eric} ERIC-capable registrars flagged (ERIC column = 'y')")
-        if n_eric == 0:
-            print("::warning::The ERIC column was found but no registrar is marked 'y', "
-                  "so every registrar night swap will fail the 2-ERIC-capable rule.")
-
-        # Check the data against the "at least 2 ERIC-capable registrars per night" rule.
-        horizon = (local_today() + timedelta(days=14)).isoformat()
-        nights = {}
-        for rec in result:
-            if rec["r"] != "R":
-                continue
-            for d, code in zip(rec["d"].split("|"), rec["v"].split("|")):
-                if today_str <= d <= horizon and code_period(strip_suffix(code).lower()) == "Night":
-                    nights.setdefault(d, []).append((rec["n"], rec.get("ERIC") == "y"))
-        low = [(d, [n for n, ok in lst if ok], len(lst)) for d, lst in sorted(nights.items())
-               if sum(1 for _, ok in lst if ok) < 2]
-        print(f"  Night cover, next 14 days: {len(nights)} nights rostered, "
-              f"{len(low)} with fewer than 2 ERIC-capable registrars")
-        for d, capable, total in low[:7]:
-            print(f"    {d}: {total} registrar(s) on nights, ERIC-capable: {', '.join(capable) or 'none'}")
-        unflagged = sorted({n for lst in nights.values() for n, ok in lst if not ok})
-        if unflagged:
-            print("  Registrars on nights who are NOT marked ERIC (check column C if any should be): "
-                  + ", ".join(unflagged))
-    return result
+    return pack(consultants, "C") + pack(registrars, "R")
 
 
 def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people, n_weeks=8):
@@ -1065,46 +940,23 @@ def build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_peop
     return weeks
 
 
-AMP_YEAR_RE = re.compile(r"(20\d\d)")
-
-def find_amp_date_rows(ws, min_dates=7):
-    """Finds every row of the AMP sheet that holds a run of dates (one per
-    half-year block), wherever it sits - instead of hard-coding row numbers.
-    Returns [(row, [(column, datetime), ...]), ...] in sheet order."""
-    found = []
-    for r in range(1, ws.max_row + 1):
-        cells = []
-        for c in range(2, ws.max_column + 1):
-            v = ws.cell(row=r, column=c).value
-            if isinstance(v, datetime):
-                cells.append((c, v))
-        if len(cells) >= min_dates:
-            found.append((r, cells))
-    return found
-
-
 def extract_amp2026(wb):
-    ws = wb["AMP 2026"]
-    date_rows = find_amp_date_rows(ws)
-    date_row_numbers = {r for r, _ in date_rows}
+    ws = find_sheet(wb, "AMP 2026")
+    if ws is None:
+        return {}
 
-    def year_label_for(date_row):
-        """The sheet's dates can carry a stale year, so the year comes from the
-        block's label (e.g. "AMP 2026"): the nearest cell in column A in the
-        3 rows above the dates, or in the date row's own column A."""
-        for r in range(date_row, max(date_row - 4, 0), -1):
-            m = AMP_YEAR_RE.search(fmt_code(ws.cell(row=r, column=1).value))
-            if m:
-                return int(m.group(1)), r
-        return None, None
+    def extract_block(title_row, date_row, name_row_start, name_row_end, col_start, col_end):
+        title = fmt_code(ws.cell(row=title_row, column=1).value)
+        m = re.search(r"(20\d\d)", title)
+        target_year = int(m.group(1)) if m else None
 
-    def extract_block(date_row, raw_dates):
-        target_year, label_row = year_label_for(date_row)
-        if target_year is None:
-            # No label found: use the dates as written rather than dropping the block.
-            target_year = raw_dates[0][1].year
-            print(f"::warning::AMP 2026: no year label (e.g. 'AMP 2026') found near the dates on row {date_row}; "
-                  f"using the dates exactly as written ({target_year}).")
+        raw_dates = []
+        for c in range(col_start, col_end + 1):
+            v = ws.cell(row=date_row, column=c).value
+            if isinstance(v, datetime):
+                raw_dates.append((c, v))
+        if not raw_dates or target_year is None:
+            return {}
 
         # self-correcting: figure out the offset from whatever year is actually
         # in the sheet right now, rather than hard-coding a fixed correction -
@@ -1113,43 +965,27 @@ def extract_amp2026(wb):
         offset = target_year - raw_year
 
         people = {}
-        blank_streak = 0
-        r = date_row + 1
-        while r <= ws.max_row:
-            if r in date_row_numbers:
-                break                       # the next block starts here
+        for r in range(name_row_start, name_row_end + 1):
             name = fmt_code(ws.cell(row=r, column=1).value)
             if not name:
-                blank_streak += 1
-                if blank_streak >= 3:
-                    break                   # end of this block's name list
-                r += 1
                 continue
-            if AMP_YEAR_RE.search(name) or is_legend_row(name):
-                break                       # a title / legend row, not a person
-            blank_streak = 0
             codes = {}
             for c, dv in raw_dates:
-                try:
-                    corrected = dv.replace(year=dv.year + offset)
-                except ValueError:
-                    continue                # e.g. 29 Feb in a year that has no 29 Feb
+                corrected = dv.replace(year=dv.year + offset)
                 code = fmt_code(ws.cell(row=r, column=c).value)
                 if code and code != "0":
                     codes[corrected.strftime("%Y-%m-%d")] = code
             people.setdefault(name, {}).update(codes)
-            r += 1
-        first, last = raw_dates[0][1], raw_dates[-1][1]
-        print(f"  AMP block: dates on row {date_row} ({len(raw_dates)} days, "
-              f"{first.strftime('%d %b')} to {last.strftime('%d %b')}, year {target_year}), {len(people)} AMPs")
         return people
 
+    block1 = extract_block(1, 2, 3, 13, 2, 182)
+    block2 = extract_block(15, 16, 17, 27, 2, 185)
+
     amp2026 = {}
-    for date_row, raw_dates in date_rows:
-        for name, codes in extract_block(date_row, raw_dates).items():
-            amp2026.setdefault(name, {}).update(codes)
-    if not date_rows:
-        print("::warning::AMP 2026: no row of dates found on the sheet, so no AMP data was read.")
+    for name, codes in block1.items():
+        amp2026.setdefault(name, {}).update(codes)
+    for name, codes in block2.items():
+        amp2026.setdefault(name, {}).update(codes)
     return amp2026
 
 
@@ -1212,12 +1048,8 @@ def main():
     registrar_periods = extract_all_registrars(wb)
     print(f"  {len(registrar_periods)} terms found")
 
-    print("Extracting AMP 2026 tab...")
-    amp2026_people = extract_amp2026(wb)
-    print(f"  {len(amp2026_people)} AMPs")
-
-    print("Extracting JMO/NP...")
-    jmo_people, np_people, amp_people = extract_jmo_np(wb, amp2026_people)
+    print("Extracting JMO/NP/AMP...")
+    jmo_people, np_people, amp_people = extract_jmo_np(wb)
     print(f"  {len(jmo_people)} JMOs, {len(np_people)} NPs, {len(amp_people)} AMPs")
 
     print("Extracting Comments tab...")
@@ -1235,7 +1067,10 @@ def main():
     weekly_data = build_weekly_data(consultant_periods, registrar_periods, jmo_people, np_people, amp_people)
     print(f"  {len(weekly_data)} weeks")
 
+    print("Extracting AMP 2026 tab...")
+    amp2026_people = extract_amp2026(wb)
     amp_roster_data = build_amp_roster_data(amp2026_people)
+    print(f"  {len(amp2026_people)} AMPs")
 
     with open("roster_data.json", "w") as f:
         json.dump(data, f, indent=2)
