@@ -189,6 +189,12 @@
             "zone": "Fast Track",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Bruce Garbutt"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Harriet Evans (TS3)"
