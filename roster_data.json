@@ -114,6 +114,17 @@
                 ]
               }
             ]
+          },
+          {
+            "zone": "Unallocated",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Anamika Joijode (TS3)"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -141,8 +152,7 @@
                 "role": "Registrars",
                 "names": [
                   "Sam Samour (TS2)",
-                  "Ben Wingrove (TS3)",
-                  "Anamika Joijode (TS3)"
+                  "Ben Wingrove (TS3)"
                 ]
               }
             ]
