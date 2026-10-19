@@ -68,13 +68,19 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Soham Sarkar"
+                  "Lisa Walker"
                 ]
               },
               {
                 "role": "Registrars",
                 "names": [
                   "Nadia Kamil (u)"
+                ]
+              },
+              {
+                "role": "Adv Musc Physio",
+                "names": [
+                  "Tim Stirling"
                 ]
               },
               {
@@ -156,6 +162,17 @@
                 ]
               }
             ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Nurse Prac",
+                "names": [
+                  "Alex Sepulveda"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -174,7 +191,8 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Marina Guertin"
+                  "Marina Guertin",
+                  "Soham Sarkar"
                 ]
               },
               {
@@ -286,12 +304,6 @@
                 "names": [
                   "Giovanni Naselli (TS2)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Stephenie Pillainayagam (ED PGY3)"
-                ]
               }
             ]
           },
@@ -302,6 +314,12 @@
                 "role": "Registrars",
                 "names": [
                   "Kieron Elie (TS3)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Stephenie Pillainayagam (ED PGY3)"
                 ]
               }
             ]
@@ -430,6 +448,12 @@
                 ]
               },
               {
+                "role": "Adv Musc Physio",
+                "names": [
+                  "Alice Wilcox"
+                ]
+              },
+              {
                 "role": "JMO",
                 "names": [
                   "Calum Haggett (PGY4)"
@@ -507,6 +531,17 @@
                   "Ahmed Al'khshali (TS3)",
                   "Joyce Chan (TS1)",
                   "Harriet Evans (TS3)"
+                ]
+              }
+            ]
+          },
+          {
+            "zone": "Fast Track",
+            "roles": [
+              {
+                "role": "Nurse Prac",
+                "names": [
+                  "Paul C"
                 ]
               }
             ]
@@ -646,12 +681,6 @@
                 "names": [
                   "Fiona Macdonald (u)"
                 ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Chris Harmer (PGY4)"
-                ]
               }
             ]
           },
@@ -662,6 +691,12 @@
                 "role": "Registrars",
                 "names": [
                   "Adelaide Pratt (TS4 IC)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Chris Harmer (PGY4)"
                 ]
               }
             ]
