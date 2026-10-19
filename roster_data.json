@@ -120,17 +120,6 @@
                 ]
               }
             ]
-          },
-          {
-            "zone": "Unallocated",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Anamika Joijode (TS3)"
-                ]
-              }
-            ]
           }
         ]
       },
@@ -145,8 +134,7 @@
                 "role": "Registrars",
                 "names": [
                   "Ahmed Al'khshali (TS3)",
-                  "Kim Pham (TS4 IC)",
-                  "Emma Watkinson (u)"
+                  "Kim Pham (TS4 IC)"
                 ]
               }
             ]
@@ -158,7 +146,8 @@
                 "role": "Registrars",
                 "names": [
                   "Sam Samour (TS2)",
-                  "Ben Wingrove (TS3)"
+                  "Ben Wingrove (TS3)",
+                  "Emma Watkinson (u)"
                 ]
               }
             ]
