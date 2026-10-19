@@ -599,16 +599,49 @@ def extract_jmo(wb):
     return jmo_people
 
 
+def find_single_date_row(ws, min_dates=7):
+    """Find the one calendar-date row on a sheet such as NP, where the row
+    number may change. Uses the same discovery principle as the AMP extractor:
+    scan rows for a run of actual Excel date values rather than assuming row 1.
+    Returns (row_number, {date_string: column_number}) or (None, {})."""
+    candidates = []
+    for r in range(1, ws.max_row + 1):
+        row_dates = []
+        for c in range(2, ws.max_column + 1):
+            value = ws.cell(row=r, column=c).value
+            if isinstance(value, date):
+                row_dates.append((c, value))
+        if len(row_dates) >= min_dates:
+            candidates.append((r, row_dates))
+
+    if not candidates:
+        return None, {}
+
+    # NP has a single date line. If other rows contain stray date-like values,
+    # prefer the row containing the most dates; for a tie, use the first row.
+    row_number, cells = min(candidates, key=lambda item: (-len(item[1]), item[0]))
+    date_columns = {}
+    for col, value in cells:
+        key = value.strftime("%Y-%m-%d")
+        if key not in date_columns:
+            date_columns[key] = col
+    return row_number, date_columns
+
+
 def extract_np(wb):
     """Extract Nurse Practitioner allocations. A missing/empty layout is an optional-feed failure."""
     ws_np = find_sheet(wb, "NP", required=True)
-    np_dates = build_date_col_map(ws_np, 1, 2, 70)
-    if not np_dates:
-        raise RuntimeError(f"NP tab {ws_np.title!r} has no date columns on row 1.")
-    np_start = find_name_start_row(ws_np, date_row=1)
-    np_people = extract_name_rows(ws_np, np_dates, 1, np_start, 40)
+    date_row, np_dates = find_single_date_row(ws_np)
+    if date_row is None or not np_dates:
+        raise RuntimeError(
+            f"NP tab {ws_np.title!r} has no row containing at least 7 Excel dates; "
+            "refusing to replace the existing NP-dependent feeds."
+        )
+    print(f"  NP date line found on row {date_row} ({len(np_dates)} dates)")
+    np_start = find_name_start_row(ws_np, date_row=date_row)
+    np_people = extract_name_rows(ws_np, np_dates, 1, np_start, ws_np.max_row + 1)
     if not np_people:
-        raise RuntimeError(f"No NP names were extracted from tab {ws_np.title!r}.")
+        raise RuntimeError(f"No NP names were extracted from tab {ws_np.title!r} below date row {date_row}.")
     return np_people
 
 
