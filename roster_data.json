@@ -56,7 +56,6 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Simone Stenner (PGY1)",
                   "Arnav Sharma (PGY4)"
                 ]
               }
@@ -103,7 +102,7 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Valerie Chu (PGY1)",
+                  "Simone Stenner (PGY1)",
                   "Jenna Shin (PGY1)",
                   "Ashish Yadav (PGY3)"
                 ]
@@ -390,7 +389,7 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Jasmine Fraser (PGY1)"
+                  "Jenna Shin (PGY1)"
                 ]
               }
             ]
@@ -410,12 +409,6 @@
                 "role": "Registrars",
                 "names": [
                   "Su Su Aung (TS3)"
-                ]
-              },
-              {
-                "role": "JMO",
-                "names": [
-                  "Jenna Shin (PGY1)"
                 ]
               }
             ]
@@ -467,8 +460,8 @@
               {
                 "role": "JMO",
                 "names": [
+                  "Jasmine Fraser (PGY1)",
                   "Simone Stenner (PGY1)",
-                  "Valerie Chu (PGY1)",
                   "Jeff Wong (PGY5)"
                 ]
               }
