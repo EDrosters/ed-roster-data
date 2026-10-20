@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Tuesday 20 October",
     "oncall": "Nicki Walsham",
-    "comment": "Chris Harmer - HMO evening purple stream (carer's leave)",
+    "comment": "Chris Harmer - HMO nights purple stream (carer's leave).  Anna Ta Anyiu recalled by MWU to backfill",
     "shifts": [
       {
         "name": "Day",
@@ -321,7 +321,7 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Chris Harmer (PGY4)"
+                  "Anna Ta Anyiu"
                 ]
               }
             ]
