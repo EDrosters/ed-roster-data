@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Thursday 22 October",
     "oncall": "Mark Putland",
-    "comment": "",
+    "comment": "Harriet Evans - day",
     "shifts": [
       {
         "name": "Day",
@@ -98,12 +98,6 @@
                 "role": "Consultants",
                 "names": [
                   "Kerry Lee"
-                ]
-              },
-              {
-                "role": "Registrars",
-                "names": [
-                  "Harriet Evans (TS3)"
                 ]
               },
               {
