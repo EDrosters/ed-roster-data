@@ -507,12 +507,6 @@
             "zone": "Purple",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "Amy Robotham"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Ahmed Al'khshali (TS3)",
