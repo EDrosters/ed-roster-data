@@ -211,12 +211,6 @@
                 ]
               },
               {
-                "role": "Registrars",
-                "names": [
-                  "Kieron Elie (TS3)"
-                ]
-              },
-              {
                 "role": "Nurse Prac",
                 "names": [
                   "Shea H"
@@ -266,6 +260,10 @@
           [
             "FACEM on Call, 0430-0800",
             "Evan O\u2019Neill"
+          ],
+          [
+            "EPIC",
+            "David Sparkhall (TS4 IC)"
           ]
         ],
         "zones": [
@@ -275,7 +273,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "David Sparkhall (TS4 IC)"
+                  "Kieron Elie (TS3)"
                 ]
               },
               {
