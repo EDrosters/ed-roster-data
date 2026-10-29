@@ -146,8 +146,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Niamh Rees (u)",
-                  "Chloe Doran (EP)"
+                  "Niamh Rees (u)"
                 ]
               }
             ]
@@ -343,6 +342,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Chloe Doran (EP)"
+                ]
+              },
               {
                 "role": "JMO",
                 "names": [
@@ -555,7 +560,6 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Chloe Doran (EP)",
                   "Sophie Tighe (PEM)"
                 ]
               }
