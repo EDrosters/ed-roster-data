@@ -118,7 +118,7 @@
                 "names": [
                   "Mateen Ahmadi (PGY1)",
                   "Joanna Beh (PGY1)",
-                  "Lisa Du (PGY3)"
+                  "Penny Grudgings"
                 ]
               }
             ]
@@ -356,6 +356,17 @@
                 ]
               }
             ]
+          },
+          {
+            "zone": "Rapid Stay",
+            "roles": [
+              {
+                "role": "JMO",
+                "names": [
+                  "Kiro Assad (PGY2)"
+                ]
+              }
+            ]
           }
         ]
       }
@@ -466,7 +477,7 @@
               {
                 "role": "JMO",
                 "names": [
-                  "Lisa Du (PGY3)"
+                  "Penny Grudgings"
                 ]
               }
             ]
