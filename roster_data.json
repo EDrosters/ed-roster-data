@@ -2,7 +2,7 @@
   "panel1": {
     "date": "Friday 30 October",
     "oncall": "George Plunkett",
-    "comment": "Ben Pan - Intern nighshift (personal leave).  Alex Cooper recalled by MWU to backfill",
+    "comment": "Ben Pang - Intern nighshift (personal leave).  Alex Cooper recalled by MWU to backfill",
     "shifts": [
       {
         "name": "Day",
@@ -312,6 +312,12 @@
                 "role": "Registrars",
                 "names": [
                   "Kim Pham (TS4 IC)"
+                ]
+              },
+              {
+                "role": "JMO",
+                "names": [
+                  "Alex Cooper"
                 ]
               }
             ]
