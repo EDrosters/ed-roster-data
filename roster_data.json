@@ -1,7 +1,7 @@
 {
   "panel1": {
     "date": "Friday 30 October",
-    "oncall": "Nicki Walsham",
+    "oncall": "George Plunkett",
     "comment": "",
     "shifts": [
       {
@@ -540,7 +540,8 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Stuart Howard"
+                  "Stuart Howard",
+                  "George Plunkett"
                 ]
               },
               {
