@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-03 10:35 AEDT",
+  "updated_at": "2026-11-03 10:58 AEDT",
   "days": [
     {
       "date": "2026-11-03",
@@ -166,7 +166,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Maire Dillon",
+                  "name": "Maire Dillon (PGY4)",
                   "pager": ""
                 }
               ]
@@ -206,7 +206,7 @@
                 },
                 {
                   "role": "HUB JMO",
-                  "name": "Mark McDonald",
+                  "name": "Mark McDonald (PGY2)",
                   "pager": ""
                 }
               ]
@@ -216,7 +216,7 @@
               "entries": [
                 {
                   "role": "JMO",
-                  "name": "Constance Malliaras",
+                  "name": "Constance Malliaras (PGY2)",
                   "pager": "22504"
                 }
               ]
@@ -408,7 +408,7 @@
                 },
                 {
                   "role": "HUB JMO",
-                  "name": "Xenia Yang",
+                  "name": "Xenia Yang (PGY3)",
                   "pager": ""
                 }
               ]
@@ -567,7 +567,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Stephenie Cameron",
+                  "name": "Stephenie Cameron (PGY2)",
                   "pager": ""
                 }
               ]
@@ -587,7 +587,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Declan O'Hare",
+                  "name": "Declan O'Hare (PGY3)",
                   "pager": ""
                 }
               ]
@@ -691,7 +691,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Mark McDonald",
+                  "name": "Mark McDonald (PGY2)",
                   "pager": ""
                 }
               ]
@@ -731,7 +731,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Jessica Han",
+                  "name": "Jessica Han (PGY2)",
                   "pager": ""
                 },
                 {
@@ -771,7 +771,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Constance Malliaras",
+                  "name": "Constance Malliaras (PGY2)",
                   "pager": ""
                 }
               ]
@@ -811,7 +811,7 @@
                 },
                 {
                   "role": "HUB JMO",
-                  "name": "Maire Dillon",
+                  "name": "Maire Dillon (PGY4)",
                   "pager": ""
                 }
               ]
@@ -821,7 +821,7 @@
               "entries": [
                 {
                   "role": "JMO",
-                  "name": "+Candice Rademaker",
+                  "name": "+Candice Rademaker (PGY4)",
                   "pager": ""
                 }
               ]
@@ -1013,7 +1013,7 @@
                 },
                 {
                   "role": "HUB JMO",
-                  "name": "Max Drezga-Kleiminger",
+                  "name": "Max Drezga-Kleiminger (PGY3)",
                   "pager": ""
                 }
               ]
@@ -1152,7 +1152,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Stephenie Cameron",
+                  "name": "Stephenie Cameron (PGY2)",
                   "pager": ""
                 }
               ]
@@ -1167,7 +1167,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "Declan O'Hare",
+                  "name": "Declan O'Hare (PGY3)",
                   "pager": ""
                 }
               ]
