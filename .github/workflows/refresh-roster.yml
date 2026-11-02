@@ -5,15 +5,22 @@ on:
     - cron: '*/20 * * * *'   # every 20 minutes
   workflow_dispatch:          # lets you trigger it manually too
 
+concurrency:
+  group: ed-roster-refresh
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -27,12 +34,22 @@ jobs:
         env:
           MS_CLIENT_ID: ${{ secrets.MS_CLIENT_ID }}
           MS_REFRESH_TOKEN: ${{ secrets.MS_REFRESH_TOKEN }}
-        run: python refresh_roster.py
+        run: refresh_roster.py
 
       - name: Commit updated data
         run: |
           git config user.name "roster-bot"
           git config user.email "actions@github.com"
-          git add roster_data.json consultant_roster.json registrar_roster.json my_roster.json weekly_allocations.json amp_roster.json
-          git diff --staged --quiet || git commit -m "Auto-refresh roster data"
-          git push
+
+          git add roster_data.json consultant_roster.json registrar_roster.json my_roster.json weekly_allocations.json amp_roster.json ed_staffboard.json
+
+          if git diff --staged --quiet; then
+            echo "No roster data changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Auto-refresh roster data"
+
+          # Integrate any newer commits before pushing.
+          git pull --rebase origin main
+          git push origin HEAD:main
