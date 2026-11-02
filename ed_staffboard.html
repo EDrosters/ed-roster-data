@@ -30,9 +30,23 @@
   .shift-head h3 { margin:0; text-transform:uppercase; letter-spacing:.04em; font:700 1rem 'Space Grotesk',sans-serif; }
   .shift-time { color:var(--ink-soft); font-size:.82rem; font-weight:700; white-space:nowrap; }
   .sections { padding:5px 12px 10px; }
-  .section { padding:8px 2px 5px; border-bottom:1px solid var(--line); }
+  .section { padding:5px 4px 6px; border-bottom:1px solid rgba(20,25,35,.18); border-radius:3px; margin:3px 0; }
   .section:last-child { border-bottom:0; }
-  .section-title { margin:0 0 5px; color:var(--ink); font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.035em; }
+  .section-title { margin:0 0 5px; color:#17202a; font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.035em; }
+  /* Match the colour bands in the original ED Staffboard PDF. */
+  .section.zone-director, .section.zone-facem-on-call, .section.zone-eric { background:#fff200; }
+  .section.zone-epic { background:#ff3038; }
+  .section.zone-edge { background:#00d477; }
+  .section.zone-purple { background:#d84be5; }
+  .section.zone-green { background:#20b66b; }
+  .section.zone-fast-track { background:#08a9e5; }
+  .section.zone-ssu-hub { background:#f2b4e5; }
+  .section.zone-rapid-stay { background:#ffa33a; }
+  .section.zone-default { background:#f3f4f6; }
+  .section .entry-head { color:#26313c; }
+  .section .entry { background:transparent; border-radius:0; }
+  .section .entry:nth-child(odd) { background:rgba(255,255,255,.13); }
+  .section .entry-role,.section .entry-pager { color:#26313c; }
   .entry-head,.entry { display:grid; grid-template-columns:minmax(92px,.75fr) minmax(0,1.7fr) minmax(55px,.55fr); gap:8px; align-items:start; }
   .entry-head { color:var(--ink-faint); font-size:.67rem; font-weight:700; text-transform:uppercase; padding:2px 5px 4px; }
   .entry { padding:5px; border-radius:6px; font-size:.82rem; }
@@ -61,7 +75,6 @@
 <main class="page">
   <header class="topbar">
     <h1>ED Staffboard</h1>
-    <div class="subtitle">Today &amp; Tomorrow</div>
     <div id="updated">Loading roster…</div>
   </header>
   <div id="app" class="days" aria-live="polite">
@@ -90,6 +103,21 @@ function renderEntry(entry) {
   return row;
 }
 
+function zoneClass(label) {
+  const value = String(label).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (value.includes('director')) return 'zone-director';
+  if (value.includes('facem on call') || value.includes('on call')) return 'zone-facem-on-call';
+  if (value === 'epic') return 'zone-epic';
+  if (value === 'edge') return 'zone-edge';
+  if (value.includes('purple')) return 'zone-purple';
+  if (value.includes('green')) return 'zone-green';
+  if (value.includes('fast track')) return 'zone-fast-track';
+  if (value.includes('ssu') || value.includes('hub')) return 'zone-ssu-hub';
+  if (value.includes('rapid stay')) return 'zone-rapid-stay';
+  if (value === 'eric') return 'zone-eric';
+  return 'zone-default';
+}
+
 function renderShift(shift) {
   const card = el('section', 'shift-card');
   const head = el('div', 'shift-head');
@@ -99,7 +127,7 @@ function renderShift(shift) {
 
   const sections = el('div', 'sections');
   (Array.isArray(shift.sections) ? shift.sections : []).forEach(section => {
-    const block = el('section', 'section');
+    const block = el('section', 'section ' + zoneClass(section.title || section.name || ''));
     if (section.title || section.name) block.append(el('h4', 'section-title', section.title || section.name));
     const table = el('div', 'entries');
     const headings = el('div', 'entry-head');
@@ -139,7 +167,7 @@ async function loadStaffboard() {
   const app = document.getElementById('app');
   const updated = document.getElementById('updated');
   try {
-    const response = await fetch('./ed_staffboard.json?t=' + '?t=' + Date.now(), { cache: 'no-store' });
+    const response = await fetch(STAFFBOARD_DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!response.ok) throw new Error('Could not load staffboard data (HTTP ' + response.status + ').');
     const data = await response.json();
     if (!data || !Array.isArray(data.days)) throw new Error('The staffboard JSON has an unexpected format.');
