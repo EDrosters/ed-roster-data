@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-11-03 10:01 AEDT",
+  "updated_at": "2026-11-03 10:05 AEDT",
   "days": [
     {
       "date": "2026-11-03",
       "label": "Tuesday, 3 November 2026",
-      "comments": "Rapid Stay\nJMO\nLouise Wadden",
+      "comments": "",
       "shifts": [
         {
           "key": "day",
@@ -609,7 +609,7 @@
     {
       "date": "2026-11-04",
       "label": "Wednesday, 4 November 2026",
-      "comments": "Rapid Stay\nJMO\nLouise Wadden",
+      "comments": "",
       "shifts": [
         {
           "key": "day",
@@ -1033,43 +1033,28 @@
         {
           "key": "swing",
           "title": "Swing Shift",
-          "time": "2300-0830",
+          "time": "1100-2030",
           "sections": [
-            {
-              "name": "FACEM on call",
-              "entries": [
-                {
-                  "role": "0100-0430",
-                  "name": "James Then",
-                  "pager": ""
-                },
-                {
-                  "role": "0430-0800",
-                  "name": "Catriona Moynihan",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "ERIC",
-              "entries": [
-                {
-                  "role": "Registrar",
-                  "name": "Alex Burman (TS4 IC)",
-                  "pager": "24890"
-                }
-              ]
-            },
             {
               "name": "Purple",
               "entries": [
                 {
-                  "role": "Registrar",
-                  "name": "Isaac Lee (TS4 IC)",
+                  "role": "FACEM",
+                  "name": "",
                   "pager": ""
                 },
                 {
-                  "role": "JMO",
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
                   "name": "",
                   "pager": ""
                 }
@@ -1079,58 +1064,33 @@
               "name": "Green",
               "entries": [
                 {
-                  "role": "Registrar",
-                  "name": "Alfred Liu (PEM)",
+                  "role": "FACEM",
+                  "name": "",
                   "pager": ""
                 },
-                {
-                  "role": "JMO",
-                  "name": "Stephenie Cameron",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Fast Track",
-              "entries": [
                 {
                   "role": "Registrar",
-                  "name": "Nathan Clinton (TS4 IC)",
+                  "name": "",
                   "pager": ""
                 },
-                {
-                  "role": "JMO",
-                  "name": "Declan O'Hare",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "SSU/HUB",
-              "entries": [
                 {
                   "role": "Registrar",
-                  "name": "Thanh Truong (TS3)",
+                  "name": "",
                   "pager": ""
                 },
                 {
-                  "role": "JMO",
-                  "name": "Jasmine Fraser (PGY1)",
+                  "role": "Registrar",
+                  "name": "",
                   "pager": ""
                 },
                 {
-                  "role": "JMO",
-                  "name": "Rabia Ali",
+                  "role": "AMP 1030-1730",
+                  "name": "",
                   "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Rapid Stay",
-              "entries": [
+                },
                 {
-                  "role": "JMO",
-                  "name": "Louise Wadden",
+                  "role": "NP 1030-1730",
+                  "name": "",
                   "pager": ""
                 }
               ]
