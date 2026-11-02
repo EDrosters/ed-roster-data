@@ -34,8 +34,8 @@
   .section:last-child { border-bottom:0; }
   .section-title { margin:0 0 5px; color:#17202a; font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.035em; }
   /* Softer versions of the colour bands in the original ED Staffboard PDF. */
-  .section.zone-director, .section.zone-facem-on-call, .section.zone-eric { background:#fff3b8; }
-  .section.zone-epic { background:#f6c5c7; }
+  .section.zone-director, .section.zone-facem-on-call { background:#fff3b8; }
+  .section.zone-epic, .section.zone-eric { background:#f6c5c7; }
   .section.zone-edge { background:#c8eadb; }
   .section.zone-purple { background:#e6d0eb; }
   .section.zone-green { background:#cce8d6; }
@@ -52,7 +52,7 @@
   .entry { padding:5px; border-radius:6px; font-size:.82rem; }
   .entry:nth-child(odd) { background:#fafbfc; }
   .entry-role { color:var(--ink-soft); font-weight:600; }
-  .entry-name { font-weight:600; overflow-wrap:anywhere; }
+  .entry-name { font-weight:600; text-align:center; overflow-wrap:anywhere; }
   .entry-pager { color:var(--ink-soft); text-align:right; font-variant-numeric:tabular-nums; }
   .entry.empty .entry-name,.entry.empty .entry-pager { color:#a2a8b4; }
   .day-comments { background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 13px; margin-top:10px; color:var(--ink-soft); font-size:.88rem; }
@@ -152,12 +152,7 @@ function renderDay(day) {
   // Keep any future/unknown shift panels rather than silently dropping them.
   shifts.filter(shift => !SHIFT_ORDER.includes(shift.key)).forEach(shift => grid.append(renderShift(shift)));
   block.append(grid);
-  if (day.comments) {
-    const comments = el('div', 'day-comments');
-    comments.append(el('strong', '', 'Comments: '));
-    comments.append(document.createTextNode(String(day.comments)));
-    block.append(comments);
-  }
+  // Comments are intentionally not displayed on the public staffboard.
   return block;
 }
 
