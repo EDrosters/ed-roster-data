@@ -34,7 +34,7 @@ jobs:
         env:
           MS_CLIENT_ID: ${{ secrets.MS_CLIENT_ID }}
           MS_REFRESH_TOKEN: ${{ secrets.MS_REFRESH_TOKEN }}
-        run: refresh_roster.py
+        run: python refresh_roster.py
 
       - name: Commit updated data
         run: |
