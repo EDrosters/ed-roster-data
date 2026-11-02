@@ -33,16 +33,16 @@
   .section { padding:5px 4px 6px; border-bottom:1px solid rgba(20,25,35,.18); border-radius:3px; margin:3px 0; }
   .section:last-child { border-bottom:0; }
   .section-title { margin:0 0 5px; color:#17202a; font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.035em; }
-  /* Match the colour bands in the original ED Staffboard PDF. */
-  .section.zone-director, .section.zone-facem-on-call, .section.zone-eric { background:#fff200; }
-  .section.zone-epic { background:#ff3038; }
-  .section.zone-edge { background:#00d477; }
-  .section.zone-purple { background:#d84be5; }
-  .section.zone-green { background:#20b66b; }
-  .section.zone-fast-track { background:#08a9e5; }
-  .section.zone-ssu-hub { background:#f2b4e5; }
-  .section.zone-rapid-stay { background:#ffa33a; }
-  .section.zone-default { background:#f3f4f6; }
+  /* Softer versions of the colour bands in the original ED Staffboard PDF. */
+  .section.zone-director, .section.zone-facem-on-call, .section.zone-eric { background:#fff3b8; }
+  .section.zone-epic { background:#f6c5c7; }
+  .section.zone-edge { background:#c8eadb; }
+  .section.zone-purple { background:#e6d0eb; }
+  .section.zone-green { background:#cce8d6; }
+  .section.zone-fast-track { background:#c9e5f2; }
+  .section.zone-ssu-hub { background:#f0d9e9; }
+  .section.zone-rapid-stay { background:#f5dfc5; }
+  .section.zone-default { background:#f0f1f3; }
   .section .entry-head { color:#26313c; }
   .section .entry { background:transparent; border-radius:0; }
   .section .entry:nth-child(odd) { background:rgba(255,255,255,.13); }
@@ -75,6 +75,7 @@
 <main class="page">
   <header class="topbar">
     <h1>ED Staffboard</h1>
+    <div class="subtitle">Today &amp; Tomorrow</div>
     <div id="updated">Loading roster…</div>
   </header>
   <div id="app" class="days" aria-live="polite">
@@ -130,9 +131,6 @@ function renderShift(shift) {
     const block = el('section', 'section ' + zoneClass(section.title || section.name || ''));
     if (section.title || section.name) block.append(el('h4', 'section-title', section.title || section.name));
     const table = el('div', 'entries');
-    const headings = el('div', 'entry-head');
-    ['Role', 'Name', 'DECT/Pager#'].forEach(label => headings.append(el('div', '', label)));
-    table.append(headings);
     (Array.isArray(section.entries) ? section.entries : []).forEach(entry => table.append(renderEntry(entry)));
     block.append(table);
     sections.append(block);
