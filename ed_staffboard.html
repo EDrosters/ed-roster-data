@@ -139,7 +139,7 @@ async function loadStaffboard() {
   const app = document.getElementById('app');
   const updated = document.getElementById('updated');
   try {
-    const response = await fetch(STAFFBOARD_DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    const response = await fetch('./ed_staffboard.json?t=' + '?t=' + Date.now(), { cache: 'no-store' });
     if (!response.ok) throw new Error('Could not load staffboard data (HTTP ' + response.status + ').');
     const data = await response.json();
     if (!data || !Array.isArray(data.days)) throw new Error('The staffboard JSON has an unexpected format.');
