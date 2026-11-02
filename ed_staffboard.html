@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>ED Staffboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas:#f0f2f6; --ink:#1b2130; --ink-soft:#4b5262; --ink-faint:#5b6272;
+    --line:#e6e8ee; --control-line:#8790a0; --accent:#4553C4; --white:#fff;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; min-height:100%; }
+  body { background:var(--canvas); color:var(--ink); font:15px/1.4 Inter,-apple-system,BlinkMacSystemFont,sans-serif; }
+  .page { max-width:1500px; margin:0 auto; padding:16px; }
+  .topbar { background:transparent; border:0; padding:14px 18px; margin-bottom:14px; box-shadow:none; }
+  h1 { margin:0; text-align:center; font:700 1.55rem 'Space Grotesk',sans-serif; }
+  .subtitle { color:var(--ink-soft); text-align:center; margin-top:4px; font-size:.9rem; }
+  #updated { color:var(--ink-faint); text-align:center; font-size:.78rem; margin-top:4px; }
+  .days { display:grid; grid-template-columns:1fr; gap:18px; }
+  .day-block { min-width:0; }
+  .day-title { font:700 1.25rem 'Space Grotesk',sans-serif; margin:0 0 9px 2px; }
+  .shift-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  .shift-card { min-width:0; background:#fff; border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:0 1px 3px rgba(20,20,40,.05); }
+  .shift-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; border-bottom:1px solid var(--line); }
+  .shift-head h3 { margin:0; text-transform:uppercase; letter-spacing:.04em; font:700 1rem 'Space Grotesk',sans-serif; }
+  .shift-time { color:var(--ink-soft); font-size:.82rem; font-weight:700; white-space:nowrap; }
+  .sections { padding:5px 12px 10px; }
+  .section { padding:8px 2px 5px; border-bottom:1px solid var(--line); }
+  .section:last-child { border-bottom:0; }
+  .section-title { margin:0 0 5px; color:var(--ink); font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.035em; }
+  .entry-head,.entry { display:grid; grid-template-columns:minmax(92px,.75fr) minmax(0,1.7fr) minmax(55px,.55fr); gap:8px; align-items:start; }
+  .entry-head { color:var(--ink-faint); font-size:.67rem; font-weight:700; text-transform:uppercase; padding:2px 5px 4px; }
+  .entry { padding:5px; border-radius:6px; font-size:.82rem; }
+  .entry:nth-child(odd) { background:#fafbfc; }
+  .entry-role { color:var(--ink-soft); font-weight:600; }
+  .entry-name { font-weight:600; overflow-wrap:anywhere; }
+  .entry-pager { color:var(--ink-soft); text-align:right; font-variant-numeric:tabular-nums; }
+  .entry.empty .entry-name,.entry.empty .entry-pager { color:#a2a8b4; }
+  .day-comments { background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 13px; margin-top:10px; color:var(--ink-soft); font-size:.88rem; }
+  .day-comments strong { color:var(--ink); }
+  .state { background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px; text-align:center; color:var(--ink-soft); }
+  .state.error { border-color:#d99; color:#8f2525; }
+  .footer { text-align:center; color:var(--ink-faint); font-size:.75rem; padding:16px 0 6px; }
+  @media (max-width:760px) {
+    .page { padding:9px; }
+    .shift-grid { grid-template-columns:1fr; gap:10px; }
+    .day-title { font-size:1.1rem; }
+    .shift-head { padding:10px 12px; }
+    .sections { padding:4px 9px 8px; }
+    .entry-head,.entry { grid-template-columns:minmax(76px,.8fr) minmax(0,1.7fr) minmax(45px,.55fr); gap:5px; }
+    .entry { font-size:.78rem; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="topbar">
+    <h1>ED Staffboard</h1>
+    <div class="subtitle">Today &amp; Tomorrow</div>
+    <div id="updated">Loading roster…</div>
+  </header>
+  <div id="app" class="days" aria-live="polite">
+    <div class="state">Loading staffboard…</div>
+  </div>
+  <div class="footer">ED Staffboard</div>
+</main>
+<script>
+// The refresh workflow writes this JSON file beside this HTML file.
+const STAFFBOARD_DATA_URL = './ed_staffboard.json';
+const SHIFT_ORDER = ['day', 'evening', 'swing', 'night'];
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = String(text);
+  return node;
+}
+
+function renderEntry(entry) {
+  const hasName = !!(entry.name && String(entry.name).trim());
+  const row = el('div', 'entry' + (hasName ? '' : ' empty'));
+  row.append(el('div', 'entry-role', entry.role || ''));
+  row.append(el('div', 'entry-name', entry.name || ''));
+  row.append(el('div', 'entry-pager', entry.pager || ''));
+  return row;
+}
+
+function renderShift(shift) {
+  const card = el('section', 'shift-card');
+  const head = el('div', 'shift-head');
+  head.append(el('h3', '', shift.title || shift.key || 'Shift'));
+  head.append(el('div', 'shift-time', shift.time || ''));
+  card.append(head);
+
+  const sections = el('div', 'sections');
+  (Array.isArray(shift.sections) ? shift.sections : []).forEach(section => {
+    const block = el('section', 'section');
+    if (section.title || section.name) block.append(el('h4', 'section-title', section.title || section.name));
+    const table = el('div', 'entries');
+    const headings = el('div', 'entry-head');
+    ['Role', 'Name', 'DECT/Pager#'].forEach(label => headings.append(el('div', '', label)));
+    table.append(headings);
+    (Array.isArray(section.entries) ? section.entries : []).forEach(entry => table.append(renderEntry(entry)));
+    block.append(table);
+    sections.append(block);
+  });
+  card.append(sections);
+  return card;
+}
+
+function renderDay(day) {
+  const block = el('section', 'day-block');
+  block.append(el('h2', 'day-title', day.label || day.date || 'Roster date'));
+  const grid = el('div', 'shift-grid');
+  const shifts = Array.isArray(day.shifts) ? day.shifts : [];
+  const byKey = new Map(shifts.map(shift => [shift.key, shift]));
+  SHIFT_ORDER.forEach(key => {
+    const shift = byKey.get(key);
+    if (shift) grid.append(renderShift(shift));
+  });
+  // Keep any future/unknown shift panels rather than silently dropping them.
+  shifts.filter(shift => !SHIFT_ORDER.includes(shift.key)).forEach(shift => grid.append(renderShift(shift)));
+  block.append(grid);
+  if (day.comments) {
+    const comments = el('div', 'day-comments');
+    comments.append(el('strong', '', 'Comments: '));
+    comments.append(document.createTextNode(String(day.comments)));
+    block.append(comments);
+  }
+  return block;
+}
+
+async function loadStaffboard() {
+  const app = document.getElementById('app');
+  const updated = document.getElementById('updated');
+  try {
+    const response = await fetch(STAFFBOARD_DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not load staffboard data (HTTP ' + response.status + ').');
+    const data = await response.json();
+    if (!data || !Array.isArray(data.days)) throw new Error('The staffboard JSON has an unexpected format.');
+    updated.textContent = data.updated_at ? 'Last updated: ' + data.updated_at : '';
+    app.replaceChildren();
+    if (!data.days.length) {
+      app.append(el('div', 'state', 'No staffboard data has been published yet. The roster refresh script needs to generate ed_staffboard.json.'));
+      return;
+    }
+    data.days.forEach(day => app.append(renderDay(day)));
+  } catch (error) {
+    console.error('ED Staffboard load error:', error);
+    app.replaceChildren(el('div', 'state error', error.message || 'Unable to load the ED Staffboard.'));
+    updated.textContent = 'Staffboard unavailable';
+  }
+}
+
+loadStaffboard();
+</script>
+</body>
+</html>
