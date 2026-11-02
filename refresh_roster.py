@@ -1652,7 +1652,14 @@ def staffboard_find_nearby_date(ws, row_number, column_number):
 
 
 def staffboard_find_table_header(ws, title_row, title_col):
-    """Locate Role / Name / DECT-Pager headings belonging to one shift panel."""
+    """Locate the Role / Name / DECT-Pager headings in the same panel as a shift title.
+
+    Search all nearby candidate header rows and select the closest horizontal
+    panel. The previous implementation returned the first row containing any
+    Role/Name headings, which could select the neighbouring panel when the
+    two lower shift panels shared a header row.
+    """
+    candidates = []
     max_search_row = min(ws.max_row, title_row + 12)
     for r in range(title_row + 1, max_search_row + 1):
         role_cols, name_cols, pager_cols, zone_cols = [], [], [], []
@@ -1668,10 +1675,6 @@ def staffboard_find_table_header(ws, title_row, title_col):
             elif compact == "zone":
                 zone_cols.append(c)
 
-        if not role_cols or not name_cols:
-            continue
-
-        choices = []
         for role_col in role_cols:
             later_names = [c for c in name_cols if c > role_col]
             if not later_names:
@@ -1683,22 +1686,37 @@ def staffboard_find_table_header(ws, title_row, title_col):
             zone_col = max(explicit_zones) if explicit_zones else role_col - 1
             if zone_col < 1:
                 zone_col = role_col
-            # The zone column normally lines up with the left edge of the merged shift title.
-            score = abs(zone_col - title_col) + (0 if later_pagers else 3)
-            choices.append((score, zone_col, role_col, name_col, pager_col))
 
-        if choices:
-            _, zone_col, role_col, name_col, pager_col = min(choices)
-            return {
-                "row": r,
-                "zone_col": zone_col,
-                "role_col": role_col,
-                "name_col": name_col,
-                "pager_col": pager_col,
-                "start_col": min(zone_col, role_col, name_col, pager_col),
-                "end_col": max(zone_col, role_col, name_col, pager_col),
-            }
-    return None
+            # A panel's Role/Name columns should be close to its title anchor.
+            # Prefer a complete header (including pager), then the nearest panel,
+            # and finally the nearest row below the title.
+            horizontal_distance = min(
+                abs(title_col - zone_col),
+                abs(title_col - role_col),
+                abs(title_col - name_col),
+            )
+            if horizontal_distance > 10:
+                continue
+            score = (
+                horizontal_distance * 100
+                + (0 if later_pagers else 20)
+                + (r - title_row)
+            )
+            candidates.append((score, r, zone_col, role_col, name_col, pager_col))
+
+    if not candidates:
+        return None
+
+    _, r, zone_col, role_col, name_col, pager_col = min(candidates)
+    return {
+        "row": r,
+        "zone_col": zone_col,
+        "role_col": role_col,
+        "name_col": name_col,
+        "pager_col": pager_col,
+        "start_col": min(zone_col, role_col, name_col, pager_col),
+        "end_col": max(zone_col, role_col, name_col, pager_col),
+    }
 
 
 def staffboard_time_between_rows(ws, title_row, header_row, start_col, end_col):
@@ -1884,10 +1902,11 @@ def extract_ed_staffboard(wb):
                 f"Unable to extract {item['title']} for {date_key}: {exc}"
             ) from exc
 
-    comments_by_date = staffboard_extract_comments(ws, shift_headers)
-    for date_key, comment in comments_by_date.items():
-        if date_key in days_by_date:
-            days_by_date[date_key]["comments"] = comment
+    # The Staffboard Comments box is intentionally not published. Its nearby
+    # cells can contain roster entries from the adjacent panel, so scanning
+    # below the label can incorrectly copy staff names into the comments field.
+    for day in days_by_date.values():
+        day["comments"] = ""
 
     ordered_days = [days_by_date[key] for key in sorted(days_by_date)]
     if not ordered_days:
