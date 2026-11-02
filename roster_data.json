@@ -1,16 +1,28 @@
 {
   "panel1": {
     "date": "Tuesday 03 November",
-    "oncall": "",
+    "oncall": "Mark Putland",
     "comment": "",
     "shifts": [
       {
         "name": "Day",
-        "top_notes": [],
+        "top_notes": [
+          [
+            "EPIC",
+            "Jana Alexander"
+          ]
+        ],
         "zones": [
           {
             "zone": "Purple",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Fiona Nicholson",
+                  "Chung"
+                ]
+              },
               {
                 "role": "Registrars",
                 "names": [
@@ -29,6 +41,13 @@
             "zone": "Green",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Nicki Walsham",
+                  "Bruce Garbutt"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Chloe Doran (EP)"
@@ -39,6 +58,12 @@
           {
             "zone": "Fast Track",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Stuart Howard"
+                ]
+              },
               {
                 "role": "Registrars",
                 "names": [
@@ -56,6 +81,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Marina Guertin"
+                ]
+              },
               {
                 "role": "Registrars",
                 "names": [
@@ -136,11 +167,23 @@
       },
       {
         "name": "Eve",
-        "top_notes": [],
+        "top_notes": [
+          [
+            "EPIC",
+            "Jonathan Papson"
+          ]
+        ],
         "zones": [
           {
             "zone": "Purple",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Lidia Samcewicz-Parham",
+                  "Richard Waller"
+                ]
+              },
               {
                 "role": "Registrars",
                 "names": [
@@ -160,6 +203,14 @@
             "zone": "Green",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Emma West",
+                  "Mazdak Mansoury",
+                  "Jasmine Poonian"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Emma Watkinson (u)",
@@ -178,6 +229,12 @@
             "zone": "Fast Track",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Elyssia Bourke"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Kieron Elie (TS3)",
@@ -189,6 +246,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Gino Toncich"
+                ]
+              },
               {
                 "role": "JMO",
                 "names": [
@@ -215,6 +278,10 @@
       {
         "name": "Night",
         "top_notes": [
+          [
+            "FACEM on Call, 0100-0430",
+            "Jonathan Papson"
+          ],
           [
             "FACEM on Call, 0430-0800",
             "Amaali Lokuge"
