@@ -9,7 +9,8 @@ Runs in GitHub Actions on a schedule. Steps:
      so it keeps working even if the file moves folders).
   3. Runs the same parsing logic we built and tested locally to produce
      roster_data.json (the Today + Tomorrow view).
-  4. Commits roster_data.json back into this repo, where GitHub Pages serves it.
+  4. Extracts the ED Staffboard worksheet into ed_staffboard.json for its GitHub Pages view.
+  5. Publishes the roster JSON feeds for the GitHub Pages views.
 
 Two different things both look like "c" - keep them apart:
   * ERIC column = Excel column C (header "ERIC") on the REGISTRAR term sheets
@@ -450,7 +451,7 @@ def extract_consultant_tab(ws, name, weekday_base):
 
 CONSULTANT_ALLOCATION_RE = re.compile(r"^[dse][a-z0-9]*c(?:-t)?$", re.IGNORECASE)
 CONSULTANT_NON_ROSTER_TAB_RE = re.compile(
-    r"^(?:data|jmo(?:\b|\s)|np(?:\b|\s)|nurse practitioner|amp(?:\b|\s)|comments?\b|"
+    r"^(?:data|public\s*holidays?|jmo(?:\b|\s)|np(?:\b|\s)|nurse practitioner|amp(?:\b|\s)|comments?\b|"
     r"weekly allocations|my roster|registrar|reg\s*t\d)"
     , re.IGNORECASE
 )
@@ -497,12 +498,6 @@ def extract_all_consultants(wb):
     tab_names = []
     for name in wb.sheetnames:
         ws = wb[name]
-        # The Public Holidays tab can contain date columns and D/S/E-style
-        # entries, but it is not a consultant roster and must never be used
-        # for consultant lookups (including dates that overlap real rosters).
-        if norm(name) == "public holidays":
-            print(f"  Consultant/SMS tab excluded by name: {name!r}")
-            continue
         if DATE_TAB_RE.match(name.strip()) or is_consultant_allocation_tab(ws):
             tab_names.append(name)
     if not tab_names:
@@ -1550,6 +1545,384 @@ def extract_comments(wb):
 
 
 # ============================================================
+# ED STAFFBOARD TAB -> ed_staffboard.json
+# ============================================================
+
+STAFFBOARD_SHIFT_TITLE_RE = re.compile(
+    r"\b(DAY|EVENING|EVE|SWING|NIGHT)\s+SHIFT\b", re.IGNORECASE
+)
+STAFFBOARD_DMY_RE = re.compile(r"(?<!\d)(\d{1,2})[/-](\d{1,2})[/-](20\d{2})(?!\d)")
+STAFFBOARD_ISO_RE = re.compile(r"(?<!\d)(20\d{2})-(\d{1,2})-(\d{1,2})(?!\d)")
+STAFFBOARD_TIME_RE = re.compile(r"(?<!\d)(\d{3,4})\s*[-–]\s*(\d{3,4})(?!\d)")
+
+
+def staffboard_cell_text(value, number_format=None):
+    """Convert worksheet values to clean display text, respecting zero-padded Excel formats."""
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, date):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
+    if isinstance(value, int):
+        if number_format and re.fullmatch(r"0+", str(number_format).split(";")[0]):
+            return str(value).zfill(len(str(number_format).split(";")[0]))
+        return str(value)
+    if isinstance(value, float):
+        if value.is_integer():
+            number = str(int(value))
+            if number_format and re.fullmatch(r"0+", str(number_format).split(";")[0]):
+                number = number.zfill(len(str(number_format).split(";")[0]))
+            return number
+        return str(value).rstrip("0").rstrip(".")
+    return str(value).replace("\xa0", " ").strip()
+
+
+def staffboard_parse_date(value):
+    """Read an Excel date or common Australian date strings used in shift headings."""
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text_value = staffboard_cell_text(value)
+    if not text_value:
+        return None
+
+    match = STAFFBOARD_DMY_RE.search(text_value)
+    if match:
+        day_num, month_num, year_num = map(int, match.groups())
+        try:
+            return date(year_num, month_num, day_num)
+        except ValueError:
+            return None
+
+    match = STAFFBOARD_ISO_RE.search(text_value)
+    if match:
+        year_num, month_num, day_num = map(int, match.groups())
+        try:
+            return date(year_num, month_num, day_num)
+        except ValueError:
+            return None
+
+    for fmt in (
+        "%A, %B %d, %Y", "%A, %B %d %Y", "%B %d, %Y", "%B %d %Y",
+        "%A, %d %B %Y", "%d %B %Y", "%a, %d %b %Y", "%d %b %Y",
+    ):
+        try:
+            return datetime.strptime(text_value, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def staffboard_shift_key(value):
+    text_value = staffboard_cell_text(value)
+    match = STAFFBOARD_SHIFT_TITLE_RE.search(text_value)
+    if not match:
+        return None
+    label = match.group(1).strip().lower()
+    return "evening" if label in ("evening", "eve") else label
+
+
+def staffboard_find_nearby_date(ws, row_number, column_number):
+    """Find a date heading close above a shift title if the shift title omits its date."""
+    candidates = []
+    first_row = max(1, row_number - 8)
+    first_col = max(1, column_number - 3)
+    last_col = min(ws.max_column, column_number + 7)
+    for r in range(first_row, row_number + 1):
+        for c in range(first_col, last_col + 1):
+            value = ws.cell(row=r, column=c).value
+            parsed = staffboard_parse_date(value)
+            if parsed:
+                candidates.append((r, c, parsed))
+    if not candidates:
+        # Some day banners span a wider merged range than the shift tables.
+        for r in range(first_row, row_number + 1):
+            for c in range(1, ws.max_column + 1):
+                parsed = staffboard_parse_date(ws.cell(row=r, column=c).value)
+                if parsed:
+                    candidates.append((r, c, parsed))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: (item[0], -abs(item[1] - column_number)))
+    return candidates[-1][2]
+
+
+def staffboard_find_table_header(ws, title_row, title_col):
+    """Locate Role / Name / DECT-Pager headings belonging to one shift panel."""
+    max_search_row = min(ws.max_row, title_row + 12)
+    for r in range(title_row + 1, max_search_row + 1):
+        role_cols, name_cols, pager_cols, zone_cols = [], [], [], []
+        for c in range(1, ws.max_column + 1):
+            value = staffboard_cell_text(ws.cell(row=r, column=c).value)
+            compact = re.sub(r"[^a-z0-9]+", "", value.lower())
+            if compact in ("role", "roles"):
+                role_cols.append(c)
+            elif compact in ("name", "staffname"):
+                name_cols.append(c)
+            elif "dect" in compact or "pager" in compact:
+                pager_cols.append(c)
+            elif compact == "zone":
+                zone_cols.append(c)
+
+        if not role_cols or not name_cols:
+            continue
+
+        choices = []
+        for role_col in role_cols:
+            later_names = [c for c in name_cols if c > role_col]
+            if not later_names:
+                continue
+            name_col = min(later_names, key=lambda c: c - role_col)
+            later_pagers = [c for c in pager_cols if c > name_col]
+            pager_col = min(later_pagers, key=lambda c: c - name_col) if later_pagers else name_col + 1
+            explicit_zones = [c for c in zone_cols if c < role_col]
+            zone_col = max(explicit_zones) if explicit_zones else role_col - 1
+            if zone_col < 1:
+                zone_col = role_col
+            # The zone column normally lines up with the left edge of the merged shift title.
+            score = abs(zone_col - title_col) + (0 if later_pagers else 3)
+            choices.append((score, zone_col, role_col, name_col, pager_col))
+
+        if choices:
+            _, zone_col, role_col, name_col, pager_col = min(choices)
+            return {
+                "row": r,
+                "zone_col": zone_col,
+                "role_col": role_col,
+                "name_col": name_col,
+                "pager_col": pager_col,
+                "start_col": min(zone_col, role_col, name_col, pager_col),
+                "end_col": max(zone_col, role_col, name_col, pager_col),
+            }
+    return None
+
+
+def staffboard_time_between_rows(ws, title_row, header_row, start_col, end_col):
+    for r in range(title_row + 1, header_row):
+        for c in range(start_col, end_col + 1):
+            value = staffboard_cell_text(ws.cell(row=r, column=c).value)
+            match = STAFFBOARD_TIME_RE.search(value)
+            if match:
+                return f"{match.group(1)}-{match.group(2)}"
+    return ""
+
+
+def staffboard_extract_shift_rows(ws, shift_info, all_shift_headers):
+    header = staffboard_find_table_header(ws, shift_info["row"], shift_info["col"])
+    if header is None:
+        raise RuntimeError(
+            f"Could not find the Role / Name / DECT-Pager header for "
+            f"{shift_info['title']} on row {shift_info['row']}."
+        )
+
+    # The next shift title in the same left/right panel marks the end of this table.
+    # Allow a one-column offset because merged headings can begin just outside the grid.
+    next_header_rows = [
+        h["row"] for h in all_shift_headers
+        if h["row"] > header["row"]
+        and header["start_col"] - 2 <= h["col"] <= header["end_col"] + 2
+    ]
+    block_end = min(next_header_rows) if next_header_rows else ws.max_row + 1
+
+    # The comments box sits below the lower-left panel; it is not part of the shift table.
+    for r in range(header["row"] + 1, block_end):
+        found_comments_label = any(
+            staffboard_cell_text(ws.cell(row=r, column=c).value).strip().lower().startswith("comments")
+            for c in range(max(1, header["start_col"] - 1), min(ws.max_column, header["end_col"] + 1) + 1)
+        )
+        if found_comments_label:
+            block_end = r
+            break
+
+    time_text = staffboard_time_between_rows(
+        ws, shift_info["row"], header["row"], header["start_col"], header["end_col"]
+    )
+
+    sections = []
+    section_lookup = {}
+    current_zone = ""
+    for r in range(header["row"] + 1, block_end):
+        try:
+            zone_cell = ws.cell(row=r, column=header["zone_col"])
+            role_cell = ws.cell(row=r, column=header["role_col"])
+            name_cell = ws.cell(row=r, column=header["name_col"])
+            pager_cell = ws.cell(row=r, column=header["pager_col"])
+            zone_text = staffboard_cell_text(zone_cell.value, zone_cell.number_format)
+            role_text = staffboard_cell_text(role_cell.value, role_cell.number_format)
+            name_text = staffboard_cell_text(name_cell.value, name_cell.number_format)
+            pager_text = staffboard_cell_text(pager_cell.value, pager_cell.number_format)
+
+            if zone_text:
+                current_zone = zone_text
+            if not any((role_text, name_text, pager_text)):
+                continue
+
+            section_name = current_zone or "Other"
+            if section_name not in section_lookup:
+                section = {"name": section_name, "entries": []}
+                section_lookup[section_name] = section
+                sections.append(section)
+            section_lookup[section_name]["entries"].append({
+                "role": role_text,
+                "name": name_text,
+                "pager": pager_text,
+            })
+        except Exception as exc:
+            report_recoverable_error(
+                f"ED Staffboard row {r}",
+                f"Skipped malformed entry row {r}; other staffboard entries will still be extracted.",
+                exc=exc,
+            )
+            traceback.print_exc()
+
+    return {
+        "key": shift_info["key"],
+        "title": shift_info["title"],
+        "time": time_text,
+        "sections": sections,
+    }
+
+
+def staffboard_extract_comments(ws, shift_headers):
+    comments_by_date = {}
+    for row in range(1, ws.max_row + 1):
+        for col in range(1, ws.max_column + 1):
+            raw = staffboard_cell_text(ws.cell(row=row, column=col).value)
+            if not raw.lower().startswith("comments"):
+                continue
+
+            previous_headers = [h for h in shift_headers if h["row"] <= row and h.get("date")]
+            if not previous_headers:
+                continue
+            nearest = max(previous_headers, key=lambda h: h["row"])
+            date_key = nearest["date"].isoformat()
+            pieces = []
+            if ":" in raw:
+                inline_text = raw.split(":", 1)[1].strip()
+                if inline_text:
+                    pieces.append(inline_text)
+
+            next_date_header_rows = [
+                h["row"] for h in shift_headers
+                if h["row"] > row and h.get("date") != nearest["date"]
+            ]
+            stop_row = min(next_date_header_rows) if next_date_header_rows else min(ws.max_row + 1, row + 5)
+            for r in range(row + 1, min(stop_row, row + 6)):
+                for c in range(1, ws.max_column + 1):
+                    value = staffboard_cell_text(ws.cell(row=r, column=c).value)
+                    if value and not value.lower().startswith("comments"):
+                        pieces.append(value)
+            comment = "\n".join(dict.fromkeys(pieces)).strip()
+            if comment:
+                prior = comments_by_date.get(date_key, "")
+                comments_by_date[date_key] = "\n".join(x for x in (prior, comment) if x)
+    return comments_by_date
+
+
+def extract_ed_staffboard(wb):
+    """Extract the live Today / Tomorrow layout from the ED Staffboard worksheet."""
+    ws = find_sheet(wb, "ED Staffboard", required=True)
+    shift_headers = []
+
+    for row in ws.iter_rows():
+        for cell in row:
+            key = staffboard_shift_key(cell.value)
+            if not key:
+                continue
+            raw_title = staffboard_cell_text(cell.value)
+            parsed_date = staffboard_parse_date(cell.value)
+            if parsed_date is None:
+                parsed_date = staffboard_find_nearby_date(ws, cell.row, cell.column)
+            if parsed_date is None:
+                raise RuntimeError(
+                    f"Could not identify the date for {raw_title!r} at "
+                    f"{cell.coordinate} on tab {ws.title!r}."
+                )
+            display_title = {
+                "day": "Day Shift", "evening": "Evening Shift",
+                "swing": "Swing Shift", "night": "Night Shift",
+            }[key]
+            shift_headers.append({
+                "row": cell.row,
+                "col": cell.column,
+                "key": key,
+                "date": parsed_date,
+                "title": display_title,
+                "raw_title": raw_title,
+            })
+
+    if not shift_headers:
+        raise RuntimeError(
+            f"No Day / Evening / Swing / Night Shift headings were found on tab {ws.title!r}."
+        )
+
+    # Avoid duplicate detections from cells that repeat a heading in the same panel.
+    unique_headers = {}
+    for item in shift_headers:
+        unique_headers[(item["row"], item["col"], item["key"], item["date"])] = item
+    shift_headers = sorted(unique_headers.values(), key=lambda h: (h["row"], h["col"]))
+
+    days_by_date = {}
+    for item in shift_headers:
+        date_key = item["date"].isoformat()
+        day = days_by_date.setdefault(date_key, {
+            "date": date_key,
+            "label": f"{item['date']:%A}, {item['date'].day} {item['date']:%B %Y}",
+            "comments": "",
+            "shifts": [],
+        })
+        try:
+            day["shifts"].append(staffboard_extract_shift_rows(ws, item, shift_headers))
+        except Exception as exc:
+            # This is an optional page. A structural problem should preserve the
+            # previous JSON rather than silently publish a partial staffboard.
+            raise RuntimeError(
+                f"Unable to extract {item['title']} for {date_key}: {exc}"
+            ) from exc
+
+    comments_by_date = staffboard_extract_comments(ws, shift_headers)
+    for date_key, comment in comments_by_date.items():
+        if date_key in days_by_date:
+            days_by_date[date_key]["comments"] = comment
+
+    ordered_days = [days_by_date[key] for key in sorted(days_by_date)]
+    if not ordered_days:
+        raise RuntimeError(f"No dated shifts were extracted from ED Staffboard tab {ws.title!r}.")
+
+    if len(ordered_days) > 2:
+        print(
+            f"::warning title=Roster refresh - ED Staffboard has extra dates::"
+            f"Found {len(ordered_days)} dates; publishing the first two in date order."
+        )
+        ordered_days = ordered_days[:2]
+    elif len(ordered_days) == 1:
+        print(
+            "::warning title=Roster refresh - ED Staffboard only has one date::"
+            "Only one dated staffboard panel was found; publishing that date."
+        )
+
+    expected_shifts = {"day", "evening", "swing", "night"}
+    for day in ordered_days:
+        present = {shift["key"] for shift in day["shifts"]}
+        missing = expected_shifts - present
+        if missing:
+            print(
+                f"::warning title=Roster refresh - ED Staffboard incomplete day::"
+                f"{day['date']} is missing shift panel(s): {', '.join(sorted(missing))}."
+            )
+        day["shifts"].sort(key=lambda shift: ("day", "evening", "swing", "night").index(shift["key"]))
+
+    return {
+        "updated_at": datetime.now(MELBOURNE_TZ).strftime("%Y-%m-%d %H:%M %Z"),
+        "days": ordered_days,
+    }
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
@@ -1664,6 +2037,13 @@ def main():
     if ok_comments:
         print(f"  {len(comments)} dated comments found")
 
+    print("Extracting ED Staffboard tab...")
+    ok_staffboard, staffboard_data = run_step(
+        "Extract ED Staffboard tab", lambda: extract_ed_staffboard(wb)
+    )
+    if ok_staffboard:
+        print(f"  {len(staffboard_data.get('days', []))} dates in ED Staffboard")
+
     data = weekly_data = amp_roster_data = None
 
     # roster_data.json depends on every optional source, including Comments.
@@ -1713,6 +2093,7 @@ def main():
         ("roster_data.json", data, {"indent": 2}, False),
         ("weekly_allocations.json", weekly_data, {"separators": (",", ":")}, False),
         ("amp_roster.json", amp_roster_data, {"separators": (",", ":")}, False),
+        ("ed_staffboard.json", staffboard_data if ok_staffboard else None, {"indent": 2}, False),
     ]
 
     # Stage all JSON first. A staging/serialization error on any core file is
