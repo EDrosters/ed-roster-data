@@ -305,17 +305,6 @@
             ]
           },
           {
-            "zone": "Green",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Abhishek Kulkarni (u)"
-                ]
-              }
-            ]
-          },
-          {
             "zone": "Fast Track",
             "roles": [
               {
