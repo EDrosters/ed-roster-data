@@ -305,6 +305,17 @@
             ]
           },
           {
+            "zone": "Green",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Nathan Clinton (TS4 IC)"
+                ]
+              }
+            ]
+          },
+          {
             "zone": "Fast Track",
             "roles": [
               {
