@@ -307,6 +307,12 @@
             "zone": "Fast Track",
             "roles": [
               {
+                "role": "Registrars",
+                "names": [
+                  "Zaheer Jayhoon (TS4 IC)"
+                ]
+              },
+              {
                 "role": "JMO",
                 "names": [
                   "Sarah Marian (PGY2)"
