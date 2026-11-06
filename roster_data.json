@@ -307,12 +307,6 @@
             "zone": "Fast Track",
             "roles": [
               {
-                "role": "Registrars",
-                "names": [
-                  "Abhishek Kulkarni (u)"
-                ]
-              },
-              {
                 "role": "JMO",
                 "names": [
                   "Sarah Marian (PGY2)"
@@ -386,7 +380,8 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Melinda Truesdale"
+                  "Melinda Truesdale",
+                  "Ali Al Joboory"
                 ]
               },
               {
