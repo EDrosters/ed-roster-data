@@ -44,7 +44,7 @@
                 "role": "Consultants",
                 "names": [
                   "Lidia Samcewicz-Parham",
-                  "Mazdak Mansoury"
+                  "George Plunkett"
                 ]
               },
               {
@@ -67,7 +67,7 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "George Plunkett"
+                  "Mazdak Mansoury"
                 ]
               },
               {
@@ -553,8 +553,7 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Ali Al Joboory",
-                  "Gordon Carter"
+                  "Ali Al Joboory"
                 ]
               },
               {
@@ -579,7 +578,7 @@
                 "role": "Consultants",
                 "names": [
                   "Bruce Garbutt",
-                  "Wei Lum"
+                  "Gordon Carter"
                 ]
               },
               {
@@ -624,6 +623,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Wei Lum"
+                ]
+              },
               {
                 "role": "JMO",
                 "names": [
