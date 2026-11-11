@@ -172,12 +172,7 @@
       },
       {
         "name": "Eve",
-        "top_notes": [
-          [
-            "EPIC",
-            "Michael Dunne"
-          ]
-        ],
+        "top_notes": [],
         "zones": [
           {
             "zone": "Purple",
@@ -279,10 +274,6 @@
       {
         "name": "Night",
         "top_notes": [
-          [
-            "FACEM on Call, 0100-0430",
-            "Michael Dunne"
-          ],
           [
             "FACEM on Call, 0430-0800",
             "Evan O\u2019Neill"
