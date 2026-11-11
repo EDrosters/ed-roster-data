@@ -183,6 +183,12 @@
             "zone": "Purple",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Glenn Harrison"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Ahmed Al'khshali (TS3)"
@@ -196,8 +202,7 @@
               {
                 "role": "Consultants",
                 "names": [
-                  "Emma Paterson",
-                  "Glenn Harrison"
+                  "Emma Paterson"
                 ]
               },
               {
