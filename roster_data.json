@@ -664,6 +664,12 @@
             "zone": "Fast Track",
             "roles": [
               {
+                "role": "Registrars",
+                "names": [
+                  "Grey Price (TS4 IC)"
+                ]
+              },
+              {
                 "role": "JMO",
                 "names": [
                   "Bryonny Rigler-Dhaliwal (PGY3)"
