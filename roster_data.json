@@ -138,6 +138,12 @@
             "zone": "Purple",
             "roles": [
               {
+                "role": "Consultants",
+                "names": [
+                  "Emma West"
+                ]
+              },
+              {
                 "role": "Registrars",
                 "names": [
                   "Matt Bray (TS4 IC)"
