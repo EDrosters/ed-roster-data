@@ -188,8 +188,7 @@
               {
                 "role": "Registrars",
                 "names": [
-                  "Abhishek Kulkarni (u)",
-                  "Mark Douglas (TS4 IC)"
+                  "Abhishek Kulkarni (u)"
                 ]
               },
               {
@@ -292,6 +291,17 @@
           ]
         ],
         "zones": [
+          {
+            "zone": "Purple",
+            "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Mark Douglas (TS4 IC)"
+                ]
+              }
+            ]
+          },
           {
             "zone": "Green",
             "roles": [
@@ -624,6 +634,12 @@
           {
             "zone": "Green",
             "roles": [
+              {
+                "role": "Registrars",
+                "names": [
+                  "Mark Douglas (TS4 IC)"
+                ]
+              },
               {
                 "role": "JMO",
                 "names": [
