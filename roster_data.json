@@ -293,17 +293,6 @@
         ],
         "zones": [
           {
-            "zone": "Purple",
-            "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Emma Watkinson (u)"
-                ]
-              }
-            ]
-          },
-          {
             "zone": "Green",
             "roles": [
               {
@@ -635,12 +624,6 @@
           {
             "zone": "Green",
             "roles": [
-              {
-                "role": "Registrars",
-                "names": [
-                  "Emma Watkinson (u)"
-                ]
-              },
               {
                 "role": "JMO",
                 "names": [
