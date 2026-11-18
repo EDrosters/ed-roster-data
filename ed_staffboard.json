@@ -1,611 +1,6 @@
 {
-  "updated_at": "2026-11-18 11:50 AEDT",
+  "updated_at": "2026-11-18 11:55 AEDT",
   "days": [
-    {
-      "date": "2026-11-17",
-      "label": "Tuesday, 17 November 2026",
-      "comments": "",
-      "shifts": [
-        {
-          "key": "day",
-          "title": "Day Shift",
-          "time": "0800-1730",
-          "sections": [
-            {
-              "name": "Director on call",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Nick Hooper",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "FACEM on call",
-              "entries": [
-                {
-                  "role": "0430-0800",
-                  "name": "Chung",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "EPIC",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Chung",
-                  "pager": "24890"
-                }
-              ]
-            },
-            {
-              "name": "EDGE",
-              "entries": [
-                {
-                  "role": "FRACP",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Purple",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Jana Alexander",
-                  "pager": "24891"
-                },
-                {
-                  "role": "FACEM",
-                  "name": "Marina Guertin",
-                  "pager": ""
-                },
-                {
-                  "role": "FACEM",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Nadia Kamil (u)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Alfredo De Faria Freitas (TS1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Valerie Chu (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Green",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Kerry Lee",
-                  "pager": "24860"
-                },
-                {
-                  "role": "FACEM",
-                  "name": "Glenn Harrison",
-                  "pager": ""
-                },
-                {
-                  "role": "FACEM",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Natalia Evertsz (ICU)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Kim Pham (TS4 IC)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Ruvanya Mallikahewa (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Fast Track",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "David See",
-                  "pager": "24896"
-                },
-                {
-                  "role": "FACEM",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Sam Samour (TS2)",
-                  "pager": ""
-                },
-                {
-                  "role": "NP 0800-1630",
-                  "name": "Paul C",
-                  "pager": ""
-                },
-                {
-                  "role": "AMP 0930-1800",
-                  "name": "Alice Wilcox",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "SSU/HUB",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Soham Sarkar",
-                  "pager": "22167"
-                },
-                {
-                  "role": "FACEM",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "OM Registrar",
-                  "name": "Niamh Rees (u)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Christopher Sparks (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Nabeel Enayati (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "HUB JMO",
-                  "name": "Jessica Han (PGY2)",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Rapid Stay",
-              "entries": [
-                {
-                  "role": "JMO",
-                  "name": "Xenia Yang (PGY3)",
-                  "pager": "22504"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "evening",
-          "title": "Evening Shift",
-          "time": "1430-0000",
-          "sections": [
-            {
-              "name": "EPIC",
-              "entries": [
-                {
-                  "role": "1530-0100",
-                  "name": "Wei Lum",
-                  "pager": "24890"
-                }
-              ]
-            },
-            {
-              "name": "EDGE",
-              "entries": [
-                {
-                  "role": "FRACP",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Purple",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Dan Hanna",
-                  "pager": "24891"
-                },
-                {
-                  "role": "FACEM",
-                  "name": "Jess Thomas",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Abhishek Kulkarni (u)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Joanna Beh (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Green",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Jonathan Papson",
-                  "pager": "24860"
-                },
-                {
-                  "role": "FACEM",
-                  "name": "Leonie Marcus",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Anthony Wishart (TS4 IC)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Kieron Elie (TS3)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Jasmine Fraser (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Rabia Ali (PGY4)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Fast Track",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "",
-                  "pager": "24896"
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Thanh Truong (TS3)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "NP 1400-2230",
-                  "name": "Alex Sepulveda",
-                  "pager": ""
-                },
-                {
-                  "role": "AMP 1400-2200",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "SSU/HUB",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Olly Clowry",
-                  "pager": "22167"
-                },
-                {
-                  "role": "JMO",
-                  "name": "Stephanie Rixon (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Yining Huang (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "HUB JMO",
-                  "name": "Matthew Cronk",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Rapid Stay",
-              "entries": [
-                {
-                  "role": "JMO",
-                  "name": "Erica Hungerford",
-                  "pager": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "swing",
-          "title": "Swing Shift",
-          "time": "1100-2030",
-          "sections": [
-            {
-              "name": "Purple",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "Emma West",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Matt Bray (TS4 IC)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Green",
-              "entries": [
-                {
-                  "role": "FACEM",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Ahmed Al'khshali (TS3)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Amanda Chong-Halliday (TS3)",
-                  "pager": ""
-                },
-                {
-                  "role": "Registrar",
-                  "name": "Giovanni Naselli (TS2)",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Fast Track",
-              "entries": [
-                {
-                  "role": "AMP 1030-1730",
-                  "name": "",
-                  "pager": ""
-                },
-                {
-                  "role": "NP 1030-1730",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "night",
-          "title": "Night Shift",
-          "time": "2300-0830",
-          "sections": [
-            {
-              "name": "FACEM on call",
-              "entries": [
-                {
-                  "role": "0100-0430",
-                  "name": "Wei Lum",
-                  "pager": ""
-                },
-                {
-                  "role": "0430-0800",
-                  "name": "Emma Paterson",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "ERIC",
-              "entries": [
-                {
-                  "role": "Registrar",
-                  "name": "Chloe Doran (EP)",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Purple",
-              "entries": [
-                {
-                  "role": "Registrar",
-                  "name": "Mark Douglas (TS4 IC)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Green",
-              "entries": [
-                {
-                  "role": "Registrar",
-                  "name": "Abbey Cartmell (u)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Jo Ann Chan (PGY2)",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Fast Track",
-              "entries": [
-                {
-                  "role": "Registrar",
-                  "name": "Damian Ianno (TS4 IC)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Maire Dillon (PGY4)",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "SSU/HUB",
-              "entries": [
-                {
-                  "role": "Registrar",
-                  "name": "Grey Price (TS4 IC)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Benjamin Crook (PGY1)",
-                  "pager": ""
-                },
-                {
-                  "role": "JMO",
-                  "name": "Bryonny Rigler-Dhaliwal (PGY3)",
-                  "pager": ""
-                }
-              ]
-            },
-            {
-              "name": "Rapid Stay",
-              "entries": [
-                {
-                  "role": "JMO",
-                  "name": "Labiba Hassan (PGY5)",
-                  "pager": ""
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
     {
       "date": "2026-11-18",
       "label": "Wednesday, 18 November 2026",
@@ -822,7 +217,7 @@
                 {
                   "role": "JMO",
                   "name": "Jessica Han (PGY2)",
-                  "pager": ""
+                  "pager": "22504"
                 }
               ]
             }
@@ -1082,7 +477,12 @@
                   "role": "Registrar",
                   "name": "",
                   "pager": ""
-                },
+                }
+              ]
+            },
+            {
+              "name": "Fast Track",
+              "entries": [
                 {
                   "role": "AMP 1030-1730",
                   "name": "",
@@ -1123,7 +523,7 @@
                 {
                   "role": "Registrar",
                   "name": "David Fitter (TS4 IC)",
-                  "pager": "24890"
+                  "pager": ""
                 }
               ]
             },
@@ -1198,6 +598,606 @@
                 {
                   "role": "JMO",
                   "name": "Bryonny Rigler-Dhaliwal (PGY3)",
+                  "pager": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "label": "Thursday, 19 November 2026",
+      "comments": "",
+      "shifts": [
+        {
+          "key": "day",
+          "title": "Day Shift",
+          "time": "0800-1730",
+          "sections": [
+            {
+              "name": "Director on call",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "George Plunkett",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "FACEM on call",
+              "entries": [
+                {
+                  "role": "0430-0800",
+                  "name": "Emma West",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "EPIC",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Jonathan Papson",
+                  "pager": "24890"
+                }
+              ]
+            },
+            {
+              "name": "EDGE",
+              "entries": [
+                {
+                  "role": "FRACP",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Purple",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Emma West",
+                  "pager": "24891"
+                },
+                {
+                  "role": "FACEM",
+                  "name": "Nicki Walsham",
+                  "pager": ""
+                },
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Dominic Gavin (TS3)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Green",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Sarah Whitelaw",
+                  "pager": "24860"
+                },
+                {
+                  "role": "FACEM",
+                  "name": "Dan Hanna",
+                  "pager": ""
+                },
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Jaimee Warren (TS3)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Eason Chan (PGY3)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Fast Track",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Khazmira Bashah",
+                  "pager": "24896"
+                },
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Stacey Lo (TS1)",
+                  "pager": ""
+                },
+                {
+                  "role": "NP 0800-1630",
+                  "name": "Meredith S",
+                  "pager": ""
+                },
+                {
+                  "role": "AMP 0930-1800",
+                  "name": "Alice Wilcox",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "+Susan Yang (PGY4)",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "SSU/HUB",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Lidia Samcewicz-Parham",
+                  "pager": "22167"
+                },
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "OM Registrar",
+                  "name": "Sophie Tighe (PEM)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Vasiliki Koutoulas (PGY1)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Ruvanya Mallikahewa (PGY1)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Valerie Chu (PGY1)",
+                  "pager": ""
+                },
+                {
+                  "role": "HUB JMO",
+                  "name": "Victor Li (PGY2)",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Rapid Stay",
+              "entries": [
+                {
+                  "role": "JMO",
+                  "name": "Xenia Yang (PGY3)",
+                  "pager": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "evening",
+          "title": "Evening Shift",
+          "time": "1430-0000",
+          "sections": [
+            {
+              "name": "EPIC",
+              "entries": [
+                {
+                  "role": "1530-0100",
+                  "name": "Thomas Razga",
+                  "pager": "24890"
+                }
+              ]
+            },
+            {
+              "name": "EDGE",
+              "entries": [
+                {
+                  "role": "FRACP",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Purple",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Jasmine Poonian",
+                  "pager": "24891"
+                },
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Alex Burman (TS4 IC)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Green",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Jana Alexander",
+                  "pager": "24860"
+                },
+                {
+                  "role": "FACEM",
+                  "name": "Glenn Harrison",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Nadia Kamil (u)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Zaheer Jayhoon (TS4 IC)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Fast Track",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Michelle Thornhill",
+                  "pager": "24896"
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Joyce Chan (TS2)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "NP 1400-2230",
+                  "name": "Tim Byrne",
+                  "pager": ""
+                },
+                {
+                  "role": "AMP 1400-2200",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "SSU/HUB",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "Jonathan Stevenson",
+                  "pager": "22167"
+                },
+                {
+                  "role": "JMO",
+                  "name": "Mateen Ahmadi (PGY1)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Joanna Beh (PGY1)",
+                  "pager": ""
+                },
+                {
+                  "role": "HUB JMO",
+                  "name": "Max Drezga-Kleiminger (PGY3)",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Rapid Stay",
+              "entries": [
+                {
+                  "role": "JMO",
+                  "name": "Stephenie Cameron (PGY2)",
+                  "pager": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "swing",
+          "title": "Swing Shift",
+          "time": "1100-2030",
+          "sections": [
+            {
+              "name": "Purple",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Fiona MacDonald (u)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Green",
+              "entries": [
+                {
+                  "role": "FACEM",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Sam Samour (TS2)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Aislinn Begley (TS3)",
+                  "pager": ""
+                },
+                {
+                  "role": "Registrar",
+                  "name": "Kim Pham (TS4 IC)",
+                  "pager": ""
+                },
+                {
+                  "role": "AMP 1030-1730",
+                  "name": "",
+                  "pager": ""
+                },
+                {
+                  "role": "NP 1030-1730",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "night",
+          "title": "Night Shift",
+          "time": "2300-0830",
+          "sections": [
+            {
+              "name": "FACEM on call",
+              "entries": [
+                {
+                  "role": "0100-0430",
+                  "name": "Thomas Razga",
+                  "pager": ""
+                },
+                {
+                  "role": "0430-0800",
+                  "name": "Andy Buck",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "ERIC",
+              "entries": [
+                {
+                  "role": "Registrar",
+                  "name": "Chloe Doran (EP)",
+                  "pager": "24890"
+                }
+              ]
+            },
+            {
+              "name": "Purple",
+              "entries": [
+                {
+                  "role": "Registrar",
+                  "name": "Alfred Liu (PEM)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Green",
+              "entries": [
+                {
+                  "role": "Registrar",
+                  "name": "Niamh Rees (u)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Mark McDonald (PGY2)",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Fast Track",
+              "entries": [
+                {
+                  "role": "Registrar",
+                  "name": "Sean Ivory (TS4 IC)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Jo Ann Chan (PGY2)",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "SSU/HUB",
+              "entries": [
+                {
+                  "role": "Registrar",
+                  "name": "Matt Bray (TS4 IC)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Isabel Tsintsiper (PGY1)",
+                  "pager": ""
+                },
+                {
+                  "role": "JMO",
+                  "name": "Labiba Hassan (PGY5)",
+                  "pager": ""
+                }
+              ]
+            },
+            {
+              "name": "Rapid Stay",
+              "entries": [
+                {
+                  "role": "JMO",
+                  "name": "Maire Dillon (PGY4)",
                   "pager": ""
                 }
               ]
