@@ -423,12 +423,6 @@
             "zone": "SSU/HUB",
             "roles": [
               {
-                "role": "Consultants",
-                "names": [
-                  "Lidia Samcewicz-Parham"
-                ]
-              },
-              {
                 "role": "Registrars",
                 "names": [
                   "Sophie Tighe (PEM)"
