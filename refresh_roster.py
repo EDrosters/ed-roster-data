@@ -869,6 +869,13 @@ def strip_suffix(code):
         c = c[:-1]
     return c
 
+def strip_registrar_suffix(code):
+    """Remove registrar-only trailing markers without changing consultant/JMO matching."""
+    c = strip_suffix(code)
+    if c and c[-1].lower() in ("o", "s") and len(c) > 1:
+        c = c[:-1]
+    return c
+
 NAME_SUFFIX_RE = re.compile(r"^(.*?)\s*(\([^)]*\))\s*$")
 
 def reverse_registrar_name(n):
@@ -945,7 +952,7 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
         target = code.lower()
         for c in p["c"]:
             codes = c["v"].split("|")
-            if idx < len(codes) and strip_suffix(codes[idx]).lower() == target:
+            if idx < len(codes) and strip_registrar_suffix(codes[idx]).lower() == target:
                 return c["n"]
         return ""
 
@@ -1027,7 +1034,7 @@ def make_lookups(consultant_periods, registrar_periods, jmo_people, np_people, a
                 raw = codes[idx]
                 if not raw:
                     continue
-                stripped = strip_suffix(raw).lower()
+                stripped = strip_registrar_suffix(raw).lower()
                 if is_non_zone_code(stripped):
                     continue
                 if stripped in VALID_REGISTRAR_CODES:
