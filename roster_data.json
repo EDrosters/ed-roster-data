@@ -189,7 +189,7 @@
                 "role": "Consultants",
                 "names": [
                   "Amaali Lokuge",
-                  "Laura Castle"
+                  "Kathleen Malcher"
                 ]
               },
               {
@@ -233,6 +233,12 @@
           {
             "zone": "SSU/HUB",
             "roles": [
+              {
+                "role": "Consultants",
+                "names": [
+                  "Laura Castle"
+                ]
+              },
               {
                 "role": "JMO",
                 "names": [
