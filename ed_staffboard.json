@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26 14:25 AEDT",
+  "updated_at": "2026-11-26 14:30 AEDT",
   "days": [
     {
       "date": "2026-11-26",
@@ -216,7 +216,7 @@
               "entries": [
                 {
                   "role": "JMO",
-                  "name": "+Eason Chan (PGY3)",
+                  "name": "",
                   "pager": "22504"
                 }
               ]
@@ -418,7 +418,7 @@
               "entries": [
                 {
                   "role": "JMO",
-                  "name": "+Mark McDonald (PGY2)",
+                  "name": "Mark McDonald (PGY2)",
                   "pager": ""
                 }
               ]
@@ -537,7 +537,7 @@
                 },
                 {
                   "role": "JMO",
-                  "name": "",
+                  "name": "Jennifer Buttimer",
                   "pager": ""
                 }
               ]
